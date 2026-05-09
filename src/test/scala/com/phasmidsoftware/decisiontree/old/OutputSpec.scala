@@ -2,9 +2,7 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.util
-
-import com.phasmidsoftware.decisiontree.MockNode
+import com.phasmidsoftware.decisiontree.old.MockNode
 import org.scalatest.flatspec
 import org.scalatest.matchers.should
 

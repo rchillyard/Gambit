@@ -2,8 +2,9 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
+package com.phasmidsoftware.decisiontree.old
 
+import com.phasmidsoftware.decisiontree.Node
 import com.phasmidsoftware.util.{MockWriter, Output}
 import org.scalatest.flatspec
 import org.scalatest.matchers.should

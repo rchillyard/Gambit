@@ -69,23 +69,23 @@ case class PriorityQueue[X: Ordering](pq: PriorityQueueJava[X]) extends Iterable
     }
 }
 
-object PriorityQueue {
-    def apply[X: Ordering]: PriorityQueue[X] = PriorityQueue(new PriorityQueueJava[X](implicitly[Ordering[X]]))
-
-    def apply[X: Ordering](x: X): PriorityQueue[X] =
-        PriorityQueue(new PriorityQueueJava[X](x, implicitly[Ordering[X]]))
-
-    def apply[X: Ordering](xs: Seq[X]): PriorityQueue[X] = {
-        import scala.jdk.CollectionConverters._
-        PriorityQueue(new PriorityQueueJava[X](xs.asJavaCollection, implicitly[Ordering[X]]))
-    }
-
-    def maxPQ[X: Ordering]: PriorityQueue[X] = apply(implicitly[Ordering[X]].reverse)
-
-    def maxPQ[X: Ordering](x: X): PriorityQueue[X] = apply(x)(implicitly[Ordering[X]].reverse)
-
-    def maxPQ[X: Ordering](xs: Seq[X]): PriorityQueue[X] = {
-        import scala.jdk.CollectionConverters._
-        PriorityQueue(new PriorityQueueJava[X](xs.asJavaCollection, implicitly[Ordering[X]].reverse))
-    }
-}
+//object PriorityQueue {
+//    def apply[X: Ordering]: PriorityQueue[X] = PriorityQueue(new PriorityQueueJava[X](implicitly[Ordering[X]]))
+//
+//    def apply[X: Ordering](x: X): PriorityQueue[X] =
+//        PriorityQueue(new PriorityQueueJava[X](x, implicitly[Ordering[X]]))
+//
+//    def apply[X: Ordering](xs: Seq[X]): PriorityQueue[X] = {
+//        import scala.jdk.CollectionConverters._
+//        PriorityQueue(new PriorityQueueJava[X](xs.asJavaCollection, implicitly[Ordering[X]]))
+//    }
+//
+//    def maxPQ[X: Ordering]: PriorityQueue[X] = apply(implicitly[Ordering[X]].reverse)
+//
+//    def maxPQ[X: Ordering](x: X): PriorityQueue[X] = apply(x)(implicitly[Ordering[X]].reverse)
+//
+//    def maxPQ[X: Ordering](xs: Seq[X]): PriorityQueue[X] = {
+//        import scala.jdk.CollectionConverters._
+//        PriorityQueue(new PriorityQueueJava[X](xs.asJavaCollection, implicitly[Ordering[X]].reverse))
+//    }
+//}

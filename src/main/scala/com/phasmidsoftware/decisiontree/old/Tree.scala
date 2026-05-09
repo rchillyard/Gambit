@@ -2,8 +2,7 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
-
+import com.phasmidsoftware.decisiontree.old.{Expandable, ExpandingNode}
 import com.phasmidsoftware.flog.Loggable
 import com.phasmidsoftware.util.{Output, Outputable, Show}
 

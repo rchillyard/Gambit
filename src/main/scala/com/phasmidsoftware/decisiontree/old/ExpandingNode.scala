@@ -2,9 +2,10 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
+package com.phasmidsoftware.decisiontree.old
 
 import com.phasmidsoftware.decisiontree.tree.Goal
+import com.phasmidsoftware.decisiontree.{Expandable, ExpandingNode, Node}
 import com.phasmidsoftware.flog.{Loggable, Loggables}
 import com.phasmidsoftware.util.Show
 import org.slf4j.{Logger, LoggerFactory}
@@ -103,7 +104,7 @@ abstract class ExpandingNode[T: Expandable : GoalDriven : Ordering : Loggable : 
         case Right(ts) =>
             // XXX normal situation with (possibly empty) descendants?
             // XXX Recursively expand them, ensuring that the elements are unique.
-            import com.phasmidsoftware.util.SmartValueOps._
+            import com.phasmidsoftware.util.SmartValueOps.*
             val verifiedStates = ts.invariant(z => z.distinct.size == z.size)
             Some(expandSuccessors(verifiedStates, moves - 1, _so))
     }
@@ -135,7 +136,7 @@ abstract class ExpandingNode[T: Expandable : GoalDriven : Ordering : Loggable : 
             case Right(ts) =>
                 // XXX normal situation with (possibly empty) descendants?
                 // XXX expand them, ensuring that the elements are unique.
-                import com.phasmidsoftware.util.SmartValueOps._
+                import com.phasmidsoftware.util.SmartValueOps.*
                 val verifiedStates: List[T] = ts.invariant(z => z.distinct.size == z.size)
                 Some(expandSuccessors(verifiedStates, moves - 1, _so))
         }
@@ -261,7 +262,7 @@ trait Expandable[T] {
    */
   def successors(t: T): List[T]
 
-  import com.phasmidsoftware.util.SmartValueOps._
+  import com.phasmidsoftware.util.SmartValueOps.*
 
   /**
    * Method to yield the result (i.e. children) of the underlying type T.

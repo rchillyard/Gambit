@@ -1,7 +1,7 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
-import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps._
+import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps.*
 import com.phasmidsoftware.decisiontree.moves.{Move, State, Transition}
 import com.phasmidsoftware.flog.{Flog, Loggable}
 import com.phasmidsoftware.util.Aggregators.{hasOne, hasTwo}
@@ -159,7 +159,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
 
   private val flog = Flog[TicTacToe]
 
-  import flog._
+  import flog.*
 
   private def messageString = s" player=$player given prior=$maybePrior choose ${board.render} ($board) for score of "
 

@@ -2,13 +2,15 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
+package com.phasmidsoftware.decisiontree.old
 
-import java.util.regex.Pattern
-
+import com.phasmidsoftware.decisiontree.old.{Expandable, ExpandingNode}
+import com.phasmidsoftware.decisiontree.{AltMockNode1, AltMockNode2, AltMockNodeS, MockNode, Node, SubStringMatch, AltMockNodeS as apply}
 import com.phasmidsoftware.util.Show
 import org.scalatest.matchers.should
 import org.scalatest.{PrivateMethodTester, flatspec}
+
+import java.util.regex.Pattern
 
 //noinspection ScalaStyle
 class ExpandingNodeSpec extends flatspec.AnyFlatSpec with should.Matchers with PrivateMethodTester {

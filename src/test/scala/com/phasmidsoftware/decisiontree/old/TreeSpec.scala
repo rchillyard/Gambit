@@ -1,5 +1,7 @@
-package com.phasmidsoftware.decisiontree
+package com.phasmidsoftware.decisiontree.old
 
+import com.phasmidsoftware.decisiontree.State
+import com.phasmidsoftware.decisiontree.old.Expandable
 import com.phasmidsoftware.flog.Loggable
 import com.phasmidsoftware.util.Show
 import org.scalatest.matchers.should

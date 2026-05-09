@@ -2,8 +2,6 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.util
-
 import java.io.OutputStream
 import org.scalatest.{BeforeAndAfterEach, flatspec, matchers}
 

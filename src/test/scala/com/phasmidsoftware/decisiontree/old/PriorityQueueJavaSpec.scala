@@ -1,5 +1,3 @@
-package com.phasmidsoftware.util
-
 import org.scalatest.{flatspec, matchers}
 
 import java.util.Comparator

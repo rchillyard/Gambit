@@ -1,5 +1,3 @@
-package com.phasmidsoftware.util
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 

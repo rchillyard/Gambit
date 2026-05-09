@@ -2,7 +2,7 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
+package com.phasmidsoftware.decisiontree.old
 
 import org.scalatest.{BeforeAndAfterEach, flatspec}
 

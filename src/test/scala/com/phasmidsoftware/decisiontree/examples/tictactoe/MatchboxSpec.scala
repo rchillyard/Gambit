@@ -2,6 +2,7 @@ package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
+
 import scala.util.Random
 
 class MatchboxSpec extends AnyFlatSpec with should.Matchers {
@@ -320,7 +321,6 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   import TicTacToe.TicTacToeState$
 
   it should "play a single game without throwing" in {
-    pending
     val mbs    = Matchboxes()
     val runner = new GameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(1L))
     noException should be thrownBy runner.playGame()
@@ -342,7 +342,6 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "show MENACE improving against a random player over many games" in {
-    pending
     // Train for 2000 games, then test win rate over the next 200.
     val mbs    = Matchboxes()
     val menace = new MenacePlayer(mbs)
@@ -355,6 +354,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     // Evaluation phase — fresh RandomPlayer, same MENACE (shared matchboxes).
     val eval = new GameRunner(menace, new RandomPlayer, rng)
     val stats = eval.playGames(200)
+    System.err.println(stats)
 
     // After training, MENACE as X should win or draw the vast majority.
     // A completely untrained random X wins ~58% against random O.

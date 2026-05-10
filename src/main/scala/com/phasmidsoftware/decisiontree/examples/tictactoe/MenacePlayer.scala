@@ -1,6 +1,5 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.examples.tictactoe.{GameDraw, GameResult, GameStats, OWins, Player, XWins}
 import com.phasmidsoftware.decisiontree.moves.State
 
 import scala.util.Random
@@ -10,7 +9,8 @@ import scala.util.Random
   */
 trait Player {
   /**
-    * Choose a move (flat cell index 0..8) from the given position.
+    * Choose a move (flat cell index 0..8, row-major, original orientation)
+    * from the given position.
     * Returns None if no move is available (should not happen in normal play).
     *
     * @param ttt    the current position.
@@ -28,18 +28,18 @@ trait Player {
   * Records the sequence of (position, move) pairs during a game so it can
   * back-propagate the result afterwards.
   *
-  * @param matchboxes the shared registry (may be shared between two MENACE players
-  *                   if you want them to learn from the same experience, or kept
-  *                   separate for independent agents).
+  * All cell indices in history are in original board orientation, matching
+  * what selectMove returns and what update expects.
+  *
+  * @param matchboxes the shared registry.
   */
 class MenacePlayer(val matchboxes: Matchboxes) extends Player {
 
-  // History of (position, chosen cell) for back-propagation.
+  // History of (position, chosen cell) in original orientation, for back-propagation.
   private var history: List[(TicTacToe, Int)] = Nil
 
   override def chooseMove(ttt: TicTacToe, random: Random): Option[Int] = {
-    val matchbox = matchboxes.get(ttt)
-    val move = matchbox.select(random)
+    val move = matchboxes.selectMove(ttt, random)
     move.foreach(cell => history = (ttt, cell) :: history)
     move
   }
@@ -77,13 +77,11 @@ class HeuristicPlayer(implicit state: State[Board, TicTacToe]) extends Player {
     if (successors.isEmpty) None
     else {
       val best = successors.maxBy(state.heuristic)
-      // Recover the cell that was played by XOR-ing the boards.
       val diff = best.board.value ^ ttt.board.value
       Some(cellFromDiff(diff))
     }
   }
 
-  /** Given a board diff with exactly one cell changed, return its flat cell index. */
   private def cellFromDiff(diff: Int): Int =
     (0 until TicTacToe.size * TicTacToe.size).find { i =>
       (diff >>> (30 - i * 2)) % 4 != 0
@@ -111,30 +109,34 @@ class GameRunner(
   def playGame(): GameResult = {
     @scala.annotation.tailrec
     def loop(ttt: TicTacToe, xToMove: Boolean): GameResult = {
-      // Check terminal before each move.
       state.isGoal(ttt) match {
         case Some(true) =>
-          // The player who just moved won. xToMove is the player about to move,
-          // so the winner is the *other* player.
+          // The player who just moved won — xToMove is the next player.
           if (xToMove) OWins else XWins
         case Some(false) =>
           GameDraw
         case None =>
           val player = if (xToMove) xPlayer else oPlayer
           player.chooseMove(ttt, random) match {
-            case None => GameDraw // No moves available — treat as draw.
+            case None => GameDraw
             case Some(cell) =>
               val row = cell / TicTacToe.size
               val col = cell % TicTacToe.size
               val proto = if (xToMove) ttt.playX(row, col) else ttt.play0(row, col)
               val next = state.construct(proto)
+              if (next.board.value == ttt.board.value && sys.env.contains("DEBUG"))
+                throw new RuntimeException(
+                  s"Board unchanged after cell=$cell row=$row col=$col xToMove=$xToMove" +
+                    s"\nbefore value=${ttt.board.value.toHexString}" +
+                    s"\nafter  value=${next.board.value.toHexString}" +
+                    s"\n${TicTacToeOps.renderWithNewlines(ttt.board.value)}"
+                )
               loop(next, !xToMove)
           }
       }
     }
 
     val result = loop(TicTacToe.start, xToMove = true)
-    // Notify players of the result.
     xPlayer.gameOver(if (result == XWins) Win else if (result == OWins) Loss else Draw)
     oPlayer.gameOver(if (result == OWins) Win else if (result == XWins) Loss else Draw)
     result
@@ -165,11 +167,6 @@ case object GameDraw extends GameResult
 
 /**
   * Aggregated statistics over multiple games.
-  *
-  * @param xWins number of X wins.
-  * @param oWins number of O wins.
-  * @param draws number of draws.
-  * @param total total games played.
   */
 case class GameStats(xWins: Int, oWins: Int, draws: Int, total: Int) {
   def xWinPct: Double = 100.0 * xWins / total

@@ -1,9 +1,8 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.parseString
-import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps._
+import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps.*
 import com.phasmidsoftware.decisiontree.moves.State
-import com.phasmidsoftware.util.PriorityQueue
 import org.scalatest.PrivateMethodTester
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should

@@ -134,16 +134,3 @@ case class Move[P, S](f: S => P, desc: String) extends Transition[P, S] {
 
   override def toString: String = desc
 }
-
-/**
- * LazyState is a domain-specific class which extends Transition by defining a function parameter and a human-legible description.
- *
- * @param state      the starting state.
- * @param transition a transition function which turns one S into another S (defaults to identity).
- * @tparam S type which defines the domain of this LazyState (must provide implicit evidence of State[T]).
- */
-case class LazyState[P, S](state: S, transition: Transition[P, S])(implicit pSs: State[P, S]) extends (() => P) {
-  override def apply(): P = transition(state)._1
-}
-
-object LazyState

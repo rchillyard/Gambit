@@ -1,10 +1,12 @@
+package com.phasmidsoftware.decisiontree.attic
+
 /*
  * Copyright (c) 2019. Phasmid Software
  */
 
 package com.phasmidsoftware.util
 
-import java.io._
+import java.io.*
 import scala.collection.mutable
 import scala.language.postfixOps
 

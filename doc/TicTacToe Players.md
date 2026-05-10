@@ -1,17 +1,10 @@
-# MENACE — Design Document
+# TicTacToe Players — Design Document
 
 ## Overview
 
-This document captures the design decisions behind the MENACE (Matchbox Educable
-Noughts And Crosses Engine) implementation for TicTacToe in the `claude` package.
-MENACE is a reinforcement learning algorithm originally devised by Donald Michie in
-1960, implemented physically using matchboxes and coloured beads. Each matchbox
-represents a board position; each bead represents a possible move. After each game,
-beads are added to winning matchboxes and removed from losing ones. Over many games
-the machine learns to play well.
-
-This implementation follows the original design faithfully while adding D4 symmetry
-reduction to accelerate learning.
+This document captures the design decisions behind the TicTacToe player
+implementations in the `claude` package: MENACE (reinforcement learning),
+and PerfectPlayer (minimax via Visitor).
 
 ---
 
@@ -22,6 +15,8 @@ reduction to accelerate learning.
 | `Matchbox.scala` | `Matchbox` — weighted bead selection and reward/penalise logic |
 | `Matchboxes.scala` | `Matchboxes` — D4-symmetric registry; `MatchResult` |
 | `MenacePlayer.scala` | `Player`, `MenacePlayer`, `RandomPlayer`, `HeuristicPlayer`, `GameRunner`, `GameResult`, `GameStats` |
+| `PerfectPlayer.scala` | `PerfectPlayer` — minimax via Visitor post-order DFS |
+| `TicTacToeUtils.scala` | `TicTacToeUtils` — shared utility methods |
 
 ---
 
@@ -131,6 +126,34 @@ baseline.
 Greedily selects the move leading to the highest-heuristic successor state, using
 the existing `TicTacToeState$` heuristic. Useful as a stronger baseline.
 
+### PerfectPlayer
+
+Builds a complete minimax score map over the TicTacToe game DAG on first use,
+via a single post-order DFS using Visitor's `Traversal.dfs(DfsOrder.Post)`.
+
+**Build phase:**
+
+1. A mutable `scoreMap: mutable.Map[TicTacToe, Int]` is allocated.
+2. A `given Evaluable[TicTacToe, Int]` closes over `scoreMap`. For terminal
+   positions it scores directly (+1 X wins, -1 O wins, 0 draw). For internal
+   nodes it reads children's scores from `scoreMap` (already populated in
+   post-order) and aggregates by max (X to move) or min (O to move).
+3. A `given GraphNeighbours[TicTacToe]` delegates to `State.getStates`.
+4. `Traversal.dfs` is called once from `TicTacToe.start`. The default
+   `given VisitedSet[TicTacToe]` (backed by `TicTacToe.equals` on board value)
+   ensures each of the ~5,000 reachable positions is evaluated exactly once —
+   the game tree is traversed as a DAG, not a tree.
+
+**Play phase:**
+
+`chooseMove` checks `isGoal` first (returning `None` for terminal positions),
+then looks up all successor scores and picks the max (X to move) or min (O to move).
+
+**Minimax convention:**
+
+`TicTacToe.player` is true when X just moved (odd number of moves played). So
+`xToMove = !ttt.player` — if X just moved, it is now O's turn.
+
 ---
 
 ## GameRunner
@@ -142,12 +165,22 @@ Returns `GameStats` with win/loss/draw counts and percentages.
 
 ---
 
+## TicTacToeUtils
+
+Shared utility methods extracted to avoid duplication across player implementations:
+
+- `cellFromDiff(diff: Int): Int` — given the XOR of two board values where exactly
+  one cell differs, returns the flat cell index (0..8, row-major) of the changed cell.
+  Used by `HeuristicPlayer` and `PerfectPlayer` to recover the move from a board diff.
+
+---
+
 ## Learning Dynamics
 
 After training against a `RandomPlayer` for ~2000 games, a `MenacePlayer` as X
-should lose fewer than 20% of evaluation games. With perfect play, X can always
-force at least a draw, so a well-trained MENACE should converge toward a near-zero
-loss rate given sufficient training.
+should lose fewer than 20% of evaluation games. Training against `PerfectPlayer`
+is harder but produces a stronger agent. With perfect play, X can always force at
+least a draw, so a well-trained MENACE should converge toward a near-zero loss rate.
 
 ### Tuning Parameters
 
@@ -168,8 +201,8 @@ loss rate given sufficient training.
   count; requires careful handling of the learning signal.
 - **Generalisation** — `Player` and `GameRunner` are currently tictactoe-specific
   due to `Prototype`. Making them generic in `[S, M]` (state, move) would allow
-  MENACE-style learning to be applied to other games.
-- **Persistence** — serialising `Matchboxes` so a trained machine can be saved and
-  restored.
+  all player types to be applied to other games.
+- **Persistence** — serialising `Matchboxes` so a trained MENACE can be saved and
+  restored between sessions.
 - **Visualisation** — rendering bead distributions across matchboxes to illustrate
   what the machine has learned.

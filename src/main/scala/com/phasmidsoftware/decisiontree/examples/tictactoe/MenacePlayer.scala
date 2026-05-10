@@ -78,14 +78,10 @@ class HeuristicPlayer(implicit state: State[Board, TicTacToe]) extends Player {
     else {
       val best = successors.maxBy(state.heuristic)
       val diff = best.board.value ^ ttt.board.value
-      Some(cellFromDiff(diff))
+      Some(TicTacToeUtils.cellFromDiff(diff))
     }
   }
 
-  private def cellFromDiff(diff: Int): Int =
-    (0 until TicTacToe.size * TicTacToe.size).find { i =>
-      (diff >>> (30 - i * 2)) % 4 != 0
-    }.getOrElse(throw new RuntimeException(s"HeuristicPlayer: no cell found in diff $diff"))
 }
 
 /**
@@ -122,15 +118,9 @@ class GameRunner(
             case Some(cell) =>
               val row = cell / TicTacToe.size
               val col = cell % TicTacToe.size
-              val proto = if (xToMove) ttt.playX(row, col) else ttt.play0(row, col)
+              val proto =
+                if (xToMove) ttt.playX(row, col) else ttt.play0(row, col)
               val next = state.construct(proto)
-              if (next.board.value == ttt.board.value && sys.env.contains("DEBUG"))
-                throw new RuntimeException(
-                  s"Board unchanged after cell=$cell row=$row col=$col xToMove=$xToMove" +
-                    s"\nbefore value=${ttt.board.value.toHexString}" +
-                    s"\nafter  value=${next.board.value.toHexString}" +
-                    s"\n${TicTacToeOps.renderWithNewlines(ttt.board.value)}"
-                )
               loop(next, !xToMove)
           }
       }

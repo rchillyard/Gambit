@@ -13,7 +13,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
 
   private val empty: TicTacToe = TicTacToe.start
 
-  /** Parse shorthand — 9-char string, dots for empty. */
+  /** Parse shorthand — dots or spaces for empty, - as optional row separator. */
   private def pos(s: String): TicTacToe = TicTacToe.parse(s).get
 
   // ---------------------------------------------------------------------------
@@ -277,20 +277,15 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     val player = new MenacePlayer(mbs)
     val rng = new Random(0L)
 
-    // Simulate a short sequence of moves.
-    println(s"chooseMove on empty: ${player.chooseMove(empty, rng)}")
+    // Simulate a short sequence of moves across two distinct positions.
+    player.chooseMove(empty, rng)
     val mid = pos("X........")
-    println(s"empty.open: ${empty.open}")
-    println(s"mid.open: ${mid.open}")
-    println(s"chooseMove on mid: ${player.chooseMove(mid, rng)}")
+    player.chooseMove(mid, rng)
 
-    println(s"Registry size before gameOver: ${mbs.size}")
-    println(s"Total beads before gameOver: ${mbs.totalBeads}")
     val totalBefore = mbs.totalBeads
     player.gameOver(Win)
-    println(s"Registry size after gameOver: ${mbs.size}")
-    println(s"Total beads after gameOver: ${mbs.totalBeads}")
-    // Two matchboxes updated, each by winDelta.
+    // Each of the two moves rewards its matchbox by winDelta.
+    // empty and mid are not D4-equivalent so they occupy distinct matchboxes.
     mbs.totalBeads shouldBe totalBefore + 2 * Matchbox.winDelta
   }
 
@@ -354,7 +349,6 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     // Evaluation phase — fresh RandomPlayer, same MENACE (shared matchboxes).
     val eval = new GameRunner(menace, new RandomPlayer, rng)
     val stats = eval.playGames(200)
-    System.err.println(stats)
 
     // After training, MENACE as X should win or draw the vast majority.
     // A completely untrained random X wins ~58% against random O.

@@ -10,7 +10,8 @@ A Scala 3 framework for game-playing tree search and reinforcement learning.
 DecisionTree provides the infrastructure for evaluating game-playing strategies
 using tree search. It is related to both minimax and Monte Carlo Tree Search (MCTS)
 techniques, and currently includes a full implementation of MENACE
-(Matchbox Educable Noughts And Crosses Engine) for TicTacToe.
+(Matchbox Educable Noughts And Crosses Engine) and a perfect minimax player for
+TicTacToe.
 
 The framework depends on [Visitor](https://github.com/rchillyard/Visitor) for
 its graph and tree traversal engine.
@@ -31,6 +32,20 @@ its graph and tree traversal engine.
   with rotation, transposition, and a rich heuristic hierarchy
 - `TicTacToeOps` — low-level Java bit manipulation for board operations (rotate,
   transpose, exchange, play, render)
+- `TicTacToeUtils` — shared utility methods (e.g. `cellFromDiff`)
+
+### Players (`com.phasmidsoftware.decisiontree.examples.tictactoe`)
+
+Four player types are provided, ranging from naive to optimal:
+
+- `RandomPlayer` — selects moves uniformly at random (training baseline)
+- `HeuristicPlayer` — greedily selects the highest-heuristic move
+- `MenacePlayer` — reinforcement learning via the MENACE bead machine (see below)
+- `PerfectPlayer` — full minimax evaluation via Visitor's post-order DFS;
+  never loses, always draws against itself
+
+`GameRunner` plays sequences of games between any two players and reports
+win/loss/draw statistics via `GameStats`.
 
 ### MENACE (`com.phasmidsoftware.decisiontree.examples.tictactoe`)
 
@@ -43,23 +58,28 @@ losing ones. Over many games the machine learns to play well.
 - `Matchboxes` — registry of matchboxes with D4 symmetry reduction (the 8-element
   dihedral group collapses rotationally and reflectionally equivalent positions into
   a single matchbox, accelerating learning ~8×)
-- `MenacePlayer` — consults `Matchboxes` to choose moves and back-propagates results
-- `RandomPlayer` — selects moves uniformly at random (training baseline)
-- `HeuristicPlayer` — greedily selects the highest-heuristic move (strong baseline)
-- `GameRunner` — plays sequences of games between two players and reports statistics
+
+### PerfectPlayer
+
+`PerfectPlayer` builds a complete minimax score map over the TicTacToe game DAG
+on first use, via a single post-order DFS using Visitor's `Traversal.dfs`. The
+`VisitedSet` ensures each of the ~5,000 reachable positions is evaluated exactly
+once. Scores are X-perspective (+1 = X wins, 0 = draw, -1 = O wins); internal
+nodes aggregate children's scores by maximising (X to move) or minimising (O to
+move).
 
 ## Design Documents
 
 - `VisitorDesign.md` — design of the Visitor traversal engine
-- `matchbox_design.md` — design of the MENACE implementation, including the D4
-  symmetry canonicalization and the coordinate space invariants that must be
-  maintained between `Matchboxes.selectMove`, `update`, and `canonicalMatchbox`
+- `matchbox_design.md` — design of the MENACE implementation and PerfectPlayer,
+  including D4 symmetry canonicalization, coordinate space invariants, and
+  minimax evaluation
 
 ## Future Work
 
 - Generalise `Player` and `GameRunner` beyond TicTacToe to a generic `[S, M]`
   (state, move) interface
 - MENACE self-play (two independent or shared-registry agents)
-- Extend to Chess and Go via full minimax / MCTS
+- Extend to Chess and Go via full minimax with alpha-beta pruning / MCTS
 - Extend to Contract Bridge via determinization-based MCTS (handling hidden
   information by sampling possible hand distributions)

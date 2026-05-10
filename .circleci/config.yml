@@ -17,8 +17,8 @@ jobs:
 
       - restore_cache:
           keys:
-            - v2-dependencies-{{ checksum "build.sbt" }}
-            - v2-dependencies-
+            - v1-dependencies-{{ checksum "build.sbt" }}
+            - v1-dependencies-
 
       - run:
           name: Compile
@@ -29,7 +29,7 @@ jobs:
             - ~/.sbt
             - ~/.ivy2/cache
             - ~/.cache/coursier
-          key: v2-dependencies-{{ checksum "build.sbt" }}
+          key: v1-dependencies-{{ checksum "build.sbt" }}
 
       - run:
           name: Test

@@ -2,7 +2,7 @@ organization := "com.phasmidsoftware"
 
 name := "DecisionTree"
 
-version := "1.0.6-SNAPSHOT"
+version := "1.0.6"
 
 scalaVersion := "3.7.4"
 

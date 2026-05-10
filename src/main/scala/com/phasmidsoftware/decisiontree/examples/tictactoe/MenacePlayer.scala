@@ -73,15 +73,17 @@ class RandomPlayer extends Player {
   */
 class HeuristicPlayer(implicit state: State[Board, TicTacToe]) extends Player {
   override def chooseMove(ttt: TicTacToe, random: Random): Option[Int] = {
-    val successors = state.getStates(ttt)
-    if (successors.isEmpty) None
+    if (state.isGoal(ttt).isDefined) None // terminal position
     else {
-      val best = successors.maxBy(state.heuristic)
-      val diff = best.board.value ^ ttt.board.value
-      Some(TicTacToeUtils.cellFromDiff(diff))
+      val successors = state.getStates(ttt)
+      if (successors.isEmpty) None
+      else {
+        val best = successors.maxBy(state.heuristic)
+        val diff = best.board.value ^ ttt.board.value
+        Some(TicTacToeUtils.cellFromDiff(diff))
+      }
     }
   }
-
 }
 
 /**

@@ -2,8 +2,6 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
-
 import com.phasmidsoftware.util.{Output, Outputable}
 
 /**

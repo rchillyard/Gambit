@@ -9,3 +9,5 @@
 logs/archived/
 
 src/main/scala/com/phasmidsoftware/util/lazylists.sc
+
+linkToCircleCIconfig

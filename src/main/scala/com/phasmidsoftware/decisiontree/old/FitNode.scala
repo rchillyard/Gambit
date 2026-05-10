@@ -2,8 +2,6 @@
  * Copyright (c) 2019. Phasmid Software
  */
 
-package com.phasmidsoftware.decisiontree
-
 /**
  * Type class to model the behavior of something with fitness.
  *

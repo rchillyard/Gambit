@@ -83,7 +83,7 @@ class Connect4GameSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "prefer the centre column from the starting position" in {
-    // Centre column (3) is the strongest opening move in Connect Four.
+    // Center column (3) is the strongest opening move in Connect Four.
     val player = new HeuristicPlayer
     val move = player.chooseMove(start, rng)
     move shouldBe Some(3)

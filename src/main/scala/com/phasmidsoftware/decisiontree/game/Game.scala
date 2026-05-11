@@ -15,7 +15,7 @@ import com.phasmidsoftware.decisiontree.game.GameResult
   *
   * @tparam S  the state type.
   * @tparam M  the move type.
-  * @tparam Pl the player identity type (e.g. Boolean for two-player,
+  * @tparam Pl the player identity type (e.g., Boolean for two-player,
   *            an enum for bridge's four seats).
   */
 trait Game[S, M, Pl]:
@@ -44,7 +44,7 @@ trait Game[S, M, Pl]:
     * the one who will make that move. It is NOT the player who made the last
     * move to reach `s` — that player has already moved and is waiting.
     *
-    * Example (TicTacToe, Pl = Boolean):
+    * Example (`TicTacToe`, `Pl = Boolean`):
     * empty board → currentPlayer = true  (X moves first)
     * after X plays → currentPlayer = false (O moves next)
     * after O plays → currentPlayer = true  (X moves next)
@@ -95,7 +95,7 @@ trait Game[S, M, Pl]:
     * Determine the winner from a terminal state.
     * Called by GameRunner when State.isGoal returns Some(true).
     * The `current` parameter is the player who is *about to move* —
-    * i.e. the player who did NOT make the winning move.
+    * i.e., the player who did NOT make the winning move.
     *
     * Default implementation for zero-sum two-player games: the player
     * who is NOT `current` wins (+1), `current` loses (-1).

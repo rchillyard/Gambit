@@ -3,13 +3,10 @@ package com.phasmidsoftware.decisiontree.game
 import scala.util.Random
 
 /**
-  * A GameResult captures the outcome of one complete game for all players.
+  * A `GameResult` captures the outcome of one complete game for all players.
   * Each player maps to a score, typically -1 (loss), 0 (draw), or +1 (win)
   * for two-player zero-sum games. For trick-taking games like bridge, the
   * scores might represent tricks won per side.
-  *
-  * @tparam Pl the player identity type (e.g. Boolean for two-player, Int or
-  *            an enum for multiplayer)
   */
 type GameResult[Pl] = Map[Pl, Int]
 

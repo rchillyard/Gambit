@@ -228,8 +228,8 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   behavior of "Matchboxes cell transformation"
 
   it should "correctly identify single-cell boards for all 9 cells" in {
-    // Verify the bit layout assumed by transformCell / cellFromBoard.
-    // Known values from TicTacToeSpec: X at cell i occupies bits (30 - i*2).
+    // Verify the bit layout assumed by `transformCell` / `cellFromBoard`.
+    // Known values from TicTacToeSpec: X at cell `i` occupies bits (30 - i*2).
     val expected = Map(
       0 -> 0x40000000,
       1 -> 0x10000000,

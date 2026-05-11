@@ -10,7 +10,7 @@ import com.phasmidsoftware.decisiontree.game.State
   * Sentinel bits at positions 6, 13, 20, 27, 34, 41, 48 are never set during
   * play; they prevent horizontal win detection from wrapping across columns.
   *
-  * Heights tracks the next available row index per column (0..5).
+  * `heights` tracks the next available row index per column (0..5).
   * A column is full when heights(col) == Connect4.rows.
   *
   * @param xBits   bit positions of X's pieces
@@ -120,7 +120,7 @@ object Connect4:
     * Bitmask for all cells in the given column.
     *
     * @param col the column index (0..6).
-    * @return a Long with bits set for all rows in that column.
+    * @return a `Long` with bits set for all rows in that column.
     */
   def columnMask(col: Int): Long =
     ((1L << rows) - 1L) << (col * stride)
@@ -154,15 +154,18 @@ object Connect4:
     val heights = Array.fill(cols)(0)
     // Parse top-to-bottom, fill bottom-to-top.
     val cells = stripped.toCharArray
+
+    def bitMask(row: Int, col: Int) = 1L << (col * stride + row)
+
     for row <- (rows - 1) to 0 by -1 do
       for col <- 0 until cols do
         val idx = (rows - 1 - row) * cols + col
         cells(idx) match
           case 'X' | 'x' =>
-            xBits |= 1L << (col * stride + row)
+            xBits |= bitMask(row, col)
             if heights(col) <= row then heights(col) = row + 1
           case '0' | 'O' | 'o' =>
-            oBits |= 1L << (col * stride + row)
+            oBits |= bitMask(row, col)
             if heights(col) <= row then heights(col) = row + 1
           case '.' | ' ' => // empty
           case c => throw new IllegalArgumentException(s"Connect4.parse: illegal char '$c'")

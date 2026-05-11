@@ -3,10 +3,10 @@ package com.phasmidsoftware.decisiontree.examples.connect4
 import com.phasmidsoftware.decisiontree.game.{Move, State, Transition}
 
 /**
-  * State[Connect4, Connect4] typeclass instance for Connect Four.
+  * `State[Connect4, Connect4]` typeclass instance for `Connect4`.
   *
-  * P = S = Connect4: the proto-state and state are the same type.
-  * construct takes (newState, previousState) and returns newState.
+  * `P = S = Connect4`: the proto-state and state are the same type.
+  * construct takes (`newState`, `previousState`) and returns `newState`.
   */
 object Connect4State extends State[Connect4, Connect4]:
 
@@ -22,7 +22,7 @@ object Connect4State extends State[Connect4, Connect4]:
   /**
     * Goal detection:
     * Some(true)  — there is a winner
-    * Some(false) — board is full with no winner (draw)
+    * Some(false) — board is full, with no winner (draw)
     * None        — game is still in progress
     */
   def isGoal(s: Connect4): Option[Boolean] =
@@ -39,8 +39,8 @@ object Connect4State extends State[Connect4, Connect4]:
     * s.player just lost → Double.MinValue
     * draw               → 0.0
     *
-    * Non-terminal: score for the player who just moved minus score for opponent,
-    * plus centre column bonus.
+    * Non-terminal: score for the player who just moved minus score for the opponent,
+    * plus center column bonus.
     */
   def heuristic(s: Connect4): Double =
     s.winner match
@@ -97,22 +97,15 @@ object Connect4State extends State[Connect4, Connect4]:
       // Windows with no opponent: all 4 positions must be in notOp.
       val w0 = notOp & (notOp >> sh) & (notOp >> (2 * sh)) & (notOp >> (3 * sh))
 
-      // Of those windows, how many of the 4 positions are mine?
-      // Count windows with exactly 2 or 3 of my pieces.
-      // Use inclusion: windows with >= k mine = intersect k positions from myBits.
-      val m1 = myBits & (myBits >> sh) // both pos 0 and 1 are mine
-      val m2 = m1 & (m1 >> (2 * sh)) // all 4 are mine (>=4, irrelevant here)
-      val anyMine = myBits | (myBits >> sh) | (myBits >> (2 * sh)) | (myBits >> (3 * sh))
-
       // Windows with 3 mine: exactly 3 of 4 positions in myBits, window unblocked.
       // = windows where exactly one position is empty (in notOp but not myBits).
       val emptyBits = notOp & ~myBits
-      val e = emptyBits | (emptyBits >> sh) | (emptyBits >> (2 * sh)) | (emptyBits >> (3 * sh))
 
       // 3 mine + 1 empty: w0 (unblocked) & m1 (at least 2 consecutive mine) &
       // the 3rd mine exists & exactly 1 empty slot.
       // Simplify: use bitCount of (myBits shifted into window) for each start.
       // Direct approach — enumerate start positions explicitly.
+      // NOTE that `p` and `mask` are mutable.
       var p = 0L
       var mask = w0
       while mask != 0 do
@@ -120,7 +113,7 @@ object Connect4State extends State[Connect4, Connect4]:
         mask &= mask - 1
         // Count my pieces in this window.
         var mine = 0
-        var pos = java.lang.Long.numberOfTrailingZeros(bit)
+        val pos = java.lang.Long.numberOfTrailingZeros(bit)
         for k <- 0 until 4 do
           if (myBits & (1L << (pos + k * sh))) != 0 then mine += 1
         if mine == 3 then score += 10.0

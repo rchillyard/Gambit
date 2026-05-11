@@ -92,6 +92,8 @@ class MCTSPlayer[P, S, M, Pl](
                              )(using state: State[P, S], game: Game[S, M, Pl])
   extends Player[S, M, Pl]:
 
+  private type Triple = (MCTSNode[S, M, Pl], List[MCTSNode[S, M, Pl]], Pl)
+  
   override def chooseMove(s: S, random: Random): Option[M] =
     if state.isGoal(s).isDefined then None
     else
@@ -129,7 +131,7 @@ class MCTSPlayer[P, S, M, Pl](
   private def select(
                       root: MCTSNode[S, M, Pl],
                       rootPlayer: Pl
-                    ): (MCTSNode[S, M, Pl], List[MCTSNode[S, M, Pl]], Pl) =
+                    ): Triple =
     var node = root
     var path = List(root)
     var pl = rootPlayer
@@ -150,7 +152,7 @@ class MCTSPlayer[P, S, M, Pl](
                       path: List[MCTSNode[S, M, Pl]],
                       pl: Pl,
                       random: Random
-                    ): (MCTSNode[S, M, Pl], List[MCTSNode[S, M, Pl]], Pl) =
+                    ): Triple =
     if state.isGoal(node.state).isDefined || node.untriedMoves.isEmpty then
       (node, path, pl)
     else

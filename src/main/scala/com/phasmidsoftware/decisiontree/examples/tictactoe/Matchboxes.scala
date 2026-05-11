@@ -5,7 +5,7 @@ import scala.util.Random
 
 /**
   * Matchboxes is the MENACE registry: a mutable map from canonical board value
-  * to Matchbox. Canonicalization uses the 8-element dihedral group D4 (4 rotations
+  * to `Matchbox`. Canonicalization uses the 8-element dihedral group D4 (4 rotations
   * × 2 for reflection via transpose), so symmetrically equivalent positions share
   * one matchbox and learn together.
   *
@@ -22,22 +22,30 @@ class Matchboxes {
   private val registry: mutable.Map[Int, Matchbox] = mutable.Map.empty
 
   /**
-    * Select a move for the given position.
-    * Looks up (or creates) the canonical matchbox, samples a canonical cell,
-    * then maps it back to the original board orientation.
-    * The returned cell index is in the original orientation and safe to pass
-    * directly to TicTacToe.playX / play0.
+    * Retrieves the `Matchbox` corresponding to the provided `TicTacToe` position.
+    * If a `Matchbox` for the position does not exist, a new one is created,
+    * using its canonical form as the key.
     *
-    * @param ttt    the current TicTacToe state.
-    * @param random a Random instance.
-    * @return Some(cell) in original orientation, or None if no moves available.
+    * @param ttt the `TicTacToe` position for which to retrieve or create a `Matchbox`.
+    * @return the `Matchbox` corresponding to the position in its canonical form.
     */
-  /** For testing: look up the canonical Matchbox without selecting a move. */
   def get(ttt: TicTacToe): Matchbox = {
     val (canon, transform) = canonicalize(ttt.board)
     registry.getOrElseUpdate(canon, canonicalMatchbox(ttt, transform))
   }
 
+  /**
+    * Selects a move for the given TicTacToe game state by utilizing the matchbox strategy.
+    * If a matchbox exists for the canonical form of the board, a move is selected based on
+    * the matchbox's bead distribution; otherwise, a new matchbox is created.
+    * The selected move is returned in the original orientation of the board.
+    *
+    * @param ttt    the current `TicTacToe` game state.
+    * @param random the `Random` instance used for probabilistic move selection.
+    * @return an `Option` containing the selected move as an integer cell index
+    *         (0 through 8, row-major) in the board's original orientation, or `None`
+    *         if no valid moves are available.
+    */
   def selectMove(ttt: TicTacToe, random: Random): Option[Int] = {
     val (canon, transform) = canonicalize(ttt.board)
     val matchbox = registry.getOrElseUpdate(canon, canonicalMatchbox(ttt, transform))

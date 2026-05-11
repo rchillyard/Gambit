@@ -24,7 +24,7 @@ import scala.util.Random
   *   - X maximises (score +1 = X wins, 0 = draw, -1 = O wins).
   *   - O minimises.
   *   - `TicTacToe.player` is true when it was X's turn to produce this board
-  *     (i.e. X just moved), so when choosing the next move we look at whose
+  *     (i.e., X just moved), so when choosing the next move, we look at whose
   *     turn it *is*, which is `!ttt.player` for the node just settled.
   *
   * Scores in the map are from X's perspective throughout.
@@ -42,7 +42,7 @@ class PerfectPlayer(implicit state: State[Board, TicTacToe]) extends Player[TicT
       else {
         // ttt.player is true if X just moved to reach ttt, so it is now O's turn.
         // X maximises; O minimises.
-        val xToMove = !ttt.player
+        val xToMove = state.isFirstPlayerToMove(ttt)
         val best = if (xToMove)
           successors.maxBy(s => scores.getOrElse(s, 0))
         else

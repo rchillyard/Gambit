@@ -8,10 +8,10 @@ import scala.util.Random
   * players, for any game representable as a State[P, S] and Game[S, M, Pl].
   *
   * Type parameters:
-  * P  — proto-state type (used by State.construct)
+  * P  — proto-state type (used by `State.construct`)
   * S  — state type
   * M  — move type
-  * Pl — player identity type (e.g. Boolean for two-player, Seat for bridge)
+  * Pl — player identity type (e.g., Boolean for two-player, Seat for bridge)
   *
   * @param playerMap a map from player identity to Player instance.
   * @param random    a Random instance for reproducibility.

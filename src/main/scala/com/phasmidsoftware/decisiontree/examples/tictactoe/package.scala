@@ -10,7 +10,7 @@ package object tictactoe {
     type Cell = Option[Boolean]
 
     /**
-     * Representation of a row (or column or diagonal) of a TicTacToe state.
+     * Representation of a row (or column or diagonal) of a `TicTacToe` state.
      * Only the six low bits are significant.
      *
      * CONSIDER using Row(x: Int) extends AnyVal

@@ -145,7 +145,7 @@ class Connect4StateSpec extends AnyFlatSpec with should.Matchers {
       .play(3, isX = true)
     state.isGoal(s) shouldBe Some(true)
     // moves() may still return moves — isGoal should be checked first.
-    // This test documents that behaviour.
+    // This test documents that behavior.
     state.moves(s).size should be >= 0
   }
 

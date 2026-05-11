@@ -36,8 +36,8 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
    * Method to determine whether there is a line of marks for one player.
    * The line may be horizontal (a row), vertical (a column) or diagonal.
    *
-   * @return Some(b) if there is a line of similar marks in this TicTacToe otherwise None.
-   *         The Boolean b is true for player X, and false for player 0.
+   * @return Some(b) if there is a line of similar marks in this `TicTacToe` otherwise `None`.
+   *         The `Boolean` b is true for player X, and false for player 0.
    */
   lazy val win: Cell =
     isWin(rowsR0) orElse isWin(rowsL0) orElse isWin(diagonals)
@@ -81,7 +81,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
    * @param xOrO true if X is to play, false otherwise.
    * @param row  the row at which the mark should be made.
    * @param col  the column at which the mark should be made.
-   * @return a new Board with the appropriate cell (i.e. square) marked.
+   * @return a new Board with the appropriate cell (i.e., square) marked.
    */
   def play(xOrO: Boolean)(row: Int, col: Int): Prototype =
     board.play(board.sequence + 1, xOrO, row, col) -> this
@@ -92,7 +92,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
    *
    * CONSIDER adding a parameter to allow dropping the heuristic.
    *
-   * @return a String which is a rendition of the current state.
+   * @return a String that is a rendition of the current state.
    */
   def render(newlines: Boolean = false): String =
     if (newlines) s"\n${TicTacToeOps.renderWithNewlines(board.value)} ($heuristic)" else s"${TicTacToeOps.render(board.value)} ($heuristic)"
@@ -235,8 +235,8 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     maybePrior flatMap (_.maybeOpponentMove)
 
   /**
-   * @param opponent if true then the opposite corner must be the opponent.
-   * @return true if this TicTacToe is a corner position and if the opponent (if true, else self) occupies the opposite corner.
+   * @param opponent if `true` then the opposite corner must be the opponent.
+   * @return true if this `TicTacToe` is a corner position and if the opponent (if true, else self) occupies the opposite corner.
    */
   def oppositeCorner(opponent: Boolean): Boolean = {
     val maskTopLeft = 0xC0000000
@@ -316,7 +316,7 @@ object TicTacToe {
   val size: Int = 3
 
   /**
-   * Trait which extends the type class State with a concrete underlying type of TicTacToe.
+   * Trait that extends the type class State with a concrete underlying type of TicTacToe.
    */
   trait TicTacToeState$ extends State[Board, TicTacToe] {
 
@@ -370,10 +370,10 @@ object TicTacToe {
      * Have we reached a result? And, if so, who won?
      *
      * @param s a (current) state.
-     * @return a Option[Boolean]: if None then this state is not a goal state.
-     *         If Some(b) then:
-     *         if b is true, we got a definite result and the winner is determined by examining s in more detail.
-     *         If b is false, we got a partial result and we should continue to seek a more definite result.
+     * @return an `Option[Boolean]`: if `None` then this state is not a goal state.
+     *         If `Some(b)` then:
+     *         if b is true, we got a definite result, and the winner is determined by examining `s` in more detail.
+     *         If b is false, we got a partial result, and we should continue to seek a more definite result.
      */
     def isGoal(s: TicTacToe): Option[Boolean] =
       s.win map (_ => true) orElse s.draw
@@ -398,26 +398,26 @@ object TicTacToe {
   implicit object TicTacToeState$ extends TicTacToeState$
 
   /**
-   * Method to construct a starting position TicTacToe.
+   * Method to construct a starting position `TicTacToe`.
    *
-   * @param board the Board which defines a TicTacToe.
-   * @return a TicTacToe with the given board, no predecessor and an empty Priority Queue.
+   * @param board the Board that defines a `TicTacToe`.
+   * @return a `TicTacToe` with the given board, no predecessor, and an empty board.
    */
   def apply(board: Board): TicTacToe = apply(board, None)
 
   /**
-   * Method to construct a starting position TicTacToe.
+   * Method to construct a starting position `TicTacToe`.
    *
-   * @param proto (Board, TicTacToe).
-   * @return a TicTacToe with the given board, no predecessor and an empty Priority Queue.
+   * @param proto (`Board`, `TicTacToe`).
+   * @return a `TicTacToe` with the given board and no predecessor.
    */
   def apply(proto: (Board, TicTacToe)): TicTacToe =
     apply(proto._1, Some(proto._2))
 
   /**
-   * Method to construct a starting position TicTacToe.
+   * Method to construct a starting position `TicTacToe`.
    *
-   * @return a TicTacToe with all empty cells, no predecessor and an empty Priority Queue.
+   * @return a `TicTacToe` with all empty cells, no predecessor and an empty `Board`.
    */
   def apply(): TicTacToe =
     apply(Board(0, 0))
@@ -425,10 +425,8 @@ object TicTacToe {
   /**
    * Apply method mostly for testing.
    *
-   * TEST not currently used.
-   *
-   * @param board the current Board.
-   * @param mask  a mask which defines the bits to be eliminated from board to yield the previous Board.
+   * @param board the current `Board`.
+   * @param mask  a mask that defines the bits to be eliminated from `board` to yield the previous `Board`.
    * @return a TicTacToe.
    */
   def apply(board: Board, mask: Int): TicTacToe =

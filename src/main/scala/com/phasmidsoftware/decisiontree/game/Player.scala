@@ -1,4 +1,4 @@
-package com.phasmidsoftware.decisiontree.moves
+package com.phasmidsoftware.decisiontree.game
 
 import scala.util.Random
 

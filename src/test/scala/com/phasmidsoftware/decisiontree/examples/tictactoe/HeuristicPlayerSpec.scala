@@ -1,7 +1,7 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.TicTacToeState$
-import com.phasmidsoftware.decisiontree.moves.State
+import com.phasmidsoftware.decisiontree.game.State
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 

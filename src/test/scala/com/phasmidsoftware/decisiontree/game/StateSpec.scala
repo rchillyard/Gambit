@@ -1,4 +1,4 @@
-package com.phasmidsoftware.decisiontree.moves
+package com.phasmidsoftware.decisiontree.game
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should

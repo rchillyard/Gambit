@@ -18,7 +18,7 @@ its graph and tree traversal engine.
 
 ## Structure
 
-### Core (`com.phasmidsoftware.decisiontree.moves`)
+### Core (`com.phasmidsoftware.decisiontree.game`)
 
 - `State[P, S]` — typeclass for a game state; defines legal moves, validity,
   goal detection, and heuristic evaluation

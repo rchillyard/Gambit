@@ -1,6 +1,6 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.moves.{GameResult, Player, State}
+import com.phasmidsoftware.decisiontree.game.{GameResult, Player, State}
 import com.phasmidsoftware.visitor.core.*
 
 import scala.collection.mutable

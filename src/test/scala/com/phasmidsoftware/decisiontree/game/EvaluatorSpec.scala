@@ -1,4 +1,4 @@
-package com.phasmidsoftware.decisiontree.moves
+package com.phasmidsoftware.decisiontree.game
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.{Board, TicTacToe}
 import org.scalatest.flatspec.AnyFlatSpec

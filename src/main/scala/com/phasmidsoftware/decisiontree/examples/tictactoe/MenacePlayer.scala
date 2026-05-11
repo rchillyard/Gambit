@@ -1,6 +1,6 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.moves.{Game, GameResult, GameRunner, Player, State}
+import com.phasmidsoftware.decisiontree.game.{Game, GameResult, GameRunner, Player, State}
 
 import scala.util.Random
 

@@ -2,7 +2,7 @@ package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps.*
-import com.phasmidsoftware.decisiontree.moves.{Move, State, Transition}
+import com.phasmidsoftware.decisiontree.game.{Move, State, Transition}
 import com.phasmidsoftware.flog.{Flog, Loggable}
 import com.phasmidsoftware.util.Aggregators.{hasOne, hasTwo}
 import com.phasmidsoftware.util.{DecisionTreeException, Shuffle}

@@ -1,6 +1,6 @@
 //package com.phasmidsoftware.decisiontree.examples.chess
 //
-//import com.phasmidsoftware.decisiontree.moves.{State, Transition}
+//import com.phasmidsoftware.decisiontree.game.{State, Transition}
 //import com.phasmidsoftware.util.PriorityQueue
 //
 ///**

@@ -10,7 +10,7 @@ player implementations in `examples.tictactoe`.
 
 ## File Structure
 
-### `com.phasmidsoftware.decisiontree.moves` (generic framework)
+### `com.phasmidsoftware.decisiontree.game` (generic framework)
 
 | File | Contents |
 |------|----------|

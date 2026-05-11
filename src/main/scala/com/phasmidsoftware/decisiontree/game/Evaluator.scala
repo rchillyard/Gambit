@@ -1,6 +1,6 @@
-//package com.phasmidsoftware.decisiontree.moves
+//package com.phasmidsoftware.decisiontree.game
 //
-//import com.phasmidsoftware.decisiontree.moves.Evaluator.{flog, wEvaluate}
+//import com.phasmidsoftware.decisiontree.game.Evaluator.{flog, wEvaluate}
 //import com.phasmidsoftware.flog.Flog
 //import com.phasmidsoftware.util.{DecisionTreeException, PriorityQueue}
 //

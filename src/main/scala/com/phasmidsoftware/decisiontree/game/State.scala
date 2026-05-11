@@ -1,4 +1,4 @@
-package com.phasmidsoftware.decisiontree.moves
+package com.phasmidsoftware.decisiontree.game
 
 /**
  * Type class for a State.

@@ -1,8 +1,8 @@
 organization := "com.phasmidsoftware"
 
-name := "DecisionTree"
+name := "gambit"
 
-version := "1.0.6"
+version := "1.0.7"
 
 scalaVersion := "3.7.4"
 

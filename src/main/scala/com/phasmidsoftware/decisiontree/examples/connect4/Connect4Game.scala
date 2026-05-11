@@ -18,6 +18,8 @@ given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean
 
   def players: Seq[Boolean] = Seq(true, false)
 
+  def moves(s: Connect4): Seq[Int] = s.open
+
   def applyMove(s: Connect4, col: Int, isX: Boolean): Connect4 =
     s.play(col, isX)
 

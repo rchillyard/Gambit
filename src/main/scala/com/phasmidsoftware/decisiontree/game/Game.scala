@@ -1,6 +1,6 @@
 package com.phasmidsoftware.decisiontree.game
 
-import scala.util.Random
+import com.phasmidsoftware.decisiontree.game.GameResult
 
 /**
   * Typeclass: describes the rules of a game in terms of state S, move M,
@@ -35,6 +35,41 @@ trait Game[S, M, Pl]:
     * of the game result.
     */
   def players: Seq[Pl]
+
+  /**
+    * The player whose turn it is to make the NEXT move from state `s`.
+    *
+    * To be completely unambiguous: if the game is in state `s`, and we are
+    * about to call `applyMove`, the player returned by `currentPlayer(s)` is
+    * the one who will make that move. It is NOT the player who made the last
+    * move to reach `s` — that player has already moved and is waiting.
+    *
+    * Example (TicTacToe, Pl = Boolean):
+    * empty board → currentPlayer = true  (X moves first)
+    * after X plays → currentPlayer = false (O moves next)
+    * after O plays → currentPlayer = true  (X moves next)
+    *
+    * Default implementation for two-player games: returns `startingPlayer`
+    * when `state.isFirstPlayerToMove(s)` is true, otherwise the other player.
+    * Override for games with more than two players.
+    *
+    * @param s     the current state.
+    * @param state the implicit State[P, S] used to determine move parity.
+    * @return the identity of the player who is about to move.
+    */
+  def currentPlayer[P](s: S)(using state: State[P, S]): Pl =
+    if state.isFirstPlayerToMove(s) then startingPlayer
+    else players.find(_ != startingPlayer).getOrElse(startingPlayer)
+
+  /**
+    * The legal moves available from state `s`.
+    * Used by MCTS and other players that need raw move values rather than
+    * State transitions.
+    *
+    * @param s the current state.
+    * @return a sequence of legal moves.
+    */
+  def moves(s: S): Seq[M]
 
   /**
     * Apply a move made by player `pl` to state `s`, returning the new state.

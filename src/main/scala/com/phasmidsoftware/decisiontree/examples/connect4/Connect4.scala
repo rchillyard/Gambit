@@ -1,5 +1,7 @@
 package com.phasmidsoftware.decisiontree.examples.connect4
 
+import com.phasmidsoftware.decisiontree.game.State
+
 /**
   * Connect Four board state using a column-major bitboard representation.
   *
@@ -20,7 +22,7 @@ case class Connect4(xBits: Long, oBits: Long, heights: Vector[Int]):
   /**
     * The player who just moved to create this state.
     * true = X just moved (odd number of total pieces).
-    * false = O just moved (even number, including the start).
+    * false = O just moved or empty board (even number).
     */
   lazy val player: Boolean =
     (java.lang.Long.bitCount(xBits) + java.lang.Long.bitCount(oBits)) % 2 == 1
@@ -105,9 +107,33 @@ object Connect4:
     */
   val stride: Int = rows + 1 // = 7
 
+  /**
+    * Shift amounts for win detection in each of the four directions:
+    * stride     = horizontal (one column apart)
+    * 1          = vertical   (one row apart)
+    * stride - 1 = diagonal /
+    * stride + 1 = diagonal \
+    */
+  val winShifts: Seq[Int] = Seq(stride, 1, stride - 1, stride + 1)
+
+  /**
+    * Bitmask for all cells in the given column.
+    *
+    * @param col the column index (0..6).
+    * @return a Long with bits set for all rows in that column.
+    */
+  def columnMask(col: Int): Long =
+    ((1L << rows) - 1L) << (col * stride)
+
+  /**
+    * Bitmask covering all valid (non-sentinel) cell positions.
+    * Must be defined after columnMask.
+    */
+  val boardMask: Long =
+    (0 until cols).foldLeft(0L)((mask, col) => mask | columnMask(col))
+
   /** The empty starting position. */
-  val start: Connect4 =
-    Connect4(0L, 0L, Vector.fill(cols)(0))
+  val start: Connect4 = Connect4(0L, 0L, Vector.fill(cols)(0))
 
   /**
     * Parse a Connect4 position from a string representation.

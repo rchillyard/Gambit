@@ -80,16 +80,16 @@ class HeuristicPlayerSpec extends AnyFlatSpec with should.Matchers {
   behavior of "HeuristicPlayer vs RandomPlayer"
 
   it should "win more than it loses as X against a random player" in {
-    val runner = new GameRunner(new HeuristicPlayer, new RandomPlayer, new Random(1L))
+    val runner = TicTacToeGameRunner(new HeuristicPlayer, new RandomPlayer, new Random(1L))
     val stats = runner.playGames(200)
     // HeuristicPlayer should win more than it loses — not necessarily never losing.
-    stats.xWins should be > stats.oWins
+    stats.winsFor(true) should be > stats.winsFor(false)
   }
 
   it should "win more than it loses as O against a random player" in {
-    val runner = new GameRunner(new RandomPlayer, new HeuristicPlayer, new Random(2L))
+    val runner = TicTacToeGameRunner(new RandomPlayer, new HeuristicPlayer, new Random(2L))
     val stats = runner.playGames(200)
-    stats.oWins should be > stats.xWins
+    stats.winsFor(false) should be > stats.winsFor(true)
   }
 
   // ---------------------------------------------------------------------------
@@ -100,16 +100,16 @@ class HeuristicPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "never beat PerfectPlayer as O" in {
     // PerfectPlayer as X should never lose.
-    val runner = new GameRunner(new PerfectPlayer, new HeuristicPlayer, new Random(3L))
+    val runner = TicTacToeGameRunner(new PerfectPlayer, new HeuristicPlayer, new Random(3L))
     val stats = runner.playGames(100)
-    stats.oWins shouldBe 0
+    stats.winsFor(false) shouldBe 0
   }
 
   it should "never beat PerfectPlayer as X" in {
     // PerfectPlayer as O should never lose.
-    val runner = new GameRunner(new HeuristicPlayer, new PerfectPlayer, new Random(4L))
+    val runner = TicTacToeGameRunner(new HeuristicPlayer, new PerfectPlayer, new Random(4L))
     val stats = runner.playGames(100)
-    stats.xWins shouldBe 0
+    stats.winsFor(true) shouldBe 0
   }
 
   // ---------------------------------------------------------------------------
@@ -120,9 +120,9 @@ class HeuristicPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "outperform an untrained MenacePlayer as X" in {
     val mbs = Matchboxes()
-    val runner = new GameRunner(new HeuristicPlayer, new MenacePlayer(mbs), new Random(5L))
+    val runner = TicTacToeGameRunner(new HeuristicPlayer, new MenacePlayer(mbs), new Random(5L))
     val stats = runner.playGames(200)
     // Heuristic should beat an untrained MENACE more often than it loses.
-    stats.xWins should be > stats.oWins
+    stats.winsFor(true) should be > stats.winsFor(false)
   }
 }

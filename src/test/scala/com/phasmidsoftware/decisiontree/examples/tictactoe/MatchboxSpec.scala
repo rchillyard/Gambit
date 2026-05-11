@@ -283,7 +283,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     player.chooseMove(mid, rng)
 
     val totalBefore = mbs.totalBeads
-    player.gameOver(Win)
+    player.gameOver(Map(true -> 1, false -> -1), true)
     // Each of the two moves rewards its matchbox by winDelta.
     // empty and mid are not D4-equivalent so they occupy distinct matchboxes.
     mbs.totalBeads shouldBe totalBefore + 2 * Matchbox.winDelta
@@ -295,13 +295,13 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     val rng    = new Random(0L)
 
     player.chooseMove(empty, rng)
-    player.gameOver(Loss)
+    player.gameOver(Map(true -> -1, false -> 1), true)
 
     val totalAfterFirst = mbs.totalBeads
 
     // Second game — only one move, then win.
     player.chooseMove(empty, rng)
-    player.gameOver(Win)
+    player.gameOver(Map(true -> 1, false -> -1), true)
 
     // Should have changed by exactly winDelta (one matchbox, one move).
     mbs.totalBeads shouldBe totalAfterFirst + Matchbox.winDelta
@@ -317,23 +317,26 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
 
   it should "play a single game without throwing" in {
     val mbs    = Matchboxes()
-    val runner = new GameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(1L))
+    val runner = TicTacToeGameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(1L))
     noException should be thrownBy runner.playGame()
   }
 
   it should "return a valid GameResult" in {
     val mbs    = Matchboxes()
-    val runner = new GameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(2L))
+    val runner = TicTacToeGameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(2L))
     val result = runner.playGame()
-    result should (equal(XWins) or equal(OWins) or equal(GameDraw))
+    // Result must have scores for both players summing to 0 (zero-sum) or both 0 (draw).
+    val xScore = result.getOrElse(true, 0)
+    val oScore = result.getOrElse(false, 0)
+    (xScore + oScore) should (equal(0) or equal(0))
+    xScore should (equal(-1) or equal(0) or equal(1))
   }
 
   it should "accumulate correct totals over multiple games" in {
-    val mbs    = Matchboxes()
-    val runner = new GameRunner(new RandomPlayer, new RandomPlayer, new Random(3L))
+    val runner = TicTacToeGameRunner(new RandomPlayer, new RandomPlayer, new Random(3L))
     val stats  = runner.playGames(100)
     stats.total shouldBe 100
-    stats.xWins + stats.oWins + stats.draws shouldBe 100
+    stats.winsFor(true) + stats.winsFor(false) + stats.drawsFor(true) shouldBe 100
   }
 
   it should "show MENACE improving against a random player over many games" in {
@@ -343,16 +346,15 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
     val rng    = new Random(7L)
 
     // Training phase.
-    val trainer = new GameRunner(menace, new RandomPlayer, rng)
+    val trainer = TicTacToeGameRunner(menace, new RandomPlayer, rng)
     trainer.playGames(2000)
 
     // Evaluation phase — fresh RandomPlayer, same MENACE (shared matchboxes).
-    val eval = new GameRunner(menace, new RandomPlayer, rng)
+    val eval = TicTacToeGameRunner(menace, new RandomPlayer, rng)
     val stats = eval.playGames(200)
 
     // After training, MENACE as X should win or draw the vast majority.
-    // A completely untrained random X wins ~58% against random O.
     // A trained MENACE should do noticeably better and rarely lose outright.
-    stats.oWins should be < 40 // less than 20% losses
+    stats.lossesFor(true) should be < 40 // less than 20% losses
   }
 }

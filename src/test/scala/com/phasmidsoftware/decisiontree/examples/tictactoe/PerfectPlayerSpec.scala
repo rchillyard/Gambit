@@ -123,26 +123,26 @@ class PerfectPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "never lose as X against a random player over many games" in {
     val perfect = new PerfectPlayer
-    val runner = new GameRunner(perfect, new RandomPlayer, new Random(1L))
+    val runner = TicTacToeGameRunner(perfect, new RandomPlayer, new Random(1L))
     val stats = runner.playGames(200)
-    stats.oWins shouldBe 0
+    stats.winsFor(false) shouldBe 0
   }
 
   it should "never lose as O against a random player over many games" in {
     val perfect = new PerfectPlayer
-    val runner = new GameRunner(new RandomPlayer, perfect, new Random(2L))
+    val runner = TicTacToeGameRunner(new RandomPlayer, perfect, new Random(2L))
     val stats = runner.playGames(200)
-    stats.xWins shouldBe 0
+    stats.winsFor(true) shouldBe 0
   }
 
   it should "always draw against itself" in {
     val p1 = new PerfectPlayer
     val p2 = new PerfectPlayer
-    val runner = new GameRunner(p1, p2, new Random(3L))
+    val runner = TicTacToeGameRunner(p1, p2, new Random(3L))
     val stats = runner.playGames(20)
-    stats.xWins shouldBe 0
-    stats.oWins shouldBe 0
-    stats.draws shouldBe 20
+    stats.winsFor(true) shouldBe 0
+    stats.winsFor(false) shouldBe 0
+    stats.drawsFor(true) shouldBe 20
   }
 
   // ---------------------------------------------------------------------------
@@ -157,18 +157,18 @@ class PerfectPlayerSpec extends AnyFlatSpec with should.Matchers {
     val rng = new Random(5L)
 
     // Baseline: 100 games before any training.
-    val baseline = new GameRunner(menace, new PerfectPlayer, rng)
+    val baseline = TicTacToeGameRunner(menace, new PerfectPlayer, rng)
     val before = baseline.playGames(100)
 
     // Training phase: 2000 games against perfect player.
-    val trainer = new GameRunner(menace, new PerfectPlayer, rng)
+    val trainer = TicTacToeGameRunner(menace, new PerfectPlayer, rng)
     trainer.playGames(2000)
 
     // Evaluation: 200 games after training.
-    val eval = new GameRunner(menace, new PerfectPlayer, rng)
+    val eval = TicTacToeGameRunner(menace, new PerfectPlayer, rng)
     val after = eval.playGames(200)
 
     // MENACE should lose less (or no more) after training.
-    after.oWins.toDouble / after.total should be < before.oWins.toDouble / before.total + 0.1
+    after.lossesFor(true).toDouble / after.total should be < before.lossesFor(true).toDouble / before.total + 0.1
   }
 }

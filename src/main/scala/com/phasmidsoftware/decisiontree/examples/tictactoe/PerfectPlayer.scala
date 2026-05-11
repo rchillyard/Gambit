@@ -1,6 +1,6 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.moves.State
+import com.phasmidsoftware.decisiontree.moves.{GameResult, Player, State}
 import com.phasmidsoftware.visitor.core.*
 
 import scala.collection.mutable
@@ -29,7 +29,7 @@ import scala.util.Random
   *
   * Scores in the map are from X's perspective throughout.
   */
-class PerfectPlayer(implicit state: State[Board, TicTacToe]) extends Player {
+class PerfectPlayer(implicit state: State[Board, TicTacToe]) extends Player[TicTacToe, Int, Boolean] {
 
   // Populated once, lazily, by running the full minimax DFS.
   private lazy val scores: Map[TicTacToe, Int] = buildScores()

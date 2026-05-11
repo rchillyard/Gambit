@@ -32,7 +32,6 @@ class Matchboxes {
     * @param random a Random instance.
     * @return Some(cell) in original orientation, or None if no moves available.
     */
-
   /** For testing: look up the canonical Matchbox without selecting a move. */
   def get(ttt: TicTacToe): Matchbox = {
     val (canon, transform) = canonicalize(ttt.board)
@@ -56,7 +55,7 @@ class Matchboxes {
     * @param cell   the flat cell index (0..8, row-major) in original orientation.
     * @param result the game result from the perspective of the player who owns this matchbox.
     */
-  def update(ttt: TicTacToe, cell: Int, result: MatchResult): Unit = {
+  def update(ttt: TicTacToe, cell: Int, result: BeadResult): Unit = {
     val (canon, transform) = canonicalize(ttt.board)
     val canonCell = transformCell(cell, transform)
     val current = registry.getOrElseUpdate(canon, canonicalMatchbox(ttt, transform))
@@ -162,7 +161,10 @@ object Matchboxes {
 /**
   * The result of a game from one player's perspective.
   */
-sealed trait MatchResult
-case object Win  extends MatchResult
-case object Loss extends MatchResult
-case object Draw extends MatchResult
+sealed trait BeadResult
+
+case object Win extends BeadResult
+
+case object Loss extends BeadResult
+
+case object Draw extends BeadResult

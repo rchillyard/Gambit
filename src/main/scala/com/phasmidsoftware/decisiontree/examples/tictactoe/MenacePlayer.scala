@@ -1,27 +1,8 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.moves.State
+import com.phasmidsoftware.decisiontree.moves.{Game, GameResult, GameRunner, Player, State}
 
 import scala.util.Random
-
-/**
-  * A Player is anything that can choose a move from a TicTacToe position.
-  */
-trait Player {
-  /**
-    * Choose a move (flat cell index 0..8, row-major, original orientation)
-    * from the given position.
-    * Returns None if no move is available (should not happen in normal play).
-    *
-    * @param ttt    the current position.
-    * @param random a Random instance.
-    * @return Some(cellIndex) or None.
-    */
-  def chooseMove(ttt: TicTacToe, random: Random): Option[Int]
-
-  /** Called at the end of a game with the result from this player's perspective. */
-  def gameOver(result: MatchResult): Unit = ()
-}
 
 /**
   * A MENACE player backed by a shared Matchboxes registry.
@@ -31,9 +12,11 @@ trait Player {
   * All cell indices in history are in original board orientation, matching
   * what selectMove returns and what update expects.
   *
+  * Pl = Boolean: true = X (first player), false = O (second player).
+  *
   * @param matchboxes the shared registry.
   */
-class MenacePlayer(val matchboxes: Matchboxes) extends Player {
+class MenacePlayer(val matchboxes: Matchboxes) extends Player[TicTacToe, Int, Boolean] {
 
   // History of (position, chosen cell) in original orientation, for back-propagation.
   private var history: List[(TicTacToe, Int)] = Nil
@@ -44,9 +27,14 @@ class MenacePlayer(val matchboxes: Matchboxes) extends Player {
     move
   }
 
-  override def gameOver(result: MatchResult): Unit = {
+  override def gameOver(result: GameResult[Boolean], me: Boolean): Unit = {
+    val beadResult = GameResult.score(result, me) match {
+      case 1 => Win
+      case -1 => Loss
+      case _ => Draw
+    }
     history.foreach { case (ttt, cell) =>
-      matchboxes.update(ttt, cell, result)
+      matchboxes.update(ttt, cell, beadResult)
     }
     history = Nil
   }
@@ -56,7 +44,7 @@ class MenacePlayer(val matchboxes: Matchboxes) extends Player {
   * A player that selects moves uniformly at random.
   * Useful as a baseline opponent for MENACE to learn against.
   */
-class RandomPlayer extends Player {
+class RandomPlayer extends Player[TicTacToe, Int, Boolean] {
   override def chooseMove(ttt: TicTacToe, random: Random): Option[Int] = {
     val open = ttt.open
     if (open.isEmpty) None
@@ -71,100 +59,54 @@ class RandomPlayer extends Player {
   * A player that uses the existing heuristic (TicTacToeState$.heuristic) to
   * greedily pick the best available move. Useful as a strong baseline.
   */
-class HeuristicPlayer(implicit state: State[Board, TicTacToe]) extends Player {
+class HeuristicPlayer(implicit state: State[Board, TicTacToe])
+  extends Player[TicTacToe, Int, Boolean] {
+
   override def chooseMove(ttt: TicTacToe, random: Random): Option[Int] = {
-    if (state.isGoal(ttt).isDefined) None // terminal position
+    if (state.isGoal(ttt).isDefined) None
     else {
       val successors = state.getStates(ttt)
       if (successors.isEmpty) None
       else {
         val best = successors.maxBy(state.heuristic)
-        val diff = best.board.value ^ ttt.board.value
-        Some(TicTacToeUtils.cellFromDiff(diff))
+        Some(TicTacToeUtils.cellFromDiff(best.board.value ^ ttt.board.value))
       }
     }
   }
 }
 
 /**
-  * Runs a sequence of games between two Players and accumulates statistics.
+  * The Game typeclass instance for TicTacToe.
   *
-  * @param xPlayer the player who moves first (X).
-  * @param oPlayer the player who moves second (O).
-  * @param random  a Random instance for reproducibility.
+  * S  = TicTacToe
+  * M  = Int (flat cell index, 0..8 row-major)
+  * Pl = Boolean (true = X, moves first; false = O, moves second)
   */
-class GameRunner(
-                  xPlayer: Player,
-                  oPlayer: Player,
-                  random: Random = new Random(42L)
-                )(implicit state: State[Board, TicTacToe]) {
+given tictactoeGame(using state: State[Board, TicTacToe]): Game[TicTacToe, Int, Boolean] with
+  def start: TicTacToe = TicTacToe.start
 
-  /**
-    * Play a single game from the starting position.
-    *
-    * @return the GameResult: XWins, OWins, or GameDraw.
-    */
-  def playGame(): GameResult = {
-    @scala.annotation.tailrec
-    def loop(ttt: TicTacToe, xToMove: Boolean): GameResult = {
-      state.isGoal(ttt) match {
-        case Some(true) =>
-          // The player who just moved won — xToMove is the next player.
-          if (xToMove) OWins else XWins
-        case Some(false) =>
-          GameDraw
-        case None =>
-          val player = if (xToMove) xPlayer else oPlayer
-          player.chooseMove(ttt, random) match {
-            case None => GameDraw
-            case Some(cell) =>
-              val row = cell / TicTacToe.size
-              val col = cell % TicTacToe.size
-              val proto =
-                if (xToMove) ttt.playX(row, col) else ttt.play0(row, col)
-              val next = state.construct(proto)
-              loop(next, !xToMove)
-          }
-      }
-    }
+  def startingPlayer: Boolean = true
 
-    val result = loop(TicTacToe.start, xToMove = true)
-    xPlayer.gameOver(if (result == XWins) Win else if (result == OWins) Loss else Draw)
-    oPlayer.gameOver(if (result == OWins) Win else if (result == XWins) Loss else Draw)
-    result
-  }
+  def players: Seq[Boolean] = Seq(true, false)
 
-  /**
-    * Play n games and return aggregated statistics.
-    *
-    * @param n the number of games to play.
-    * @return a GameStats summary.
-    */
-  def playGames(n: Int): GameStats = {
-    val results = (1 to n).map(_ => playGame())
-    GameStats(
-      xWins = results.count(_ == XWins),
-      oWins = results.count(_ == OWins),
-      draws = results.count(_ == GameDraw),
-      total = n
-    )
-  }
-}
+  def applyMove(ttt: TicTacToe, cell: Int, isX: Boolean): TicTacToe =
+    val row = cell / TicTacToe.size
+    val col = cell % TicTacToe.size
+    state.construct(if isX then ttt.playX(row, col) else ttt.play0(row, col))
 
-/** The result of a single game. */
-sealed trait GameResult
-case object XWins    extends GameResult
-case object OWins    extends GameResult
-case object GameDraw extends GameResult
+  def nextPlayer(ttt: TicTacToe, current: Boolean): Boolean = !current
 
 /**
-  * Aggregated statistics over multiple games.
+  * Factory for a TicTacToe GameRunner.
+  * Requires an implicit State[Board, TicTacToe] in scope.
   */
-case class GameStats(xWins: Int, oWins: Int, draws: Int, total: Int) {
-  def xWinPct: Double = 100.0 * xWins / total
-  def oWinPct: Double = 100.0 * oWins / total
-  def drawPct: Double = 100.0 * draws / total
-
-  override def toString: String =
-    f"Games: $total  X wins: $xWins (${xWinPct}%.1f%%)  O wins: $oWins (${oWinPct}%.1f%%)  Draws: $draws (${drawPct}%.1f%%)"
-}
+object TicTacToeGameRunner:
+  def apply(
+             xPlayer: Player[TicTacToe, Int, Boolean],
+             oPlayer: Player[TicTacToe, Int, Boolean],
+             random: Random = new Random(42L)
+           )(using State[Board, TicTacToe]): GameRunner[Board, TicTacToe, Int, Boolean] =
+    new GameRunner[Board, TicTacToe, Int, Boolean](
+      playerMap = Map(true -> xPlayer, false -> oPlayer),
+      random = random
+    )

@@ -1,8 +1,8 @@
 package com.phasmidsoftware.gambit.examples.tictactoe
 
-import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.parseString
-import TicTacToeOps.*
-import com.phasmidsoftware.decisiontree.game.State
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.parseString
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
+import com.phasmidsoftware.gambit.game.State
 import org.scalatest.PrivateMethodTester
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -169,7 +169,7 @@ class TicTacToeSpec extends AnyFlatSpec with should.Matchers with PrivateMethodT
         val t0 = startingPosition
         val (b1: Board, t: TicTacToe) = t0.play(xOrO = true)(0, 0)
         b1 shouldBe Board(1, 0x40000000)
-      t shouldBe t0
+        t shouldBe t0
     }
 
     it should "playX 0, 0 and play0 1, 0" in {
@@ -306,22 +306,22 @@ class TicTacToeSpec extends AnyFlatSpec with should.Matchers with PrivateMethodT
 
     it should "maybeOpponentMove" in {
         val t: TicTacToe = TicTacToe(TicTacToe(TicTacToe.parse("X        ").get.play(xOrO = false)(1, 1)).play(xOrO = true)(2, 2))
-      t.maybeOpponentMove shouldBe Some(Board(1, 0x800000))
+        t.maybeOpponentMove shouldBe Some(Board(1, 0x800000))
     }
 
     it should "maybePreviousMove" in {
         val t: TicTacToe = TicTacToe(TicTacToe(TicTacToe.parse("X        ").get.play(xOrO = false)(1, 1)).play(xOrO = true)(2, 2))
-      t.maybePreviousMove shouldBe Some(Board(1, 0x40000000))
+        t.maybePreviousMove shouldBe Some(Board(1, 0x40000000))
     }
 
     it should "heuristic for best game" in {
         val z = implicitly[State[Board, TicTacToe]]
         val (moveX0, _) = startingPosition.play(xOrO = true)(2, 2)
-      moveX0 shouldBe Board(1, 0x4000)
-      z.heuristic(TicTacToe(moveX0)) shouldBe 1 // X corner
+        moveX0 shouldBe Board(1, 0x4000)
+        z.heuristic(TicTacToe(moveX0)) shouldBe 1 // X corner
         val (moveO0, _) = TicTacToe(moveX0).play(xOrO = false)(0, 0)
-      moveO0 shouldBe Board(2, 0x80004000)
-      z.heuristic(TicTacToe(moveO0)) shouldBe 2 // 0 opposite corner
+        moveO0 shouldBe Board(2, 0x80004000)
+        z.heuristic(TicTacToe(moveO0)) shouldBe 2 // 0 opposite corner
         TicTacToe(moveO0).board
         z.heuristic(TicTacToe(TicTacToe.parse("0     X0.").get.play(xOrO = true)(2, 2))) shouldBe 2 // X opposite corner
         z.heuristic(TicTacToe(TicTacToe.parse("0X0   .  ").get.play(xOrO = true)(2, 0))) shouldBe 2 // X opposite corner

@@ -3,7 +3,7 @@
   -->
 
 <configuration>
-    <property name="HOME_LOG" value="logs/DecisionTree.log"/>
+    <property name="HOME_LOG" value="logs/gambit.log"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

@@ -31,24 +31,30 @@ object Connect4State extends State[Connect4, Connect4]:
     else None
 
   /**
-    * Heuristic: score from the perspective of the player about to move
-    * (!s.player, since s.player is who just moved).
+    * Heuristic from the perspective of the player who just moved (s.player).
+    * Positive = good for the player who just moved.
     *
-    * For each direction, enumerate all windows of 4 valid cells.
-    * Score a window if it contains only my pieces and empty cells:
-    * 3 mine + 1 empty = 10 points
-    * 2 mine + 2 empty =  1 point
-    * Centre column control adds 3 points per piece advantage.
+    * Terminal positions:
+    * s.player just won  → Double.MaxValue
+    * s.player just lost → Double.MinValue
+    * draw               → 0.0
+    *
+    * Non-terminal: score for the player who just moved minus score for opponent,
+    * plus centre column bonus.
     */
   def heuristic(s: Connect4): Double =
     s.winner match
-      case Some(true) => Double.MaxValue // X already won
-      case Some(false) => Double.MinValue // O already won
+      case Some(true) =>
+        // X won. Good for X (s.player=true), bad for O (s.player=false).
+        if s.player then Double.MaxValue else Double.MinValue
+      case Some(false) =>
+        // O won. Good for O (s.player=false), bad for X (s.player=true).
+        if s.player then Double.MinValue else Double.MaxValue
       case None =>
         if s.isFull then 0.0
         else
-          val xToMove = !s.player
-          val (myBits, opBits) = if xToMove then (s.xBits, s.oBits) else (s.oBits, s.xBits)
+          // Score from perspective of the player who just moved (s.player).
+          val (myBits, opBits) = if s.player then (s.xBits, s.oBits) else (s.oBits, s.xBits)
           scoreFor(myBits, opBits) - scoreFor(opBits, myBits) + centreBonus(myBits, opBits)
 
   /**
@@ -91,8 +97,6 @@ object Connect4State extends State[Connect4, Connect4]:
       // Windows with no opponent: all 4 positions must be in notOp.
       val w0 = notOp & (notOp >> sh) & (notOp >> (2 * sh)) & (notOp >> (3 * sh))
 
-      //      println(s"Window shift $sh: w0=$w0, myBits=$myBits, opBits=$opBits")
-
       // Of those windows, how many of the 4 positions are mine?
       // Count windows with exactly 2 or 3 of my pieces.
       // Use inclusion: windows with >= k mine = intersect k positions from myBits.
@@ -111,7 +115,6 @@ object Connect4State extends State[Connect4, Connect4]:
       // Direct approach — enumerate start positions explicitly.
       var p = 0L
       var mask = w0
-      //      println(s"w0=$w0, bit=${w0 & (-w0)}, pos=${java.lang.Long.numberOfTrailingZeros(w0 & (-w0))}")
       while mask != 0 do
         val bit = mask & (-mask) // lowest set bit = one window start
         mask &= mask - 1
@@ -122,7 +125,6 @@ object Connect4State extends State[Connect4, Connect4]:
           if (myBits & (1L << (pos + k * sh))) != 0 then mine += 1
         if mine == 3 then score += 10.0
         else if mine == 2 then score += 1.0
-    //        println(s"mine=$mine, score=$score")
     score
 
   /**

@@ -205,13 +205,12 @@ class Connect4StateSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "prefer the centre column" in {
-    // X plays centre vs X plays edge — centre should score higher.
+    // X plays centre vs X plays edge — centre should score higher from X's perspective.
     val centre = start.play(3, isX = true)
     val edge = start.play(0, isX = true)
-    // After X plays, it's O's turn — heuristic is O's perspective.
-    // X in centre gives O a worse position than X at edge.
-    // So heuristic(centre) < heuristic(edge) from O's perspective.
-    state.heuristic(centre) should be < state.heuristic(edge)
+    // heuristic is from the perspective of whoever just moved (X in both cases).
+    // Centre is a better position for X, so heuristic(centre) > heuristic(edge).
+    state.heuristic(centre) should be > state.heuristic(edge)
   }
 
   // ---------------------------------------------------------------------------

@@ -4,58 +4,10 @@ import scala.collection.mutable
 import scala.util.Random
 
 /**
-  * A node in the MCTS search tree.
-  *
-  * Mutable: visits and wins are updated in-place during backpropagation.
-  * Children are added during expansion.
-  * untriedMoves shrinks as children are expanded.
-  *
-  * No parent reference — backpropagation uses an explicit path stack
-  * accumulated during selection, avoiding circular references and the
-  * GC/equality issues that back-references cause in tree structures.
-  *
-  * @param state        the game state at this node.
-  * @param move         the move that led to this state (None for root).
-  * @param movedBy      the player who made `move` (None for root).
-  * @param visits       number of times this node has been visited.
-  * @param wins         cumulative score from simulations through this node,
-  *                     from the perspective of `movedBy`.
-  *
-  * @param children     expanded child nodes.
-  * @param untriedMoves moves not yet expanded into children.
-  * @tparam S  the state type.
-  * @tparam M  the move type.
-  * @tparam Pl the player identity type.
-  */
-class MCTSNode[S, M, Pl](
-                          val state: S,
-                          val move: Option[M],
-                          val movedBy: Option[Pl],
-                          var visits: Int,
-                          var wins: Double,
-                          val children: mutable.ListBuffer[MCTSNode[S, M, Pl]],
-                          var untriedMoves: List[M]
-                        ):
-  def isFullyExpanded: Boolean = untriedMoves.isEmpty
-
-  def isLeaf: Boolean = children.isEmpty
-
-  override def toString: String =
-    s"MCTSNode(move=$move, movedBy=$movedBy, visits=$visits, wins=$wins, " +
-      s"children=${children.size}, untried=${untriedMoves.size})"
-
-object MCTSNode:
-  def root[S, M, Pl](state: S, moves: List[M]): MCTSNode[S, M, Pl] =
-    new MCTSNode(state, None, None, 0, 0.0, mutable.ListBuffer.empty, moves)
-
-  def child[S, M, Pl](state: S, move: M, movedBy: Pl, moves: List[M]): MCTSNode[S, M, Pl] =
-    new MCTSNode(state, Some(move), Some(movedBy), 0, 0.0, mutable.ListBuffer.empty, moves)
-
-/**
   * A generic Monte Carlo Tree Search player.
   *
   * Implements the standard four-phase MCTS loop:
-  *   1. Selection   — walk the tree by UCB1 until an unexpanded node is found.
+  *   1. Selection   — walk the tree by UCB1 (Upper Confidence Bound) until an unexpanded node is found.
   *   2. Expansion   — add one new child for an untried move.
   *   3. Simulation  — play randomly to a terminal state (rollout).
   *   4. Backprop    — update visit/win counts along the path to root.
@@ -93,7 +45,7 @@ class MCTSPlayer[P, S, M, Pl](
   extends Player[S, M, Pl]:
 
   private type Triple = (MCTSNode[S, M, Pl], List[MCTSNode[S, M, Pl]], Pl)
-  
+
   override def chooseMove(s: S, random: Random): Option[M] =
     if state.isGoal(s).isDefined then None
     else
@@ -213,3 +165,95 @@ class MCTSPlayer[P, S, M, Pl](
     else
       node.wins / node.visits +
         explorationConstant * math.sqrt(math.log(parentVisits.toDouble) / node.visits)
+
+/**
+  * A node in the MCTS search tree.
+  *
+  * Mutable: visits and wins are updated in-place during backpropagation.
+  * Children are added during expansion.
+  * untriedMoves shrinks as children are expanded.
+  *
+  * No parent reference — backpropagation uses an explicit path stack
+  * accumulated during selection, avoiding circular references and the
+  * GC/equality issues that back-references cause in tree structures.
+  *
+  * @param state        the game state at this node.
+  * @param move         the move that led to this state (None for root).
+  * @param movedBy      the player who made `move` (None for root).
+  * @param visits       number of times this node has been visited.
+  * @param wins         cumulative score from simulations through this node,
+  *                     from the perspective of `movedBy`.
+  *
+  * @param children     expanded child nodes.
+  * @param untriedMoves moves not yet expanded into children.
+  * @tparam S  the state type.
+  * @tparam M  the move type.
+  * @tparam Pl the player identity type.
+  */
+class MCTSNode[S, M, Pl](
+                          val state: S,
+                          val move: Option[M],
+                          val movedBy: Option[Pl],
+                          var visits: Int,
+                          var wins: Double,
+                          val children: mutable.ListBuffer[MCTSNode[S, M, Pl]],
+                          var untriedMoves: List[M]
+                        ):
+  /**
+    * Determines if all possible moves from this node have been expanded into child nodes.
+    *
+    * @return true if there are no untried moves remaining for this node; false otherwise.
+    */
+  def isFullyExpanded: Boolean = untriedMoves.isEmpty
+
+  /**
+    * Determines if this node is a leaf node within the MCTS search tree.
+    * A leaf node is characterized by having no child nodes.
+    *
+    * @return true if this node has no children, indicating it is a leaf node; false otherwise.
+    */
+  def isLeaf: Boolean = children.isEmpty
+
+  override def toString: String =
+    s"MCTSNode(move=$move, movedBy=$movedBy, visits=$visits, wins=$wins, " +
+      s"children=${children.size}, untried=${untriedMoves.size})"
+
+/**
+  * Companion object for the `MCTSNode` class, providing factory methods to
+  * create root and child nodes in a Monte Carlo Tree Search (MCTS) search tree.
+  */
+object MCTSNode:
+  /**
+    * Creates the root node of a Monte Carlo Tree Search (MCTS) tree.
+    *
+    * The root node represents the initial state of the game and contains
+    * all the possible moves for the starting player. It has no parent, no
+    * associated move, and no player who moved to generate it.
+    *
+    * @param state the initial game state.
+    * @param moves the list of moves available from the initial state.
+    * @tparam S  the type representing the game state.
+    * @tparam M  the type representing a move in the game.
+    * @tparam Pl the type representing a player in the game.
+    * @return an `MCTSNode` representing the root of the MCTS tree.
+    */
+  def root[S, M, Pl](state: S, moves: List[M]): MCTSNode[S, M, Pl] =
+    new MCTSNode(state, None, None, 0, 0.0, mutable.ListBuffer.empty, moves)
+
+  /**
+    * Creates a child node in a Monte Carlo Tree Search (MCTS) tree.
+    *
+    * A child node is derived from a given game state, move, and the player who made that move.
+    * It also holds the list of untried moves available from the resulting state.
+    *
+    * @param state   the game state at this node.
+    * @param move    the move that led to this state.
+    * @param movedBy the player who made the move.
+    * @param moves   the list of untried moves available from this state.
+    * @tparam S  the type representing the game state.
+    * @tparam M  the type representing a move in the game.
+    * @tparam Pl the type representing a player in the game.
+    * @return an `MCTSNode` representing the child node with the specified parameters.
+    */
+  def child[S, M, Pl](state: S, move: M, movedBy: Pl, moves: List[M]): MCTSNode[S, M, Pl] =
+    new MCTSNode(state, Some(move), Some(movedBy), 0, 0.0, mutable.ListBuffer.empty, moves)

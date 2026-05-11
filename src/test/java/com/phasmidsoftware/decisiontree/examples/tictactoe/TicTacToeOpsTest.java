@@ -1,5 +1,6 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe;
 
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

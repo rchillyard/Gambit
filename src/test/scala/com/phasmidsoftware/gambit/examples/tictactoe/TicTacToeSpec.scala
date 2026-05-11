@@ -1,7 +1,7 @@
-package com.phasmidsoftware.decisiontree.examples.tictactoe
+package com.phasmidsoftware.gambit.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.parseString
-import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps.*
+import TicTacToeOps.*
 import com.phasmidsoftware.decisiontree.game.State
 import org.scalatest.PrivateMethodTester
 import org.scalatest.flatspec.AnyFlatSpec

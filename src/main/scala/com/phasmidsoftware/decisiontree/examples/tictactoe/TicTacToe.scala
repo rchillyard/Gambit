@@ -1,11 +1,12 @@
 package com.phasmidsoftware.decisiontree.examples.tictactoe
 
 import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
-import com.phasmidsoftware.decisiontree.examples.tictactoe.TicTacToeOps.*
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
 import com.phasmidsoftware.decisiontree.game.{Move, State, Transition}
 import com.phasmidsoftware.flog.{Flog, Loggable}
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps
 import com.phasmidsoftware.util.Aggregators.{hasOne, hasTwo}
-import com.phasmidsoftware.util.{DecisionTreeException, Shuffle}
+import com.phasmidsoftware.util.{GambitException, Shuffle}
 
 import scala.util.{Failure, Success, Try}
 
@@ -181,7 +182,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
       case None =>
         assessBlock
       case Some(_) =>
-        throw DecisionTreeException("logic error: opponent win")
+        throw GambitException("logic error: opponent win")
     }
 
   private lazy val assessBlock: Double = block match {
@@ -190,13 +191,13 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     case None =>
       assessFork
     case Some(_) =>
-      throw DecisionTreeException("logic error: opponent block")
+      throw GambitException("logic error: opponent block")
   }
 
   private lazy val assessFork: Double = fork match {
     case Some(x) if x == player => s"Fork by" + messageString !? 5
     case _ => assessStrategy
-    //    case Some(_) => throw DecisionTreeException("Logic error: opponent fork")
+    //    case Some(_) => throw GambitException("Logic error: opponent fork")
   }
 
   private lazy val assessStrategy: Double =
@@ -457,11 +458,11 @@ object TicTacToe {
       case ' ' | '.' => 0
       case 'X' | 'x' => 1
       case '0' | 'o' | 'O' => 2
-      case x => throw DecisionTreeException(s"TicTacToe: illegal character: $x")
+      case x => throw GambitException(s"TicTacToe: illegal character: $x")
     }
     val sequence = s.replace(" ", "").replace(".", "").length
     if (cells.length >= 9) TicTacToe.from(sequence, TicTacToeOps.parseArray(cells.toArray), maybeMask map (Board(sequence, _)))
-    else throw DecisionTreeException("insufficient elements")
+    else throw GambitException("insufficient elements")
   }
 
   /**
@@ -475,7 +476,7 @@ object TicTacToe {
   def parse(s: String, maybeMask: Option[Int] = None): Try[TicTacToe] = {
     val x = s.replaceAll("""[\n\-]""", "")
     if (x.length == TicTacToe.size * TicTacToe.size) Success(parseString(x, maybeMask))
-    else Failure(DecisionTreeException(s"TicTacToe: parse failure: $s"))
+    else Failure(GambitException(s"TicTacToe: parse failure: $s"))
   }
 
   // XXX the starting position (all nine empty cells).

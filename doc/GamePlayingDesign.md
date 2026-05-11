@@ -1,16 +1,16 @@
-# DecisionTree — Game Playing Design Document
+# Gambit — Game Playing Design Document
 
 ## Overview
 
 This document captures the design decisions behind the game-playing framework
-in DecisionTree, covering the generic typeclasses in `game`, the TicTacToe
+in Gambit, covering the generic typeclasses in `game`, the TicTacToe
 and Connect Four implementations, and the player types including MCTS.
 
 ---
 
 ## File Structure
 
-### `com.phasmidsoftware.decisiontree.game` (generic framework)
+### `com.phasmidsoftware.gambit.game` (generic framework)
 
 | File | Contents |
 |------|----------|
@@ -20,7 +20,7 @@ and Connect Four implementations, and the player types including MCTS.
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
 | `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
 
-### `com.phasmidsoftware.decisiontree.examples.tictactoe`
+### `com.phasmidsoftware.gambit.examples.tictactoe`
 
 | File | Contents |
 |------|----------|
@@ -33,7 +33,7 @@ and Connect Four implementations, and the player types including MCTS.
 | `PerfectPlayer.scala` | `PerfectPlayer` — minimax via Visitor post-order DFS |
 | `TicTacToeDemo.scala` | `@main TicTacToeDemo` — home/away round-robin demo |
 
-### `com.phasmidsoftware.decisiontree.examples.connect4`
+### `com.phasmidsoftware.gambit.examples.connect4`
 
 | File | Contents |
 |------|----------|

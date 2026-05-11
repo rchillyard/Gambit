@@ -1,6 +1,6 @@
 organization := "com.phasmidsoftware"
 
-name := "DecisionTree"
+name := "gambit"
 
 version := "1.0.7"
 

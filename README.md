@@ -1,85 +1,111 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2d89f95b27b246e3bd1c3c116ff24004)](https://www.codacy.com/app/scalaprof/DecisionTree?utm_source=github.com&utm_medium=referral&utm_content=rchillyard/DecisionTree&utm_campaign=Badge_Grade)
-[![CircleCI](https://circleci.com/gh/rchillyard/DecisionTree.svg?style=svg)](https://circleci.com/gh/rchillyard/DecisionTree)
+![Sonatype Central](https://maven-badges.sml.io/sonatype-central/com.phasmidsoftware/gambit_3/badge.svg?color=blue)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/2d89f95b27b246e3bd1c3c116ff24004)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/main)
+![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)
+![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)
+![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)
+![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)
+![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)
 
-# DecisionTree
+# Gambit
 
 A Scala 3 framework for game-playing tree search and reinforcement learning.
 
 ## Overview
 
-DecisionTree provides the infrastructure for evaluating game-playing strategies
-using tree search. It is related to both minimax and Monte Carlo Tree Search (MCTS)
-techniques, and currently includes a full implementation of MENACE
-(Matchbox Educable Noughts And Crosses Engine) and a perfect minimax player for
-TicTacToe.
+Gambit provides a generic, typeclass-driven infrastructure for game-playing
+strategies. It supports minimax, Monte Carlo Tree Search (MCTS), and reinforcement
+learning (MENACE), with fully worked implementations for TicTacToe and Connect Four.
 
 The framework depends on [Visitor](https://github.com/rchillyard/Visitor) for
 its graph and tree traversal engine.
 
+## Usage
+
+Gambit is published to Maven Central. Add the following to your `build.sbt`:
+
+```scala
+libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.0.7"
+```
+
+Requires Scala 3. Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.6.0,
+which is pulled in automatically as a transitive dependency.
+
 ## Structure
 
-### Core (`com.phasmidsoftware.decisiontree.game`)
+### Generic Framework (`com.phasmidsoftware.gambit.game`)
 
-- `State[P, S]` — typeclass for a game state; defines legal moves, validity,
-  goal detection, and heuristic evaluation
-- `Transition[P, S]` / `Move[P, S]` — a function from state `S` to a proto-state `P`
-  from which the next state is constructed
-- `Evaluator[S]` — evaluates a game tree starting from a given state
+- `State[P, S]` — typeclass for a game state: legal moves, goal detection,
+  heuristic evaluation, and `isFirstPlayerToMove`
+- `Game[S, M, Pl]` — typeclass for game mechanics: `start`, `moves`, `applyMove`,
+  `nextPlayer`, `currentPlayer`, `winner`
+- `Player[S, M, Pl]` — trait for player strategy: `chooseMove`, `gameOver`
+- `GameRunner[P, S, M, Pl]` — generic game execution driven by `State` and `Game` givens
+- `GameResult[Pl]` / `MatchResult[Pl]` — per-game and per-match result types
+- `MCTSPlayer[P, S, M, Pl]` — generic Monte Carlo Tree Search player with UCB1
 
-### TicTacToe (`com.phasmidsoftware.decisiontree.examples.tictactoe`)
+### TicTacToe (`com.phasmidsoftware.gambit.examples.tictactoe`)
 
-- `TicTacToe` / `Board` — compact bitboard representation of a TicTacToe position,
-  with rotation, transposition, and a rich heuristic hierarchy
-- `TicTacToeOps` — low-level Java bit manipulation for board operations (rotate,
-  transpose, exchange, play, render)
-- `TicTacToeUtils` — shared utility methods (e.g. `cellFromDiff`)
+- `TicTacToe` / `Board` — compact bitboard representation with rotation,
+  transposition, and a rich heuristic hierarchy
+- `TicTacToeOps` — low-level Java bit manipulation (rotate, transpose, play, render)
+- Five player types: `RandomPlayer`, `HeuristicPlayer`, `MenacePlayer`,
+  `PerfectPlayer`, and `MCTSPlayer`
+- `given tictactoeGame` — wires TicTacToe into the generic `Game` typeclass
+- `TicTacToeDemo` — `@main` program playing home/away matches between all player types
 
-### Players (`com.phasmidsoftware.decisiontree.examples.tictactoe`)
-
-Four player types are provided, ranging from naive to optimal:
-
-- `RandomPlayer` — selects moves uniformly at random (training baseline)
-- `HeuristicPlayer` — greedily selects the highest-heuristic move
-- `MenacePlayer` — reinforcement learning via the MENACE bead machine (see below)
-- `PerfectPlayer` — full minimax evaluation via Visitor's post-order DFS;
-  never loses, always draws against itself
-
-`GameRunner` plays sequences of games between any two players and reports
-win/loss/draw statistics via `GameStats`.
-
-### MENACE (`com.phasmidsoftware.decisiontree.examples.tictactoe`)
+### MENACE (`com.phasmidsoftware.gambit.examples.tictactoe`)
 
 A reinforcement learning player based on Donald Michie's 1960 matchbox machine.
-Each board position is represented by a `Matchbox` holding weighted beads for each
-legal move. After each game, beads are added to winning matchboxes and removed from
-losing ones. Over many games the machine learns to play well.
+Each board position is a `Matchbox` of weighted beads per legal move; beads are
+added after wins and removed after losses.
 
-- `Matchbox` — weighted bead selection, reward, and penalise
-- `Matchboxes` — registry of matchboxes with D4 symmetry reduction (the 8-element
-  dihedral group collapses rotationally and reflectionally equivalent positions into
-  a single matchbox, accelerating learning ~8×)
+- `Matchboxes` — registry with D4 symmetry reduction (~8× learning speedup)
+- `MenacePlayer` — records move history and back-propagates results
 
-### PerfectPlayer
+### PerfectPlayer (`com.phasmidsoftware.gambit.examples.tictactoe`)
 
-`PerfectPlayer` builds a complete minimax score map over the TicTacToe game DAG
-on first use, via a single post-order DFS using Visitor's `Traversal.dfs`. The
-`VisitedSet` ensures each of the ~5,000 reachable positions is evaluated exactly
-once. Scores are X-perspective (+1 = X wins, 0 = draw, -1 = O wins); internal
-nodes aggregate children's scores by maximising (X to move) or minimising (O to
-move).
+Builds a complete minimax score map over the TicTacToe game DAG on first use via
+Visitor's `Traversal.dfs(DfsOrder.Post)`. Each of the ~5,000 reachable positions
+is evaluated exactly once (DAG, not tree). Never loses; always draws against itself.
+
+### Connect Four (`com.phasmidsoftware.gambit.examples.connect4`)
+
+- `Connect4` — column-major bitboard with gravity, sentinel-bit win detection
+- `Connect4State` — `State[Connect4, Connect4]` with window-scoring heuristic
+- Three player types: `RandomPlayer`, `HeuristicPlayer`, `MCTSPlayer`
+- `given connect4Game` — wires Connect Four into the generic `Game` typeclass
+- `Connect4Demo` — `@main` program playing home/away matches between player types
+
+## Demo Programs
+
+Run from sbt with `sbt run` and choose `TicTacToeDemo` or `Connect4Demo`. Each
+program plays home-and-away matches between all player type pairs, printing the
+board state and heuristic score after each move, e.g.:
+
+```
+HOME:  Perfect (X) vs MCTS(500) (O)
+==================================================
+Move 1 (X plays cell 4 — row 1, col 1):
+...
+.X.
+...
+[heuristic=7.0]
+...
+Result: X (Perfect) wins!
+```
 
 ## Design Documents
 
 - `VisitorDesign.md` — design of the Visitor traversal engine
-- `matchbox_design.md` — design of the MENACE implementation and PerfectPlayer,
-  including D4 symmetry canonicalization, coordinate space invariants, and
-  minimax evaluation
+- `GamePlayingDesign.md` — design of the game-playing framework: typeclasses,
+  MCTS, MENACE, Connect Four, heuristic conventions, and future directions
 
 ## Future Work
 
-- Generalise `Player` and `GameRunner` beyond TicTacToe to a generic `[S, M]`
-  (state, move) interface
-- MENACE self-play (two independent or shared-registry agents)
-- Extend to Chess and Go via full minimax with alpha-beta pruning / MCTS
-- Extend to Contract Bridge via determinization-based MCTS (handling hidden
-  information by sampling possible hand distributions)
+- MCTS tree reuse between moves; actor-based parallel rollouts (Akka/Pekko)
+- MENACE self-play, X/O symmetry, and persistence
+- Alpha-beta pruning for stronger Connect Four play
+- Chess — `given chessGame: Game[ChessState, ChessMove, Boolean]`
+- Bridge — `given bridgeGame: Game[BridgeState, Card, Seat]`; four-player;
+  MCTS with determinization for hidden information

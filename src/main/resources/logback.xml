@@ -35,7 +35,7 @@
         <appender-ref ref="FILE-ROLLING"/>
     </appender>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="ASYNC"/>
     </root>

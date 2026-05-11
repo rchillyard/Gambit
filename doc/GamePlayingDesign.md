@@ -1,10 +1,10 @@
-# DecisionTree Players — Design Document
+# DecisionTree — Game Playing Design Document
 
 ## Overview
 
 This document captures the design decisions behind the game-playing framework
-in DecisionTree, covering the generic typeclasses in `moves` and the TicTacToe
-player implementations in `examples.tictactoe`.
+in DecisionTree, covering the generic typeclasses in `game`, the TicTacToe
+and Connect Four implementations, and the player types including MCTS.
 
 ---
 
@@ -16,9 +16,9 @@ player implementations in `examples.tictactoe`.
 |------|----------|
 | `State.scala` | `State[P, S]`, `Transition[P, S]`, `Move[P, S]` — game state typeclass |
 | `Game.scala` | `Game[S, M, Pl]` — game mechanics typeclass |
-| `Player.scala` | `Player[S, M, Pl]` — player strategy trait; `GameResult[Pl]`, `MatchResult[Pl]` |
+| `Player.scala` | `Player[S, M, Pl]`; `GameResult[Pl]`, `MatchResult[Pl]` |
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
-| `Evaluator.scala` | `Evaluator[S]` — tree search evaluator (attic) |
+| `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
 
 ### `com.phasmidsoftware.decisiontree.examples.tictactoe`
 
@@ -26,185 +26,271 @@ player implementations in `examples.tictactoe`.
 |------|----------|
 | `TicTacToe.scala` | `TicTacToe`, `Board` — bitboard state; `TicTacToeState$` |
 | `TicTacToeOps.java` | Low-level bit manipulation (rotate, transpose, play, render) |
-| `TicTacToeUtils.scala` | `TicTacToeUtils` — shared utility (`cellFromDiff`) |
+| `TicTacToeUtils.scala` | `cellFromDiff` — shared utility |
 | `Matchbox.scala` | `Matchbox` — weighted bead selection and reward/penalise |
 | `Matchboxes.scala` | `Matchboxes` — D4-symmetric registry; `BeadResult` |
 | `MenacePlayer.scala` | `MenacePlayer`, `RandomPlayer`, `HeuristicPlayer`; `given tictactoeGame`; `TicTacToeGameRunner` |
 | `PerfectPlayer.scala` | `PerfectPlayer` — minimax via Visitor post-order DFS |
+| `TicTacToeDemo.scala` | `@main TicTacToeDemo` — home/away round-robin demo |
+
+### `com.phasmidsoftware.decisiontree.examples.connect4`
+
+| File | Contents |
+|------|----------|
+| `Connect4.scala` | `Connect4` — column-major bitboard state with gravity |
+| `Connect4State.scala` | `Connect4State` — `State[Connect4, Connect4]` instance |
+| `Connect4Game.scala` | `RandomPlayer`, `HeuristicPlayer`; `given connect4Game`; `Connect4GameRunner` |
+| `Connect4Demo.scala` | `@main Connect4Demo` — home/away matchup demo |
 
 ---
 
-## Generic Framework (`moves`)
+## Generic Framework
 
 ### Typeclass Hierarchy
 
 ```
-State[P, S]          — game state: legal moves, goal detection, heuristic
-Game[S, M, Pl]       — game mechanics: start, applyMove, nextPlayer, winner
-Player[S, M, Pl]     — player strategy: chooseMove, gameOver
-GameRunner[P,S,M,Pl] — execution: driven by State and Game givens
+State[P, S]            — game state: legal moves, goal detection, heuristic,
+                         isFirstPlayerToMove
+Game[S, M, Pl]         — game mechanics: start, moves, applyMove, nextPlayer,
+                         currentPlayer, winner
+Player[S, M, Pl]       — player strategy: chooseMove, gameOver
+GameRunner[P, S, M, Pl] — execution: driven by State and Game givens
+MCTSPlayer[P, S, M, Pl] — generic MCTS player
 ```
+
+### State[P, S]
+
+The existing Visitor-derived typeclass, extended with:
+
+- `isFirstPlayerToMove(s: S): Boolean` — `sequence(s) % 2 == 0`; true when
+  it is the first player's turn to move. Unambiguous: it is the player who
+  will make the *next* move from `s`, NOT the player who made the last move.
 
 ### Game[S, M, Pl]
 
-The central new typeclass. Separates game *rules* from game *strategy*:
+Separates game *rules* from game *strategy*:
 
 - `start: S` — the initial state
 - `startingPlayer: Pl` — who moves first
 - `players: Seq[Pl]` — all player identities in turn order
+- `moves(s: S): Seq[M]` — legal moves as raw values (used by MCTS and players)
 - `applyMove(s, m, pl): S` — transition function
-- `nextPlayer(s, pl): Pl` — whose turn is next
+- `nextPlayer(s, pl): Pl` — whose turn is next after `pl` moves
+- `currentPlayer[P](s)(using State[P,S]): Pl` — default implementation via
+  `isFirstPlayerToMove`; returns `startingPlayer` on even sequence, the other
+  player on odd. Override for games with more than two players (e.g. bridge).
 - `winner(s, current): GameResult[Pl]` — default zero-sum two-player winner;
-  override for multiplayer or non-zero-sum games (e.g. bridge trick counts)
+  override for multiplayer or non-zero-sum games
 
 ### Player[S, M, Pl]
 
-A trait (not a typeclass) because players have instance identity and mutable state
-(e.g. `MenacePlayer` holds a history list). Two methods:
+A trait (not a typeclass) because players have instance identity and mutable
+state. Two methods:
 
 - `chooseMove(s, random): Option[M]` — returns `None` for terminal positions
-- `gameOver(result: GameResult[Pl], me: Pl): Unit` — default no-op; override
-  for learning or logging. The full `GameResult[Pl]` is provided so players can
-  inspect all scores, not just their own.
+- `gameOver(result: GameResult[Pl], me: Pl): Unit` — default no-op
 
 ### GameResult[Pl] and MatchResult[Pl]
 
 ```scala
-type GameResult[Pl] = Map[Pl, Int]   // one game: player → score
+type GameResult[Pl] = Map[Pl, Int]                        // one game
 case class MatchResult[Pl](results: Seq[GameResult[Pl]])  // many games
 ```
 
-Scores are typically -1 (loss), 0 (draw), +1 (win) for two-player zero-sum games.
-For trick-taking games like bridge, scores could represent tricks won per side.
-`MatchResult` provides `winsFor`, `lossesFor`, `drawsFor`, `total`, and `summary`.
+Scores are -1/0/+1 for two-player zero-sum games. For trick-taking games like
+bridge, scores could represent tricks won per side.
 
 **Vocabulary:**
 - **Move** — a single transition (one card played, one cell filled)
-- **Game** — a complete play from start to terminal (one deal, one board)
-- **Match** — a series of games (a rubber, a session, a training run)
-
-This maps cleanly onto bridge: a Trick is four Moves; a Game is 13 Tricks (one deal);
-a Match is multiple deals with cumulative scoring.
+- **Game** — complete play from start to terminal (one deal, one board)
+- **Match** — a series of games (rubber, session, training run)
+- **Trick** (bridge) — four Moves completing one trick
 
 ### GameRunner[P, S, M, Pl]
 
-Driven entirely by `given State[P, S]` and `given Game[S, M, Pl]`. Takes only a
-`playerMap: Map[Pl, Player[S, M, Pl]]` and a `Random`. The `loop` function is
-tail-recursive; `playGames(n)` returns a `MatchResult[Pl]`.
+Driven entirely by `given State[P, S]` and `given Game[S, M, Pl]`. Takes only
+`playerMap: Map[Pl, Player[S, M, Pl]]` and a `Random`. Tail-recursive `loop`;
+`playGames(n)` returns a `MatchResult[Pl]`.
 
 ---
 
-## TicTacToe Wiring
+## MCTS
+
+### MCTSNode[S, M, Pl]
+
+Mutable tree node. Fields: `state`, `move`, `movedBy`, `visits`, `wins`,
+`children`, `untriedMoves`. No parent reference — backpropagation uses an
+explicit path stack accumulated during selection, avoiding circular references
+and the GC/equality issues that back-references cause in tree structures.
+
+### MCTSPlayer[P, S, M, Pl]
+
+Generic MCTS player implementing the standard four-phase loop:
+
+1. **Selection** — descend by UCB1, accumulating path and current player
+2. **Expansion** — add one random untried child
+3. **Simulation** — random rollout via `game.moves` to terminal state
+4. **Backpropagation** — update `visits` and `wins` along the path;
+   each node's win score credited to `movedBy`
+
+**UCB1:** `wins/visits + C * sqrt(ln(parentVisits) / visits)` where `C = √2`.
+
+**Most-visited child** criterion for final move selection — more robust than
+highest win-rate under finite simulations.
+
+**`me` parameter** — the player identity this instance represents; used in
+backpropagation to correctly credit wins. Must be set to `true` (X) when
+playing as X and `false` (O) when playing as O.
+
+**`currentPlayer`** — uses `game.currentPlayer(s)(using state)` to determine
+who moves at the root, correctly handling mid-game positions.
+
+### Future Upgrades
+
+- **Tree reuse** — retain the subtree rooted at the chosen move between calls,
+  avoiding redundant re-exploration of already-visited states
+- **Actor-based parallelism** — move the mutable tree into an Akka/Pekko actor;
+  multiple rollout worker actors submit simulation results concurrently (root
+  parallelization), giving near-linear speedup with core count
+- **Heuristic rollouts** — replace pure random simulation with heuristic-guided
+  playout for stronger play
+
+---
+
+## TicTacToe
 
 ### given tictactoeGame
-
-The single place where TicTacToe-specific mechanics are defined:
 
 ```scala
 given tictactoeGame(using State[Board, TicTacToe]): Game[TicTacToe, Int, Boolean] with
   def start          = TicTacToe.start
-  def startingPlayer = true            // X moves first
+  def startingPlayer = true
   def players        = Seq(true, false)
-  def applyMove(ttt, cell, isX) = ...  // delegates to playX / play0
-  def nextPlayer(ttt, current)  = !current
+  def moves(ttt)     = ttt.open.map { case (r,c) => r * TicTacToe.size + c }
+  def applyMove(...) = state.construct(ttt.playX/play0(...))
+  def nextPlayer(..) = !current
 ```
 
-`Pl = Boolean` (true = X, false = O), `M = Int` (flat cell index 0..8).
+### Player Types
 
-### TicTacToeGameRunner
+| Player | Strategy |
+|--------|----------|
+| `RandomPlayer` | Uniform random over open cells |
+| `HeuristicPlayer` | `maxBy(heuristic)` over successors |
+| `MenacePlayer` | MENACE bead reinforcement learning |
+| `PerfectPlayer` | Full minimax via Visitor post-order DFS |
+| `MCTSPlayer` | Monte Carlo Tree Search |
 
-A two-line factory that builds a `GameRunner[Board, TicTacToe, Int, Boolean]`
-from two players and a `Random`, relying on the `given tictactoeGame` and
-`given TicTacToeState$` in scope.
+### MENACE
 
----
+**Matchbox** — immutable `Map[Int, Int]` (canonical cell → bead count).
+Weighted sampling via `scanLeft`. `reward`/`penalise` floored at `beadFloor=1`.
 
-## MENACE
+**Matchboxes** — D4 symmetry canonicalization reduces ~5,000 positions to ~765
+equivalence classes (~8× speedup). `selectMove` returns original-orientation
+cell; `update` accepts original-orientation cell and transforms internally.
 
-### Matchbox
-
-An immutable `Map[Int, Int]` from canonical cell index to bead count.
-`select(random)` uses weighted sampling via `scanLeft`.
-`reward`/`penalise` return new instances with updated counts, floored at
-`beadFloor = 1` so no move is permanently eliminated.
-
-### Matchboxes and D4 Symmetry
-
-The registry maps canonical board values to `Matchbox` instances.
-Canonicalization uses the 8-element dihedral group D4 (4 rotations × 2 reflections),
-reducing ~5,000 reachable positions to ~765 equivalence classes (~8× learning speedup).
-
-**Coordinate space invariant** — three operations must use consistent transform directions:
+**Coordinate space invariant:**
 
 | Operation | Direction | Method |
 |-----------|-----------|--------|
-| Create matchbox open cells | original → canonical | `canonicalMatchbox` via forward transform |
-| Record played move for update | original → canonical | `transformCell` via inverse transform |
-| Return selected move to caller | canonical → original | `selectMove` via inverse transform |
+| Create matchbox | original → canonical | `canonicalMatchbox` (forward) |
+| Record move for update | original → canonical | `transformCell` (inverse) |
+| Return move to caller | canonical → original | `selectMove` (inverse) |
 
-**d4CellPerms** are derived empirically from `TicTacToeOps` — applying each board
-transform to a single-X board and observing where it lands. This avoids geometric
-assumptions: `transposeBoard` is `rotateBoard(hFlip(x))`, not a pure matrix transpose.
+**d4CellPerms** derived empirically from `TicTacToeOps` — immune to the fact
+that `transposeBoard` is `rotateBoard(hFlip(x))`, not a pure matrix transpose.
 
-**BeadResult** (`Win`/`Loss`/`Draw`) is the MENACE-internal result type, distinct
-from the generic `GameResult[Pl]`. `MenacePlayer.gameOver` maps `GameResult.score`
-(+1/0/-1) to `BeadResult` before calling `Matchboxes.update`.
+**BeadResult** (`Win`/`Loss`/`Draw`) is MENACE-internal, distinct from
+`GameResult[Pl]`. `MenacePlayer.gameOver` maps score (+1/0/-1) to `BeadResult`.
 
-**The key bug** — during development, `selectMove` returned canonical cell indices
-to the caller. `playX`/`play0` then wrote into already-occupied cells, producing
-bit pattern `11` ("corrupted empty") which rendered as `.` and caused an infinite
-loop. Fix: `selectMove` applies the inverse D4 transform before returning.
+### PerfectPlayer
 
-### MenacePlayer
-
-Extends `Player[TicTacToe, Int, Boolean]`. Records `(position, cell)` history
-during play; back-propagates via `Matchboxes.update` in `gameOver`; clears history
-after each game.
+Builds a complete minimax score map via `Traversal.dfs(DfsOrder.Post)` on first
+use. `given VisitedSet[TicTacToe]` ensures DAG traversal (~5,000 positions scored
+once). Heuristic convention: positive = good for player who just moved (`s.player`);
+`maxBy(heuristic)` in `chooseMove`. Uses `state.isFirstPlayerToMove` to determine
+whose turn it is.
 
 ---
 
-## PerfectPlayer
+## Connect Four
 
-Extends `Player[TicTacToe, Int, Boolean]`. Builds a complete minimax score map
-over the TicTacToe game DAG on first use via `Traversal.dfs(DfsOrder.Post)`.
+### Connect4 Bitboard
 
-**Build phase** — `given Evaluable[TicTacToe, Int]` closes over a mutable score map;
-post-order guarantees children are scored before parents; terminal positions score
-directly (+1/-1/0); internal nodes aggregate via max (X to move) or min (O to move).
+Column-major layout: bit index = `col * 7 + row` (row 0 = bottom).
+Sentinel bits at `col * 7 + 6` prevent horizontal win detection wrapping.
+Win detection uses four bitwise AND/shift pairs (horizontal, vertical, two diagonals).
 
-**Play phase** — checks `isGoal` first (returns `None` for terminal positions),
-then picks the successor with the best score for the current player.
-`TicTacToe.player` is true when X just moved, so `xToMove = !ttt.player`.
+### Connect4State
 
-**DAG traversal** — `given VisitedSet[TicTacToe]` (backed by board-value equality)
-ensures each of the ~5,000 reachable positions is scored exactly once.
+`State[Connect4, Connect4]` (P = S = Connect4; `construct = _._1`).
+
+**Heuristic convention** — from the perspective of whoever just moved (`s.player`):
+- Terminal: `±Double.MaxValue`
+- Non-terminal: window scoring (3-in-window = 10, 2-in-window = 1) + centre bonus
+- Windows enumerated via lowest-set-bit iteration over unblocked positions
+
+**`isFirstPlayerToMove`** inherited from `State`; correct since `sequence =
+bitCount(xBits) + bitCount(oBits)`.
+
+### given connect4Game
+
+```scala
+given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean] with
+  def moves(s)           = s.open          // open columns 0..6
+  def applyMove(s,col,x) = s.play(col, x)
+  def nextPlayer(s,cur)  = !cur
+```
+
+### Player Types
+
+| Player | Strategy |
+|--------|----------|
+| `RandomPlayer` | Uniform random over open columns |
+| `HeuristicPlayer` | `maxBy(heuristic)` over successors |
+| `MCTSPlayer` | Monte Carlo Tree Search |
 
 ---
 
-## Learning Dynamics
+## Heuristic Convention
 
-After ~2000 training games against `RandomPlayer`, `MenacePlayer` as X loses fewer
-than 20% of evaluation games. Training against `PerfectPlayer` is harder but
-produces a stronger agent.
+Both TicTacToe and Connect Four follow the same convention:
 
-### Tuning Parameters
+> `heuristic(s)` is positive when the player who **just moved** to reach `s`
+> is doing well. `HeuristicPlayer.chooseMove` uses `maxBy(heuristic)` over
+> successors — since each successor was reached by the current player moving,
+> the maximum heuristic successor is the best move.
 
-| Parameter | Default | Effect |
-|-----------|---------|--------|
-| `initialBeads` | 4 | Higher = more exploration early |
-| `winDelta` | 3 | Higher = stronger reinforcement of wins |
-| `lossDelta` | 1 | Higher = faster pruning of losing moves |
-| `beadFloor` | 1 | Higher = more sustained exploration |
+This was the source of several bugs during development when the convention
+was inconsistently applied between `State.heuristic` and `Player.chooseMove`.
+
+---
+
+## Demo Programs
+
+`TicTacToeDemo` and `Connect4Demo` are `@main` programs that play home-and-away
+matches between all player type pairs, printing the board and heuristic score
+after each move. Each match is labelled HOME/AWAY; the result includes the
+player name, e.g. `Result: X (MCTS(500)) wins!`.
+
+The `playTicTacToeDemo` and `playConnect4Demo` functions return `Option[Boolean]`
+(the `isGoal` result) rather than `Unit`, enabling unit testing via
+`TicTacToeDemoSpec` and `Connect4DemoSpec`.
 
 ---
 
 ## Future Work
 
-- **Self-play** — two `MenacePlayer` instances with shared or separate registries
-- **X/O symmetry** — `exchangeBoard` canonicalization to halve matchbox count
-- **Persistence** — serialising `Matchboxes` for trained agent reuse
-- **Visualisation** — bead distribution rendering
-- **Chess** — `given chessGame: Game[ChessState, ChessMove, Boolean]`; minimax
-  with alpha-beta pruning
-- **Bridge** — `given bridgeGame: Game[BridgeState, Card, Seat]`; four-player,
-  `winner` returns tricks per side; MCTS with determinization for hidden information
+- **MCTS tree reuse** between moves
+- **Actor-based parallel rollouts** (Akka/Pekko)
+- **MENACE self-play** — two instances with shared or separate registries
+- **MENACE X/O symmetry** — `exchangeBoard` to halve matchbox count
+- **MENACE persistence** — serialise registry for trained agent reuse
+- **Alpha-beta pruning** — for stronger Connect Four play (full minimax
+  is intractable for the 7×6 board)
+- **Chess** — `given chessGame: Game[ChessState, ChessMove, Boolean]`
+- **Bridge** — `given bridgeGame: Game[BridgeState, Card, Seat]`;
+  four-player; `winner` returns tricks per side; MCTS with determinization
+  for hidden information (sample possible hand distributions, run MCTS
+  on each as perfect-information, aggregate)

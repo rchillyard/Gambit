@@ -227,6 +227,7 @@ Win detection uses four bitwise AND/shift pairs (horizontal, vertical, two diago
 `State[Connect4, Connect4]` (P = S = Connect4; `construct = _._1`).
 
 **Heuristic convention** — from the perspective of whoever just moved (`s.player`):
+
 - Terminal: `±Double.MaxValue`
 - Non-terminal: window scoring (3-in-window = 10, 2-in-window = 1) + centre bonus
 - Windows enumerated via lowest-set-bit iteration over unblocked positions
@@ -255,7 +256,7 @@ given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean
 
 ## Heuristic Convention
 
-Both TicTacToe and Connect Four follow the same convention:
+Both `TicTacToe` and Connect Four follow the same convention:
 
 > `heuristic(s)` is positive when the player who **just moved** to reach `s`
 > is doing well. `HeuristicPlayer.chooseMove` uses `maxBy(heuristic)` over

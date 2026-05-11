@@ -1,6 +1,6 @@
 // Optional but useful
-ThisBuild / description := "Purely functional, typeclass-driven graph and tree traversal library for Scala 3"
-ThisBuild / homepage := Some(url("https://github.com/rchillyard/Visitor"))
+ThisBuild / description := "A generic, typeclass-driven game-playing framework for Scala 3, supporting MCTS, minimax, and reinforcement learning"
+ThisBuild / homepage := Some(url("https://github.com/rchillyard/DecisionTree"))
 ThisBuild / organizationName := "Phasmid Software"
 ThisBuild / organizationHomepage := Some(url("https://phasmidsoftware.com/"))
 
@@ -19,8 +19,8 @@ ThisBuild / credentials += Credentials(Path.userHome / ".sbt" / "sonatype_creden
 ThisBuild / licenses := List("MIT" -> url("https://opensource.org/licenses/MIT"))
 ThisBuild / scmInfo := Some(
   ScmInfo(
-    url("https://github.com/rchillyard/Visitor"),
-    "scm:git@github.com:rchillyard/Visitor.git"
+    url("https://github.com/rchillyard/DecisionTree"),
+    "scm:git@github.com:rchillyard/DecisionTree.git"
   )
 )
 ThisBuild / developers := List(

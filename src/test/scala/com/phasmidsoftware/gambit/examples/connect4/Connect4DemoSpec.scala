@@ -4,6 +4,7 @@ import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
 import com.phasmidsoftware.gambit.game.MCTSPlayer
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
+import org.scalatest.tagobjects.Slow
 
 import scala.util.Random
 
@@ -53,19 +54,19 @@ class Connect4DemoSpec extends AnyFlatSpec with should.Matchers {
   // MCTS player
   // ---------------------------------------------------------------------------
 
-  it should "return a defined result for MCTS vs Random" in {
+  it should "return a defined result for MCTS vs Random" taggedAs Slow in {
     val mcts = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 200)
     val result = playConnect4Demo(mcts, "MCTS", new RandomPlayer, "Random", rng)
     result shouldBe defined
   }
 
-  it should "return a defined result for MCTS vs Heuristic" in {
+  it should "return a defined result for MCTS vs Heuristic" taggedAs Slow in {
     val mctsX = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 200)
     val result = playConnect4Demo(mctsX, "MCTS", new HeuristicPlayer, "Heuristic", rng)
     result shouldBe defined
   }
 
-  it should "return a defined result for MCTS vs MCTS" in {
+  it should "return a defined result for MCTS vs MCTS" taggedAs Slow in {
     val mctsX = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 200)
     val mctsO = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = false, iterations = 200)
     val result = playConnect4Demo(mctsX, "MCTS", mctsO, "MCTS", rng)

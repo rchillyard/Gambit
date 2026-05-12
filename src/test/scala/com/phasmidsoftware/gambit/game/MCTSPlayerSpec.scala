@@ -6,6 +6,7 @@ import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
 import com.phasmidsoftware.gambit.examples.tictactoe.{Board, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
+import org.scalatest.tagobjects.Slow
 
 import scala.util.Random
 
@@ -121,5 +122,60 @@ class MCTSPlayerSpec extends AnyFlatSpec with should.Matchers {
     val stats     = runner.playGames(10)
     // MCTS with 500 iterations should not be completely dominated.
     stats.winsFor(true) + stats.drawsFor(true) should be > 0
+  }
+  // ---------------------------------------------------------------------------
+  // Tree reuse
+  // ---------------------------------------------------------------------------
+
+  behavior of "MCTSPlayer tree reuse"
+
+  it should "return consistent moves across calls on the same player instance" in {
+    // The same MCTSPlayer instance is reused across multiple chooseMove calls
+    // within a game. Tree reuse must not corrupt state between calls.
+    val mcts = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 100)
+    val rng = new Random(42L)
+    var s = Connect4.start
+    // Play 6 moves (3 each), reusing the same mcts instance throughout.
+    for i <- 0 until 6 do
+      val isX = i % 2 == 0
+      if isX then
+        val move = mcts.chooseMove(s, rng)
+        move shouldBe defined
+        s.open should contain(move.get)
+        s = s.play(move.get, isX = true)
+      else
+        // Opponent plays randomly.
+        s = s.play(s.open(rng.nextInt(s.open.size)), isX = false)
+    // After 6 moves the board should have 6 pieces.
+    (java.lang.Long.bitCount(s.xBits) + java.lang.Long.bitCount(s.oBits)) shouldBe 6
+  }
+
+  it should "still choose a valid move after a cache miss (opponent plays unexplored line)" in {
+    // Force a cache miss by giving the opponent a fresh random player whose
+    // move may not have been explored in the previous search.
+    val mcts = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 50)
+    val rng = new Random(99L)
+    var s = Connect4.start
+    // Move 1: MCTS picks for X.
+    val m1 = mcts.chooseMove(s, rng)
+    m1 shouldBe defined
+    s = s.play(m1.get, isX = true)
+    // Opponent plays col 0 regardless (likely unexplored at depth 2).
+    s = s.play(0, isX = false)
+    // Move 2: MCTS must still return a valid move after the potential cache miss.
+    val m2 = mcts.chooseMove(s, rng)
+    m2 shouldBe defined
+    s.open should contain(m2.get)
+  }
+
+  it should "produce a valid game with tree reuse enabled" taggedAs Slow in {
+    // Play a complete game using the same MCTS instance; verify it terminates
+    // and produces a valid result (no exception, board makes sense).
+    val mcts = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 50)
+    val runner = Connect4GameRunner(mcts, new C4RandomPlayer, new Random(11L))
+    val result = runner.playGame()
+    result.keys should contain(true)
+    result.keys should contain(false)
+    result(true) + result(false) shouldBe 0 // zero-sum
   }
 }

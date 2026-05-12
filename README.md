@@ -2,7 +2,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/main)
 ![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)
-![License: MIT](https://img.shields.io/github/license/rchillyard/Gambit)
+![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)
 ![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)
 ![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)
@@ -26,7 +26,7 @@ its graph and tree traversal engine.
 Gambit is published to Maven Central. Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.0.8"
+libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.1.0"
 ```
 
 Requires Scala 3. Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.6.0,
@@ -139,7 +139,6 @@ sbt ghpagesPushSite
 
 ## Design Documents
 
-- `VisitorDesign.md` — design of the Visitor traversal engine
 - `GamePlayingDesign.md` — design of the game-playing framework: typeclasses,
   alpha-beta, MCTS with tree reuse, MENACE, Connect Four tournament, heuristic
   conventions, and future directions

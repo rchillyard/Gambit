@@ -1,6 +1,6 @@
 ![Sonatype Central](https://maven-badges.sml.io/sonatype-central/com.phasmidsoftware/gambit_3/badge.svg?color=blue)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/main)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/master)
 ![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)
 ![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)

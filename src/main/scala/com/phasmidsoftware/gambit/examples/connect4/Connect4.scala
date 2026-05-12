@@ -11,7 +11,7 @@ package com.phasmidsoftware.gambit.examples.connect4
   * `heights` tracks the next available row index per column (0..5).
   * A column is full when heights(col) == Connect4.rows.
   *
-  * You can read more about the game here: [[https://en.wikipedia.org/wiki/Connect_Four#cite_note-19]]
+  * You can read more about the game here: [[https://en.wikipedia.org/wiki/Connect_Four]]
   *
   * @param xBits   bit positions of X's pieces
   * @param oBits   bit positions of O's pieces

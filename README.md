@@ -2,7 +2,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/main)
 ![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)
-![License: MIT](https://img.shields.io/github/license/rchillyard/Gambit)
+![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)
 ![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)
 ![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)

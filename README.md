@@ -8,8 +8,7 @@
 ![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)
 [![API Docs](https://img.shields.io/badge/api-docs-blue)](https://rchillyard.github.io/Gambit/latest/api/)
 
-![Gambit](logo.svg)
-
+![Gambit](img/logo.svg)
 # Gambit
 
 A Scala 3 framework for game-playing tree search and reinforcement learning.

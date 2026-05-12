@@ -4,7 +4,8 @@
 
 This document captures the design decisions behind the game-playing framework
 in Gambit, covering the generic typeclasses in `game`, the TicTacToe
-and Connect Four implementations, and the player types including MCTS.
+and Connect Four implementations, and the player types including MCTS and
+AlphaBeta.
 
 ---
 
@@ -18,7 +19,9 @@ and Connect Four implementations, and the player types including MCTS.
 | `Game.scala` | `Game[S, M, Pl]` — game mechanics typeclass |
 | `Player.scala` | `Player[S, M, Pl]`; `GameResult[Pl]`, `MatchResult[Pl]` |
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
+| `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl]` — minimax with alpha-beta pruning |
 | `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
+| `Tournament.scala` | `Tournament[P, S, M, Pl]`, `Contestant[S, M, Pl]` — round-robin league |
 
 ### `com.phasmidsoftware.gambit.examples.tictactoe`
 
@@ -40,6 +43,7 @@ and Connect Four implementations, and the player types including MCTS.
 | `Connect4.scala` | `Connect4` — column-major bitboard state with gravity |
 | `Connect4State.scala` | `Connect4State` — `State[Connect4, Connect4]` instance |
 | `Connect4Game.scala` | `RandomPlayer`, `HeuristicPlayer`; `given connect4Game`; `Connect4GameRunner` |
+| `Connect4Tournament.scala` | `Connect4Tournament` — concrete tournament runner with `main` |
 | `Connect4Demo.scala` | `@main Connect4Demo` — home/away matchup demo |
 
 ---
@@ -49,13 +53,15 @@ and Connect Four implementations, and the player types including MCTS.
 ### Typeclass Hierarchy
 
 ```
-State[P, S]            — game state: legal moves, goal detection, heuristic,
-                         isFirstPlayerToMove
-Game[S, M, Pl]         — game mechanics: start, moves, applyMove, nextPlayer,
-                         currentPlayer, winner
-Player[S, M, Pl]       — player strategy: chooseMove, gameOver
-GameRunner[P, S, M, Pl] — execution: driven by State and Game givens
-MCTSPlayer[P, S, M, Pl] — generic MCTS player
+State[P, S]              — game state: legal moves, goal detection, heuristic,
+                           isFirstPlayerToMove
+Game[S, M, Pl]           — game mechanics: start, moves, applyMove, nextPlayer,
+                           currentPlayer, winner
+Player[S, M, Pl]         — player strategy: chooseMove, gameOver
+GameRunner[P, S, M, Pl]  — execution: driven by State and Game givens
+AlphaBetaPlayer[P,S,M,Pl]— generic minimax player with alpha-beta pruning
+MCTSPlayer[P, S, M, Pl]  — generic MCTS player with tree reuse
+Tournament[P, S, M, Pl]  — round-robin league with 3-1-0 scoring
 ```
 
 ### State[P, S]
@@ -88,7 +94,9 @@ A trait (not a typeclass) because players have instance identity and mutable
 state. Two methods:
 
 - `chooseMove(s, random): Option[M]` — returns `None` for terminal positions
-- `gameOver(result: GameResult[Pl], me: Pl): Unit` — default no-op
+- `gameOver(result: GameResult[Pl], me: Pl): Unit` — default no-op; overridden
+  by stateful players (e.g. `MenacePlayer`, `MCTSPlayer`) to reset or update
+  internal state between games
 
 ### GameResult[Pl] and MatchResult[Pl]
 
@@ -111,6 +119,33 @@ bridge, scores could represent tricks won per side.
 Driven entirely by `given State[P, S]` and `given Game[S, M, Pl]`. Takes only
 `playerMap: Map[Pl, Player[S, M, Pl]]` and a `Random`. Tail-recursive `loop`;
 `playGames(n)` returns a `MatchResult[Pl]`.
+
+---
+
+## AlphaBeta
+
+### AlphaBetaPlayer[P, S, M, Pl]
+
+Generic minimax player with alpha-beta pruning to a configurable depth.
+
+**Heuristic convention** — `heuristic(s)` is from the perspective of whoever
+just moved INTO `s`. `alphaBeta` returns a value from `me`'s perspective;
+leaf nodes negate the heuristic when the minimizing player just moved:
+
+```scala
+def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuristic(s)
+```
+
+**Alpha-beta bounds** — initial alpha is `-Double.MaxValue` (not
+`Double.MinValue`, which is the smallest *positive* double ~5e-324).
+
+**Move ordering** — successors sorted by heuristic before recursing (highest
+first for maximizer, lowest first for minimizer), maximising the probability
+of early pruning and approaching best-case O(b^(d/2)) node count.
+
+**`maximizing` flag** — true when `currentPlayer(s) == me`; correctly handles
+positions where it is the opponent's turn at the root (e.g. when `AlphaBetaPlayer`
+is called as `me=true` but the board has an odd number of pieces).
 
 ---
 
@@ -138,6 +173,18 @@ Generic MCTS player implementing the standard four-phase loop:
 **Most-visited child** criterion for final move selection — more robust than
 highest win-rate under finite simulations.
 
+**Tree reuse** — the chosen child subtree is retained between `chooseMove`
+calls via `retainedRoot`. On the next call, `advanceTree` searches the retained
+node's children for the opponent's reply state:
+- **Cache hit** — the matching grandchild becomes the new root, carrying
+  forward all accumulated visits and wins.
+- **Cache miss** — opponent played an unexplored line; a fresh root is created.
+  `gameOver` resets `retainedRoot = None` so tree state does not leak between
+  games when the same instance is reused across a match.
+
+Tree matching uses `==` on `S`; requires meaningful equality (satisfied by
+`case class`).
+
 **`me` parameter** — the player identity this instance represents; used in
 backpropagation to correctly credit wins. Must be set to `true` (X) when
 playing as X and `false` (O) when playing as O.
@@ -147,13 +194,62 @@ who moves at the root, correctly handling mid-game positions.
 
 ### Future Upgrades
 
-- **Tree reuse** — retain the subtree rooted at the chosen move between calls,
-  avoiding redundant re-exploration of already-visited states
 - **Actor-based parallelism** — move the mutable tree into an Akka/Pekko actor;
   multiple rollout worker actors submit simulation results concurrently (root
   parallelization), giving near-linear speedup with core count
 - **Heuristic rollouts** — replace pure random simulation with heuristic-guided
   playout for stronger play
+
+---
+
+## Tournament
+
+### Tournament[P, S, M, Pl]
+
+Generic round-robin tournament. Every ordered pair of contestants plays
+`gamesPerPairing` games, so each contestant takes the first-player role
+equally often. Driven by the same `given State[P, S]` and `given Game[S, M, Pl]`
+as `GameRunner`.
+
+**Scoring** — standard football 3-1-0:
+- Win  = 3 points
+- Draw = 1 point
+- Loss = 0 points
+
+**Standings** sorted by points descending, then goal difference (wins − losses),
+then wins. `leagueTable` returns a formatted string; `standings` returns raw
+tuples for programmatic use.
+
+**`Contestant[S, M, Pl]`** — pairs a display name with a `Player` instance.
+The name is purely for the league table; players are unaware of the tournament
+context and optimise only for winning individual games.
+
+### Connect4Tournament
+
+Concrete runner in the `connect4` package. Enters six player types:
+`Random`, `Heuristic`, `AlphaBeta(d=4)`, `AlphaBeta(d=6)`, `MCTS(i=200)`,
+`MCTS(i=500)`. Runnable as a JVM main:
+
+```
+sbt "runMain com.phasmidsoftware.gambit.examples.connect4.Connect4Tournament [gamesPerPairing] [seed]"
+```
+
+Both arguments are optional. `gamesPerPairing` defaults to 6;
+`seed` defaults to `System.currentTimeMillis()` so repeated runs produce
+different results unless a seed is specified explicitly.
+
+Sample output (6 games per pairing, seed 42):
+
+```
+Player             P     W     D     L    GD   Pts
+--------------------------------------------------
+1. AlphaBeta(d=6)  60    48     1    11   +37   145
+2. AlphaBeta(d=4)  60    45     1    14   +31   136
+3. MCTS(i=500)     60    37     2    21   +16   113
+4. MCTS(i=200)     60    31     1    28    +3    94
+5. Heuristic       60    16     1    43   -27    49
+6. Random          60     0     0    60   -60     0
+```
 
 ---
 
@@ -179,7 +275,8 @@ given tictactoeGame(using State[Board, TicTacToe]): Game[TicTacToe, Int, Boolean
 | `HeuristicPlayer` | `maxBy(heuristic)` over successors |
 | `MenacePlayer` | MENACE bead reinforcement learning |
 | `PerfectPlayer` | Full minimax via Visitor post-order DFS |
-| `MCTSPlayer` | Monte Carlo Tree Search |
+| `AlphaBetaPlayer` | Minimax with alpha-beta pruning (generic) |
+| `MCTSPlayer` | Monte Carlo Tree Search with tree reuse (generic) |
 
 ### MENACE
 
@@ -249,8 +346,9 @@ given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean
 | Player | Strategy |
 |--------|----------|
 | `RandomPlayer` | Uniform random over open columns |
-| `HeuristicPlayer` | `maxBy(heuristic)` over successors |
-| `MCTSPlayer` | Monte Carlo Tree Search |
+| `HeuristicPlayer` | `maxBy(heuristic)` over successors (one-ply greedy) |
+| `AlphaBetaPlayer` | Minimax with alpha-beta pruning (generic) |
+| `MCTSPlayer` | Monte Carlo Tree Search with tree reuse (generic) |
 
 ---
 
@@ -262,6 +360,10 @@ Both `TicTacToe` and Connect Four follow the same convention:
 > is doing well. `HeuristicPlayer.chooseMove` uses `maxBy(heuristic)` over
 > successors — since each successor was reached by the current player moving,
 > the maximum heuristic successor is the best move.
+
+`AlphaBetaPlayer` accounts for this at leaf nodes by negating the heuristic
+when the minimizing player just moved, ensuring the returned value is always
+from `me`'s perspective regardless of search depth.
 
 This was the source of several bugs during development when the convention
 was inconsistently applied between `State.heuristic` and `Player.chooseMove`.
@@ -281,15 +383,28 @@ The `playTicTacToeDemo` and `playConnect4Demo` functions return `Option[Boolean]
 
 ---
 
+## API Documentation
+
+Scaladoc is published to GitHub Pages via `sbt-ghpages`:
+
+```
+https://rchillyard.github.io/Gambit/latest/api/
+```
+
+To update after significant changes:
+```
+sbt ghpagesPushSite
+```
+
+---
+
 ## Future Work
 
-- **MCTS tree reuse** between moves
-- **Actor-based parallel rollouts** (Akka/Pekko)
+- **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
+- **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries
 - **MENACE X/O symmetry** — `exchangeBoard` to halve matchbox count
 - **MENACE persistence** — serialise registry for trained agent reuse
-- **Alpha-beta pruning** — for stronger Connect Four play (full minimax
-  is intractable for the 7×6 board)
 - **Chess** — `given chessGame: Game[ChessState, ChessMove, Boolean]`
 - **Bridge** — `given bridgeGame: Game[BridgeState, Card, Seat]`;
   four-player; `winner` returns tricks per side; MCTS with determinization

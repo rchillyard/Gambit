@@ -1,0 +1,1317 @@
+<!DOCTYPE html><html data-pathToRoot="../../../" data-rawLocation="com/phasmidsoftware/gambit/game" data-dynamicSideMenu="false"><head><meta charset="utf-8"></meta><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"></meta><title>com.phasmidsoftware.gambit.game</title><link rel="shortcut icon" type="image/x-icon" href="../../../favicon.ico"></link><script type="text/javascript" src="../../../scripts/theme.js"></script><script type="text/javascript" src="../../../scripts/searchData.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scastieConfiguration.js" defer="true"></script><link rel="stylesheet" href="../../../styles/theme/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/components/button/bundle.css"></link><link rel="stylesheet" href="../../../styles/theme/layout/bundle.css"></link><link rel="stylesheet" href="../../../styles/nord-light.css"></link><link rel="stylesheet" href="../../../styles/dotty-icons.css"></link><link rel="stylesheet" href="../../../styles/filter-bar.css"></link><link rel="stylesheet" href="../../../styles/code-snippets.css"></link><link rel="stylesheet" href="../../../styles/searchbar.css"></link><link rel="stylesheet" href="../../../styles/social-links.css"></link><link rel="stylesheet" href="../../../styles/versions-dropdown.css"></link><link rel="stylesheet" href="../../../styles/content-contributors.css"></link><link rel="stylesheet" href="../../../styles/fontawesome.css"></link><script type="text/javascript" src="../../../hljs/highlight.pack.js" defer="true"></script><script type="text/javascript" src="../../../scripts/hljs-scala3.js" defer="true"></script><script type="text/javascript" src="../../../scripts/ux.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/component.js" defer="true"></script><script type="text/javascript" src="../../../scripts/common/utils.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterBar.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/DocumentableList.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Input.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/FilterGroup.js" defer="true"></script><script type="text/javascript" src="../../../scripts/components/Filter.js" defer="true"></script><script type="text/javascript" src="../../../scripts/scaladoc-scalajs.js" defer="true"></script><script type="text/javascript" src="../../../scripts/contributors.js" defer="true"></script><script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.min.js" defer="true"></script><script type="text/javascript" src="https://d3js.org/d3.v6.min.js" defer="true"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/graphlib-dot@0.6.2/dist/graphlib-dot.min.js" defer="true"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js" defer="true"></script><script type="text/javascript" src="https://scastie.scala-lang.org/embedded.js" defer="true"></script><script type="text/javascript" src="../../../scripts/data.js" defer="true"></script><link rel="stylesheet" href="../../../styles/apistyles.css"></link><script>var pathToRoot = "../../../";</script></head><body><div id=""><div id="header" class="body-small"><div class="header-container-left"><a href="../../../" class="logo-container"><span class="project-name h300">gambit</span></a><span onclick="dropdownHandler(event)" class="text-button with-arrow" id="dropdown-trigger"><a></a></span><div id="version-dropdown" class="dropdown-menu"></div></div><div class="header-container-right"><button id="search-toggle" class="icon-button"></button><span id="theme-toggle" class="icon-button"></span><span id="mobile-menu-toggle" class="icon-button hamburger"></span></div></div><div id="mobile-menu"><div class="mobile-menu-header body-small"><span class="mobile-menu-logo"><span class="project-name h300">gambit</span></span><button id="mobile-menu-close" class="icon-button close"></button></div><div class="mobile-menu-container body-medium"><input id="mobile-scaladoc-searchbar-input" class="scaladoc-searchbar-input" type="search" placeholder="Find anything"></input><span id="mobile-theme-toggle" class="mobile-menu-item mode"></span></div></div><span id="mobile-sidebar-toggle" class="floating-button"></span><div id="leftColumn" class="body-small"><div class="switcher-container"><a id="api-nav-button" class="switcher h100 selected" href="../../../index.html">API</a></div><nav id="api-nav" class="side-menu"><div class="ni n0 expanded"><span class="nh h100 expanded cs"><button class="ar icon-button expanded"></button><a href="../../phasmidsoftware.html"><span class="micon pa"></span><span>com.phasmidsoftware</span></a></span><div class="ni n1 expanded"><span class="nh h100 expanded cs"><button class="ar icon-button expanded"></button><a href="../gambit.html"><span class="micon pa"></span><span>gambit</span></a></span><div class="ni n2"><span class="nh "><button class="ar icon-button "></button><a href="attic.html"><span class="micon pa"></span><span>attic</span></a></span><div class="ni n3 "><span class="nh "><a href="attic/BackedOutput.html"><span class="micon tr"></span><span>BackedOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/BufferedCharSequenceOutput.html"><span class="micon cl"></span><span>BufferedCharSequenceOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/BufferedOutput.html"><span class="micon tr"></span><span>BufferedOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/CharacterOutput.html"><span class="micon tr"></span><span>CharacterOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/NonOutput.html"><span class="micon cl"></span><span>NonOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/Output.html"><span class="micon tr"></span><span>Output</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/Output$.html"><span class="micon ob"></span><span>Output</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/OutputException.html"><span class="micon cl"></span><span>OutputException</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/Outputable.html"><span class="micon tr"></span><span>Outputable</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/TypedOutput.html"><span class="micon tr"></span><span>TypedOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/UnbackedOutput.html"><span class="micon cl"></span><span>UnbackedOutput</span></a></span></div><div class="ni n3 "><span class="nh "><a href="attic/WriterOutput.html"><span class="micon cl"></span><span>WriterOutput</span></a></span></div></div><div class="ni n2"><span class="nh "><button class="ar icon-button "></button><a href="examples.html"><span class="micon pa"></span><span>examples</span></a></span><div class="ni n3"><span class="nh "><button class="ar icon-button "></button><a href="examples/connect4.html"><span class="micon pa"></span><span>connect4</span></a></span><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4.html"><span class="micon cl"></span><span>Connect4</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4$.html"><span class="micon ob"></span><span>Connect4</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4Demo.html"><span class="micon cl"></span><span>Connect4Demo</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4GameRunner$.html"><span class="micon ob"></span><span>Connect4GameRunner</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4State$.html"><span class="micon ob"></span><span>Connect4State</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/Connect4Tournament$.html"><span class="micon ob"></span><span>Connect4Tournament</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/HeuristicPlayer.html"><span class="micon cl"></span><span>HeuristicPlayer</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/connect4/RandomPlayer.html"><span class="micon cl"></span><span>RandomPlayer</span></a></span></div></div><div class="ni n3"><span class="nh "><button class="ar icon-button "></button><a href="examples/tictactoe.html"><span class="micon pa"></span><span>tictactoe</span></a></span><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/BeadResult.html"><span class="micon tr"></span><span>BeadResult</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Board.html"><span class="micon cl"></span><span>Board</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Draw$.html"><span class="micon ob"></span><span>Draw</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/HeuristicPlayer.html"><span class="micon cl"></span><span>HeuristicPlayer</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Loss$.html"><span class="micon ob"></span><span>Loss</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Matchbox.html"><span class="micon cl"></span><span>Matchbox</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Matchbox$.html"><span class="micon ob"></span><span>Matchbox</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Matchboxes.html"><span class="micon cl"></span><span>Matchboxes</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Matchboxes$.html"><span class="micon ob"></span><span>Matchboxes</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/MenacePlayer.html"><span class="micon cl"></span><span>MenacePlayer</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Outcome.html"><span class="micon cl"></span><span>Outcome</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/PerfectPlayer.html"><span class="micon cl"></span><span>PerfectPlayer</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/RandomPlayer.html"><span class="micon cl"></span><span>RandomPlayer</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/TicTacToe.html"><span class="micon cl"></span><span>TicTacToe</span></a></span></div><div class="ni n4"><span class="nh "><button class="ar icon-button "></button><a href="examples/tictactoe/TicTacToe$.html"><span class="micon ob"></span><span>TicTacToe</span></a></span><div class="ni n5 "><span class="nh "><a href="examples/tictactoe/TicTacToe$$TicTacToeState$$.html"><span class="micon ob"></span><span>TicTacToeState$</span></a></span></div><div class="ni n5 "><span class="nh "><a href="examples/tictactoe/TicTacToe$$TicTacToeState$.html"><span class="micon tr"></span><span>TicTacToeState$</span></a></span></div><div class="ni n5 "><span class="nh "><a href="examples/tictactoe/TicTacToe$$loggableTicTacToe$.html"><span class="micon ob"></span><span>loggableTicTacToe</span></a></span></div></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/TicTacToeDemo.html"><span class="micon cl"></span><span>TicTacToeDemo</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/TicTacToeGameRunner$.html"><span class="micon ob"></span><span>TicTacToeGameRunner</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/TicTacToeUtils$.html"><span class="micon ob"></span><span>TicTacToeUtils</span></a></span></div><div class="ni n4 "><span class="nh "><a href="examples/tictactoe/Win$.html"><span class="micon ob"></span><span>Win</span></a></span></div></div></div><div class="ni n2 expanded"><span class="nh h100 selected"><button class="ar icon-button expanded"></button><a href="#"><span class="micon pa"></span><span>game</span></a></span><div class="ni n3 "><span class="nh "><a href="game/AlphaBetaPlayer.html"><span class="micon cl"></span><span>AlphaBetaPlayer</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Contestant.html"><span class="micon cl"></span><span>Contestant</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Game.html"><span class="micon tr"></span><span>Game</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/GameResult$.html"><span class="micon ob"></span><span>GameResult</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/GameRunner.html"><span class="micon cl"></span><span>GameRunner</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/MCTSNode.html"><span class="micon cl"></span><span>MCTSNode</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/MCTSNode$.html"><span class="micon ob"></span><span>MCTSNode</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/MCTSPlayer.html"><span class="micon cl"></span><span>MCTSPlayer</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/MatchResult.html"><span class="micon cl"></span><span>MatchResult</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Move.html"><span class="micon cl"></span><span>Move</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Player.html"><span class="micon tr"></span><span>Player</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/State.html"><span class="micon tr"></span><span>State</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Tournament.html"><span class="micon cl"></span><span>Tournament</span></a></span></div><div class="ni n3 "><span class="nh "><a href="game/Transition.html"><span class="micon tr"></span><span>Transition</span></a></span></div></div></div><div class="ni n1"><span class="nh "><button class="ar icon-button "></button><a href="../util.html"><span class="micon pa"></span><span>util</span></a></span><div class="ni n2 "><span class="nh "><a href="../util/Aggregators$.html"><span class="micon ob"></span><span>Aggregators</span></a></span></div><div class="ni n2 "><span class="nh "><a href="../util/GambitException.html"><span class="micon cl"></span><span>GambitException</span></a></span></div><div class="ni n2 "><span class="nh "><a href="../util/Shuffle$.html"><span class="micon ob"></span><span>Shuffle</span></a></span></div></div></div></nav></div><div id="footer" class="body-small"><div class="left-container">Generated with</div><div class="right-container"><div class="text"></div></div><div class="text-mobile"></div></div><div id="scaladoc-searchBar"></div><div id="main"><div class="breadcrumbs container"><a href="../../../index.html">gambit</a>/<a href="../../phasmidsoftware.html">com.phasmidsoftware</a>/<a href="../gambit.html">com.phasmidsoftware.gambit</a>/<a href="game.html">com.phasmidsoftware.gambit.game</a></div><div id="content" class="body-medium"><div><div class="cover-header">
+ <span class="icon"><span class="micon pa"></span></span>
+ <h1 class="h600 single">com.phasmidsoftware.gambit.game</h1>
+</div>
+<div class="fqname body-large">
+ <span></span>
+</div>
+<div class="main-signature mono-small-block">
+ <div class="signature">
+  <span class="modifiers"></span><span class="kind"><span t="k">package </span></span><a href="game.html" t="n" class="documentableName ">com.phasmidsoftware.gambit.game</a>
+ </div>
+</div>
+<section id="members-list">
+ <h2 class="h500">Members list</h2>
+ <div class="documentableFilter">
+  <div class="filtersContainer"></div><input class="filterableInput" placeholder="Filter by any phrase" data-test-id="filterBarInput" type="search"><button class="clearButton label-only-button" data-test-id="filterBarClearButton">Clear all</button>
+ </div>
+ <div class="membersList expand">
+  <div class="tabs">
+   <div class="contents">
+    <section id="Type-members">
+     <div data-togglable="Type members" class="tab expand">
+      <div class="member-group-header">
+       <h3 data-togglable="Type members" class="h400">Type members</h3>
+      </div>
+      <section id="Classlikes">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Classlikes</h4>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="game/AlphaBetaPlayer.html" t="n" class="documentableName ">AlphaBetaPlayer</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">me</span>: <span data-unresolved-link="" t="t">Pl</span>, <span t="k"></span><span data-unresolved-link="" t="n">depth</span>: <span data-unresolved-link="" t="t">Int</span> = ...)(<span t="k">using </span><span t="k"></span><span data-unresolved-link="" t="n">state</span>: <a href="game/State.html" t="t">State</a>[<span data-unresolved-link="" t="t">P</span>, <span data-unresolved-link="" t="t">S</span>], <span t="k"></span><span data-unresolved-link="" t="n">game</span>: <a href="game/Game.html" t="t">Game</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>])<span t="k"> extends </span><a href="game/Player.html" t="t">Player</a>[<span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]</span><span class="signature-long"></span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A generic alpha-beta pruning player.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A generic alpha-beta pruning player.</p>
+              <p>Implements minimax search with alpha-beta pruning to a configurable depth. Alpha-beta pruning eliminates branches that cannot affect the final decision, reducing the effective branching factor from b to approximately √b in the best case — effectively doubling the achievable search depth for the same computation compared to plain minimax.</p>
+              <p>== Heuristic Convention ==</p>
+              <p><code>State.heuristic(s)</code> is positive when the player who just moved to reach <code>s</code> is doing well. This is consistent with the convention used throughout Gambit. At leaf nodes (terminal or depth limit reached), the raw heuristic is returned. The maximizing/minimizing logic correctly accounts for this convention.</p>
+              <p>== Move Ordering ==</p>
+              <p>Moves are ordered by heuristic before recursing — highest first for the maximizing player, lowest first for the minimizing player. This shallow search ordering maximises the probability of early pruning, approaching the theoretical best-case performance of alpha-beta.</p>
+              <p>== Mutable State ==</p>
+              <p>Alpha and beta bounds are tracked with mutable variables, and <code>boundary</code>/<code>break</code> is used for early termination on a prune. This is intentional: alpha-beta pruning is fundamentally about early exit based on accumulated bounds, and fighting that with purely functional constructs would sacrifice both clarity and performance. Mutable state is appropriate here for the same reason it is appropriate in high-performance sorting algorithms.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>the proto-state type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               depth
+              </dt>
+              <dd class="body-medium">
+               <p>search depth in plies (half-moves). Default 6. Higher values give stronger play at the cost of exponentially more computation.</p>
+              </dd>
+              <dt class="body-small">
+               game
+              </dt>
+              <dd class="body-medium">
+               <p>implicit Game[S, M, Pl] for move generation and application.</p>
+              </dd>
+              <dt class="body-small">
+               me
+              </dt>
+              <dd class="body-medium">
+               <p>this player's identity.</p>
+              </dd>
+              <dt class="body-small">
+               state
+              </dt>
+              <dd class="body-medium">
+               <p>implicit State[P, S] for goal detection and heuristic.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <a href="game/Player.html" t="n">Player</a>[<span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" data-f-keywords="case">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">case </span></span><span class="kind"><span t="k">class </span></span><a href="game/Contestant.html" t="n" class="documentableName ">Contestant</a>[<span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">name</span>: <span data-unresolved-link="" t="t">String</span>, <span t="k"></span><span data-unresolved-link="" t="n">player</span>: <a href="game/Player.html" t="t">Player</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A named contestant in a tournament.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A named contestant in a tournament.</p>
+              <p>Wraps a <code>Player</code> with a display name so the league table can identify each entry independently of the Boolean player-identity used internally by two-player <code>GameRunner</code>.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               name
+              </dt>
+              <dd class="body-medium">
+               <p>display name for the league table.</p>
+              </dd>
+              <dt class="body-small">
+               player
+              </dt>
+              <dd class="body-medium">
+               <p>the underlying player.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <span data-unresolved-link="" t="n">Serializable</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Product</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Equals</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">trait </span></span><a href="game/Game.html" t="n" class="documentableName ">Game</a>[<span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Typeclass: describes the rules of a game in terms of state S, move M, and player identity Pl.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Typeclass: describes the rules of a game in terms of state S, move M, and player identity Pl.</p>
+              <p>A Game instance captures everything the GameRunner needs to know about the mechanics of a specific game — how moves are applied, whose turn it is, where the game starts, and how many players are involved.</p>
+              <p>This separates game rules (Game[S, M, Pl]) from game strategy (Player[S, M, Pl]) and game execution (GameRunner[P, S, M, Pl]).</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type (e.g., Boolean for two-player, an enum for bridge's four seats).</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">object </span></span><a href="game/GameResult$.html" t="n" class="documentableName ">GameResult</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Companion for GameResult providing factory methods.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Companion for GameResult providing factory methods.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Self type
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <span></span>
+                <div>
+                 <a href="game/GameResult$.html" t="n">GameResult</a>.<span t="k">type</span>
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="game/GameRunner.html" t="n" class="documentableName ">GameRunner</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">playerMap</span>: <span data-unresolved-link="" t="t">Map</span>[<span data-unresolved-link="" t="t">Pl</span>, <a href="game/Player.html" t="t">Player</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>]], <span t="k"></span><span data-unresolved-link="" t="n">random</span>: <span data-unresolved-link="" t="t">Random</span> = ...)(<span t="k">using </span><span t="k"></span><span data-unresolved-link="" t="n">state</span>: <a href="game/State.html" t="t">State</a>[<span data-unresolved-link="" t="t">P</span>, <span data-unresolved-link="" t="t">S</span>], <span t="k"></span><span data-unresolved-link="" t="n">game</span>: <a href="game/Game.html" t="t">Game</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A generic game runner that plays a sequence of games between any number of players, for any game representable as a State[P, S] and Game[S, M, Pl].</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A generic game runner that plays a sequence of games between any number of players, for any game representable as a State[P, S] and Game[S, M, Pl].</p>
+              <p>Type parameters: P — proto-state type (used by <code>State.construct</code>) S — state type M — move type Pl — player identity type (e.g., Boolean for two-player, Seat for bridge)</p>
+             </div>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               game
+              </dt>
+              <dd class="body-medium">
+               <p>implicit Game[S, M, Pl] for game mechanics.</p>
+              </dd>
+              <dt class="body-small">
+               playerMap
+              </dt>
+              <dd class="body-medium">
+               <p>a map from player identity to Player instance.</p>
+              </dd>
+              <dt class="body-small">
+               random
+              </dt>
+              <dd class="body-medium">
+               <p>a Random instance for reproducibility.</p>
+              </dd>
+              <dt class="body-small">
+               state
+              </dt>
+              <dd class="body-medium">
+               <p>implicit State[P, S] for goal detection.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="game/MCTSNode.html" t="n" class="documentableName ">MCTSNode</a>[<span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k">val </span><span data-unresolved-link="" t="n">state</span>: <span data-unresolved-link="" t="t">S</span>, <span t="k">val </span><span data-unresolved-link="" t="n">move</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">M</span>], <span t="k">val </span><span data-unresolved-link="" t="n">movedBy</span>: <span data-unresolved-link="" t="t">Option</span>[<span data-unresolved-link="" t="t">Pl</span>], <span t="k">var </span><span data-unresolved-link="" t="n">visits</span>: <span data-unresolved-link="" t="t">Int</span>, <span t="k">var </span><span data-unresolved-link="" t="n">wins</span>: <span data-unresolved-link="" t="t">Double</span>, <span t="k">val </span><span data-unresolved-link="" t="n">children</span>: <span data-unresolved-link="" t="t">ListBuffer</span>[<a href="game/MCTSNode.html" t="t">MCTSNode</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>]], <span t="k">var </span><span data-unresolved-link="" t="n">untriedMoves</span>: <span data-unresolved-link="" t="t">List</span>[<span data-unresolved-link="" t="t">M</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A node in the MCTS search tree.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A node in the MCTS search tree.</p>
+              <p>Mutable: visits and wins are updated in-place during backpropagation. Children are added during expansion. untriedMoves shrinks as children are expanded.</p>
+              <p>No parent reference -- backpropagation uses an explicit path stack accumulated during selection, avoiding circular references and the GC/equality issues that back-references cause in tree structures.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               children
+              </dt>
+              <dd class="body-medium">
+               <p>expanded child nodes.</p>
+              </dd>
+              <dt class="body-small">
+               move
+              </dt>
+              <dd class="body-medium">
+               <p>the move that led to this state (None for root).</p>
+              </dd>
+              <dt class="body-small">
+               movedBy
+              </dt>
+              <dd class="body-medium">
+               <p>the player who made <code>move</code> (None for root).</p>
+              </dd>
+              <dt class="body-small">
+               state
+              </dt>
+              <dd class="body-medium">
+               <p>the game state at this node.</p>
+              </dd>
+              <dt class="body-small">
+               untriedMoves
+              </dt>
+              <dd class="body-medium">
+               <p>moves not yet expanded into children.</p>
+              </dd>
+              <dt class="body-small">
+               visits
+              </dt>
+              <dd class="body-medium">
+               <p>number of times this node has been visited.</p>
+              </dd>
+              <dt class="body-small">
+               wins
+              </dt>
+              <dd class="body-medium">
+               <p>cumulative score from simulations through this node, from the perspective of <code>movedBy</code>.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Companion
+              </dt>
+              <dd class="body-medium">
+               <a href="game/MCTSNode$.html">object</a>
+              </dd>
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">object </span></span><a href="game/MCTSNode$.html" t="n" class="documentableName ">MCTSNode</a>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Companion object for <code>MCTSNode</code>, providing factory methods.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Companion object for <code>MCTSNode</code>, providing factory methods.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Companion
+              </dt>
+              <dd class="body-medium">
+               <a href="game/MCTSNode.html">class</a>
+              </dd>
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Self type
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <span></span>
+                <div>
+                 <a href="game/MCTSNode$.html" t="n">MCTSNode</a>.<span t="k">type</span>
+                </div>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="game/MCTSPlayer.html" t="n" class="documentableName ">MCTSPlayer</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">me</span>: <span data-unresolved-link="" t="t">Pl</span>, <span t="k"></span><span data-unresolved-link="" t="n">iterations</span>: <span data-unresolved-link="" t="t">Int</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">explorationConstant</span>: <span data-unresolved-link="" t="t">Double</span> = ...)(<span t="k">using </span><span t="k"></span><span data-unresolved-link="" t="n">state</span>: <a href="game/State.html" t="t">State</a>[<span data-unresolved-link="" t="t">P</span>, <span data-unresolved-link="" t="t">S</span>], <span t="k"></span><span data-unresolved-link="" t="n">game</span>: <a href="game/Game.html" t="t">Game</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>])<span t="k"> extends </span><a href="game/Player.html" t="t">Player</a>[<span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]</span><span class="signature-long"></span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A generic Monte Carlo Tree Search player.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A generic Monte Carlo Tree Search player.</p>
+              <p>Implements the standard four-phase MCTS loop:</p>
+              <ol>
+               <li>Selection -- walk the tree by UCB1 (Upper Confidence Bound) until an unexpanded node is found.</li>
+               <li>Expansion -- add one new child for an untried move.</li>
+               <li>Simulation -- play randomly to a terminal state (rollout).</li>
+               <li>Backprop -- update visit/win counts along the path to root.</li>
+              </ol>
+              <p>The search tree is retained between calls to <code>chooseMove</code>. After each move the subtree rooted at the chosen child becomes the new root, carrying forward all accumulated visit and win counts. If the opponent plays an unexplored line the retained tree cannot be advanced and a fresh root is created instead.</p>
+              <p>Tree matching uses <code>==</code> on the state type <code>S</code>; callers must ensure <code>S</code> has meaningful equality (satisfied by <code>case class</code> and <code>case object</code>).</p>
+              <p>== Future upgrades ==</p>
+              <ul>
+               <li>
+                <p><strong>Actor-based parallelism</strong>: move the mutable tree into an Akka/Pekko actor. Multiple rollout worker actors could then submit simulation results to the tree actor concurrently (root parallelization), giving a near-linear speedup with the number of cores.</p></li>
+               <li>
+                <p><strong>Heuristic rollouts</strong>: replace pure random simulation with a heuristic-guided playout for stronger play.</p></li>
+              </ul>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>the proto-state type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               explorationConstant
+              </dt>
+              <dd class="body-medium">
+               <p>UCB1 exploration parameter C (default sqrt(2)).</p>
+              </dd>
+              <dt class="body-small">
+               game
+              </dt>
+              <dd class="body-medium">
+               <p>implicit Game[S, M, Pl] for move application.</p>
+              </dd>
+              <dt class="body-small">
+               iterations
+              </dt>
+              <dd class="body-medium">
+               <p>number of MCTS iterations per move (default 1000).</p>
+              </dd>
+              <dt class="body-small">
+               me
+              </dt>
+              <dd class="body-medium">
+               <p>this player's identity.</p>
+              </dd>
+              <dt class="body-small">
+               state
+              </dt>
+              <dd class="body-medium">
+               <p>implicit State[P, S] for goal detection.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <a href="game/Player.html" t="n">Player</a>[<span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" data-f-keywords="case">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"><span t="k">case </span></span><span class="kind"><span t="k">class </span></span><a href="game/MatchResult.html" t="n" class="documentableName ">MatchResult</a>[<span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">results</span>: <span data-unresolved-link="" t="t">Seq</span>[<a href="game.html#GameResult-0" t="t">GameResult</a>[<span data-unresolved-link="" t="t">Pl</span>]])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A MatchResult aggregates GameResults over a series of games. Provides win/loss/draw counts and total games for a given player.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A MatchResult aggregates GameResults over a series of games. Provides win/loss/draw counts and total games for a given player.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               results
+              </dt>
+              <dd class="body-medium">
+               <p>the sequence of individual game results.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <span data-unresolved-link="" t="n">Serializable</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Product</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Equals</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement" data-f-keywords="case">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="signature-short"><span class="modifiers"><span t="k">case </span></span><span class="kind"><span t="k">class </span></span><a href="game/Move.html" t="n" class="documentableName ">Move</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">f</span>: <span data-unresolved-link="" t="t">S</span> <span t="k">=&gt;</span> <span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="n">desc</span>: <span data-unresolved-link="" t="t">String</span>)<span t="k"> extends </span><a href="game/Transition.html" t="t">Transition</a>[<span t="t">P</span>, <span t="t">S</span>]</span><span class="signature-long"></span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A case class that implements Transition[S].</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A case class that implements Transition[S].</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>a proto-state, from which a state S can be constructed.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the type of the input parameter and of the result.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               desc
+              </dt>
+              <dd class="body-medium">
+               <p>the human-legible description of f.</p>
+              </dd>
+              <dt class="body-small">
+               f
+              </dt>
+              <dd class="body-medium">
+               <p>a function S =&gt; P.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <span data-unresolved-link="" t="n">Serializable</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Product</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Equals</span>
+                </div>
+                <div>
+                 trait <a href="game/Transition.html" t="n">Transition</a>[<span t="t">P</span>, <span t="t">S</span>]
+                </div>
+                <div>
+                 trait <span t="t">S</span> <span t="k">=&gt;</span> (<span t="t">P</span>, <span t="t">S</span>)
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">trait </span></span><a href="game/Player.html" t="n" class="documentableName ">Player</a>[<span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A Player in a game of type S, making moves of type M, identified as player Pl.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A Player in a game of type S, making moves of type M, identified as player Pl.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Known subtypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block subtypes">
+                <div>
+                 class <a href="examples/connect4/HeuristicPlayer.html" t="n">HeuristicPlayer</a>
+                </div>
+                <div>
+                 class <a href="examples/connect4/RandomPlayer.html" t="n">RandomPlayer</a>
+                </div>
+                <div>
+                 class <a href="examples/tictactoe/HeuristicPlayer.html" t="n">HeuristicPlayer</a>
+                </div>
+                <div>
+                 class <a href="examples/tictactoe/MenacePlayer.html" t="n">MenacePlayer</a>
+                </div>
+                <div>
+                 class <a href="examples/tictactoe/PerfectPlayer.html" t="n">PerfectPlayer</a>
+                </div>
+                <div>
+                 class <a href="examples/tictactoe/RandomPlayer.html" t="n">RandomPlayer</a>
+                </div>
+                <div>
+                 class <a href="game/AlphaBetaPlayer.html" t="n">AlphaBetaPlayer</a>[<span t="t">P</span>, <span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]
+                </div>
+                <div>
+                 class <a href="game/MCTSPlayer.html" t="n">MCTSPlayer</a>[<span t="t">P</span>, <span t="t">S</span>, <span t="t">M</span>, <span t="t">Pl</span>]
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">trait </span></span><a href="game/State.html" t="n" class="documentableName ">State</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>]<span t="k"> extends </span><span data-unresolved-link="" t="t">Ordering</span>[<span t="t">S</span>]</span><span class="signature-long"></span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>Type class for a State. A State is a position in a game or other situation which requires heuristically-directed tree search. For example, a State might describe a board position in Tic-tac-toe or Chess.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>Type class for a State. A State is a position in a game or other situation which requires heuristically-directed tree search. For example, a State might describe a board position in Tic-tac-toe or Chess.</p>
+              <p>NOTE that State depends on Transition. CONSIDER eliminating Transition such that all logic is defined by State.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>a proto-state, that's to say a type such that a P, S tuple can be converted into a new S.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the underlying type on which the state is based.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <span data-unresolved-link="" t="n">Ordering</span>[<span t="t">S</span>]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">PartialOrdering</span>[<span t="t">S</span>]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Equiv</span>[<span t="t">S</span>]
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Serializable</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Comparator</span>[<span t="t">S</span>]
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span class="show-all-code show-content text-button h100">Show all</span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Known subtypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block subtypes">
+                <div>
+                 object <a href="examples/connect4/Connect4State$.html" t="n">Connect4State</a>
+                </div>
+                <div>
+                 trait <a href="examples/tictactoe/TicTacToe$$TicTacToeState$.html" t="n">TicTacToeState$</a>
+                </div>
+                <div>
+                 object <a href="examples/tictactoe/TicTacToe$$TicTacToeState$$.html" t="n">TicTacToeState$</a>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">class </span></span><a href="game/Tournament.html" t="n" class="documentableName ">Tournament</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>, <span t="k"></span><span data-unresolved-link="" t="t">M</span>, <span t="k"></span><span data-unresolved-link="" t="t">Pl</span>](<span t="k"></span><span t="k"></span><span data-unresolved-link="" t="n">contestants</span>: <span data-unresolved-link="" t="t">Seq</span>[<a href="game/Contestant.html" t="t">Contestant</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>]], <span t="k"></span><span data-unresolved-link="" t="n">gamesPerPairing</span>: <span data-unresolved-link="" t="t">Int</span> = ..., <span t="k"></span><span data-unresolved-link="" t="n">random</span>: <span data-unresolved-link="" t="t">Random</span> = ...)(<span t="k">using </span><span t="k"></span><span data-unresolved-link="" t="n">state</span>: <a href="game/State.html" t="t">State</a>[<span data-unresolved-link="" t="t">P</span>, <span data-unresolved-link="" t="t">S</span>], <span t="k"></span><span data-unresolved-link="" t="n">game</span>: <a href="game/Game.html" t="t">Game</a>[<span data-unresolved-link="" t="t">S</span>, <span data-unresolved-link="" t="t">M</span>, <span data-unresolved-link="" t="t">Pl</span>])
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A round-robin tournament for two-player zero-sum games.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A round-robin tournament for two-player zero-sum games.</p>
+              <p>Every pair of contestants plays <code>gamesPerPairing</code> games with each contestant taking the first-player role in half the games, so neither side has a systematic first-move advantage in the overall standings.</p>
+              <p>== Scoring == Standard football (soccer) 3-1-0 scoring: Win = 3 points Draw = 1 point Loss = 0 points</p>
+              <p>Ties in the table are broken by goal difference (wins minus losses), then by total wins.</p>
+              <p>== Usage ==</p>
+              <div class="snippet mono-small-block">
+               <pre><code class="language-"><span line-number="1" class=""><span class="tooltip-container"></span><span class="hideable"> </span>val t = Tournament(contestants, gamesPerPairing = 10, random = new Random(42L))
+</span><span line-number="2" class=""><span class="tooltip-container"></span><span class="hideable"> </span>println(t.leagueTable)
+</span></code></pre>
+               <div class="buttons"></div>
+              </div>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               M
+              </dt>
+              <dd class="body-medium">
+               <p>the move type.</p>
+              </dd>
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>the proto-state type.</p>
+              </dd>
+              <dt class="body-small">
+               Pl
+              </dt>
+              <dd class="body-medium">
+               <p>the player identity type.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the state type.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Value parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               contestants
+              </dt>
+              <dd class="body-medium">
+               <p>the players to enter in the tournament.</p>
+              </dd>
+              <dt class="body-small">
+               game
+              </dt>
+              <dd class="body-medium">
+               <p>implicit Game[S, M, Pl].</p>
+              </dd>
+              <dt class="body-small">
+               gamesPerPairing
+              </dt>
+              <dd class="body-medium">
+               <p>number of games each ordered pair plays (A-as-first vs B-as-second). Each unordered pair therefore plays 2 * gamesPerPairing games in total.</p>
+              </dd>
+              <dt class="body-small">
+               random
+              </dt>
+              <dd class="body-medium">
+               <p>random source passed to each GameRunner.</p>
+              </dd>
+              <dt class="body-small">
+               state
+              </dt>
+              <dd class="body-medium">
+               <p>implicit State[P, S].</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+        <div class="documentableElement">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="signature-short"><span class="modifiers"></span><span class="kind"><span t="k">trait </span></span><a href="game/Transition.html" t="n" class="documentableName ">Transition</a>[<span t="k"></span><span data-unresolved-link="" t="t">P</span>, <span t="k"></span><span data-unresolved-link="" t="t">S</span>]<span t="k"> extends </span><span t="t">S</span> <span t="k">=&gt;</span> (<span t="t">P</span>, <span t="t">S</span>)</span><span class="signature-long"></span>
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A function that transitions from a state S to a prototype state.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A function that transitions from a state S to a prototype state.</p>
+             </div>
+             <h2 class="h200">Type parameters</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               P
+              </dt>
+              <dd class="body-medium">
+               <p>a proto-state, from which a state S can be constructed.</p>
+              </dd>
+              <dt class="body-small">
+               S
+              </dt>
+              <dd class="body-medium">
+               <p>the type of the input.</p>
+              </dd>
+             </dl>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small">
+              <dt class="body-small">
+               Supertypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block supertypes">
+                <div>
+                 trait <span t="t">S</span> <span t="k">=&gt;</span> (<span t="t">P</span>, <span t="t">S</span>)
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Object</span>
+                </div>
+                <div>
+                 trait <span data-unresolved-link="" t="n">Matchable</span>
+                </div>
+                <div>
+                 class <span data-unresolved-link="" t="n">Any</span>
+                </div><span></span>
+               </div>
+              </dd>
+              <dt class="body-small">
+               Known subtypes
+              </dt>
+              <dd class="body-medium">
+               <div class="mono-small-block subtypes">
+                <div>
+                 class <a href="game/Move.html" t="n">Move</a>[<span t="t">P</span>, <span t="t">S</span>]
+                </div><span></span>
+               </div>
+              </dd>
+             </dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+      <section id="Types">
+       <div class="documentableList expand">
+        <div class="documentableList-expander">
+         <button class="icon-button show-content expand"></button>
+         <h4 class="groupHeader h200">Types</h4>
+        </div>
+        <div class="documentableElement" id="GameResult-0">
+         <div class="documentableElement-expander">
+          <button class="icon-button ar show-content"></button>
+          <div class="header monospace mono-medium">
+           <div class="signature">
+            <span class="modifiers"></span><span class="kind"><span t="k">type </span></span><a href="game.html#GameResult-0" t="n" class="documentableName ">GameResult</a>[<span t="k"></span><span data-unresolved-link="" t="t">Pl</span>] = <span data-unresolved-link="" t="t">Map</span>[<span data-unresolved-link="" t="t">Pl</span>, <span data-unresolved-link="" t="t">Int</span>]
+           </div>
+          </div>
+         </div>
+         <div class="docs">
+          <span class="modifiers"></span>
+          <div>
+           <div class="originInfo"></div>
+           <div class="memberDocumentation">
+            <div class="documentableBrief doc">
+             <p>A <code>GameResult</code> captures the outcome of one complete game for all players. Each player maps to a score, typically -1 (loss), 0 (draw), or +1 (win) for two-player zero-sum games. For trick-taking games like bridge, the scores might represent tricks won per side.</p>
+            </div>
+            <div class="cover">
+             <div class="doc">
+              <p>A <code>GameResult</code> captures the outcome of one complete game for all players. Each player maps to a score, typically -1 (loss), 0 (draw), or +1 (win) for two-player zero-sum games. For trick-taking games like bridge, the scores might represent tricks won per side.</p>
+              <p>A <code>GameResult</code> is typically a subset of a <code>MatchResult</code> and is a <code>Map</code> of <code>Pl -&gt; Int</code>.</p>
+             </div>
+             <h2 class="h200">Attributes</h2>
+             <dl class="attributes attributes-small"></dl>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </section>
+     </div>
+    </section>
+   </div>
+  </div>
+ </div>
+</section></div><div id="toc" class="body-small"><div id="toc-container"><span class="toc-title h200">In this article</span><nav class="toc-nav"><ul class="toc-list"><li><a href="#members-list">Members list</a><ul><li><a href="#Type-members">Type members</a><ul><li><a href="#Classlikes">Classlikes</a></li><li><a href="#Types">Types</a></li></ul></li></ul></li></ul></nav></div></div></div><div id="footer" class="body-small mobile-footer"><div class="left-container">Generated with</div><div class="right-container"><div class="text"></div></div><div class="text-mobile"></div></div></div></div></body></html>

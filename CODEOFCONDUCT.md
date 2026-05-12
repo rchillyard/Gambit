@@ -36,7 +36,7 @@ the project.
 ## Enforcement
 
 Instances of unacceptable behaviour may be reported to the project maintainer
-at r.hillyard@northeastern.edu. All reports will be reviewed promptly and
+at <r.hillyard@northeastern.edu>. All reports will be reviewed promptly and
 confidentially. The maintainer reserves the right to remove comments, close
 issues, or ban contributors who violate this code of conduct.
 

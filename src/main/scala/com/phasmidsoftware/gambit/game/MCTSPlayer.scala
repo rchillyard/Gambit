@@ -5,6 +5,8 @@ import scala.util.Random
 
 /**
   * A generic Monte Carlo Tree Search player.
+  * For more information about MCTS, see
+  * [[https://en.wikipedia.org/wiki/Monte_Carlo_tree_search]]
   *
   * Implements the standard four-phase MCTS loop:
   *   1. Selection   -- walk the tree by UCB1 (Upper Confidence Bound) until an unexpanded node is found.

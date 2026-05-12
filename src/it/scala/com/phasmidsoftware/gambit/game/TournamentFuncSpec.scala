@@ -7,12 +7,6 @@ import org.scalatest.tagobjects.Slow
 
 class TournamentFuncSpec extends AnyFlatSpec with should.Matchers {
 
-  // Convenience alias.
-  private type C4Tournament = Tournament[Connect4, Connect4, Int, Boolean]
-
-  private def contestant(name: String, player: Player[Connect4, Int, Boolean]) =
-    Contestant(name, player)
-
   behavior of "Tournament competitive ordering"
 
   it should "produce a complete Connect4Tournament table without throwing" taggedAs Slow in {

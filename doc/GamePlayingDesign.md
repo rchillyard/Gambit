@@ -176,6 +176,7 @@ highest win-rate under finite simulations.
 **Tree reuse** — the chosen child subtree is retained between `chooseMove`
 calls via `retainedRoot`. On the next call, `advanceTree` searches the retained
 node's children for the opponent's reply state:
+
 - **Cache hit** — the matching grandchild becomes the new root, carrying
   forward all accumulated visits and wins.
 - **Cache miss** — opponent played an unexplored line; a fresh root is created.

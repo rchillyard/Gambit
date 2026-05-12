@@ -5,6 +5,7 @@ import scala.util.boundary.break
 
 /**
   * A generic alpha-beta pruning player.
+  * For more information, see [[https://en.wikipedia.org/wiki/Alpha–beta_pruning]]
   *
   * Implements minimax search with alpha-beta pruning to a configurable depth.
   * Alpha-beta pruning eliminates branches that cannot affect the final decision,

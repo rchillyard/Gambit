@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="680" height="400" viewBox="0 0 680 400" role="img"
+     xmlns="http://www.w3.org/2000/svg">
+  <title>Gambit logo</title>
+  <desc>A brutish chess knight silhouette in deep teal with a minimax game tree inside, beside the Gambit wordmark.</desc>
+
+  <defs>
+    <clipPath id="kc">
+      <path d="
+        M108,330 L108,310
+        Q92,298 88,274
+        Q80,246 86,216
+        Q92,190 106,172
+        Q114,162 108,142
+        Q102,120 114,106
+        Q124,92 142,88
+        Q154,84 158,74
+        Q164,60 176,54
+        Q192,46 210,50
+        Q228,54 236,70
+        Q244,88 238,110
+        Q258,100 270,110
+        Q280,122 272,144
+        Q266,162 250,170
+        Q262,184 266,208
+        Q270,236 258,262
+        Q246,286 224,300
+        Q214,308 214,318
+        L214,330 Z
+      "/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="680" height="400" fill="#ffffff"/>
+
+  <!-- Knight body -->
+  <path d="
+    M108,330 L108,310
+    Q92,298 88,274
+    Q80,246 86,216
+    Q92,190 106,172
+    Q114,162 108,142
+    Q102,120 114,106
+    Q124,92 142,88
+    Q154,84 158,74
+    Q164,60 176,54
+    Q192,46 210,50
+    Q228,54 236,70
+    Q244,88 238,110
+    Q258,100 270,110
+    Q280,122 272,144
+    Q266,162 250,170
+    Q262,184 266,208
+    Q270,236 258,262
+    Q246,286 224,300
+    Q214,308 214,318
+    L214,330 Z
+  " fill="#1d5f5f" stroke="#0d3f3f" stroke-width="2.5"/>
+
+  <!-- Plinth -->
+  <rect x="94" y="328" width="130" height="14" rx="3" fill="#1d5f5f" stroke="#0d3f3f" stroke-width="2"/>
+
+  <!-- Snout detail -->
+  <path d="M158,74 Q164,60 176,54 Q170,64 166,70 Z" fill="#0d4f4f"/>
+
+  <!-- Brow ridge -->
+  <path d="M210,82 Q224,80 234,92 Q226,84 214,86 Z" fill="#0d4f4f"/>
+
+  <!-- Eye -->
+  <circle cx="216" cy="110" r="6" fill="#d0f0f0"/>
+  <circle cx="218" cy="111" r="3" fill="#041f1f"/>
+
+  <!-- Mane cuts -->
+  <path d="M108,202 Q98,212 96,228 Q106,214 112,210 Z" fill="#0d4f4f"/>
+  <path d="M104,234 Q92,246 90,262 Q102,250 108,244 Z" fill="#0d4f4f"/>
+
+  <!-- Game tree (clipped to knight silhouette) -->
+  <g clip-path="url(#kc)" opacity="0.45">
+    <circle cx="172" cy="182" r="10" fill="#c0f0f0"/>
+    <circle cx="148" cy="222" r="8" fill="#a8e4e4"/>
+    <circle cx="196" cy="222" r="8" fill="#a8e4e4"/>
+    <circle cx="134" cy="258" r="6" fill="#90d8d8"/>
+    <circle cx="160" cy="258" r="6" fill="#90d8d8"/>
+    <circle cx="186" cy="258" r="6" fill="#90d8d8"/>
+    <circle cx="210" cy="258" r="6" fill="#90d8d8"/>
+    <line x1="172" y1="192" x2="153" y2="214" stroke="#e0f8f8" stroke-width="2"/>
+    <line x1="172" y1="192" x2="191" y2="214" stroke="#e0f8f8" stroke-width="2"/>
+    <line x1="148" y1="230" x2="137" y2="252" stroke="#e0f8f8" stroke-width="1.5"/>
+    <line x1="148" y1="230" x2="159" y2="252" stroke="#e0f8f8" stroke-width="1.5"/>
+    <line x1="196" y1="230" x2="187" y2="252" stroke="#e0f8f8" stroke-width="1.5"/>
+    <line x1="196" y1="230" x2="209" y2="252" stroke="#e0f8f8" stroke-width="1.5"/>
+    <!-- Pruned branch -->
+    <line x1="160" y1="258" x2="153" y2="280" stroke="#ff9090" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="160" y1="258" x2="167" y2="280" stroke="#ff9090" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <!-- Pruning cross -->
+    <line x1="152" y1="266" x2="168" y2="276" stroke="#ff5050" stroke-width="2.5"/>
+    <line x1="168" y1="266" x2="152" y2="276" stroke="#ff5050" stroke-width="2.5"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="318" y="238"
+        font-family="Georgia, serif" font-weight="700" font-size="88"
+        fill="#1a3a3a" letter-spacing="-1">Gambit</text>
+
+  <!-- Subtitle -->
+  <text x="320" y="270"
+        font-family="Georgia, serif" font-weight="400" font-size="15"
+        fill="#4a7c7c" letter-spacing="3">GAME PLAYING FRAMEWORK</text>
+
+  <!-- Scala 3 badge -->
+  <rect x="320" y="290" width="90" height="24" rx="4" fill="#dc3121"/>
+  <text x="365" y="307"
+        font-family="Georgia, serif" font-weight="700" font-size="13"
+        fill="#ffffff" text-anchor="middle">Scala 3</text>
+
+</svg>

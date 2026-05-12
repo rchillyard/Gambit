@@ -2,7 +2,7 @@
 
 ## 1.1.0 (2026-05-12)
 
-### New features
+### New features 1.1.0
 
 - `AlphaBetaPlayer[P, S, M, Pl]` — generic minimax player with alpha-beta pruning
   and heuristic-based move ordering; configurable depth
@@ -20,7 +20,7 @@
 ### Infrastructure
 
 - `it` source set for slow functional tests (separate from unit tests)
-- GitHub Pages API documentation at https://rchillyard.github.io/Gambit/latest/api/
+- GitHub Pages API documentation at <https://rchillyard.github.io/Gambit/latest/api/>
 - `CODE_OF_CONDUCT.md` and `CONTRIBUTING.md` added
 - `GamePlayingDesign.md` updated to cover AlphaBeta, Tournament, tree reuse,
   and configuration
@@ -30,7 +30,7 @@
 
 ## 1.0.8 (2026-05-11)
 
-### New features
+### New features 1.0.8
 
 - `MCTSPlayer[P, S, M, Pl]` — generic Monte Carlo Tree Search player with UCB1
   selection and random rollout simulation

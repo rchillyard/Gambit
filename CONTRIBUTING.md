@@ -80,4 +80,4 @@ Add AlphaBetaPlayer with minimax search and alpha-beta pruning
 
 ## Questions
 
-Open a GitHub issue or contact r.hillyard@northeastern.edu.
+Open a GitHub issue or contact <r.hillyard@northeastern.edu>.

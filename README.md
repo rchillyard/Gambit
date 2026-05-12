@@ -130,7 +130,7 @@ Player             P     W     D     L    GD   Pts
 
 ## API Documentation
 
-Full Scaladoc at: https://rchillyard.github.io/Gambit/latest/api/
+Full Scaladoc at: <https://rchillyard.github.io/Gambit/latest/api/>
 
 To regenerate and publish:
 ```

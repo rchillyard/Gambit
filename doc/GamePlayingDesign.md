@@ -212,6 +212,7 @@ equally often. Driven by the same `given State[P, S]` and `given Game[S, M, Pl]`
 as `GameRunner`.
 
 **Scoring** — standard football 3-1-0:
+
 - Win  = 3 points
 - Draw = 1 point
 - Loss = 0 points

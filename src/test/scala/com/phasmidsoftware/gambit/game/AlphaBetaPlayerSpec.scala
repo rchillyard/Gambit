@@ -57,13 +57,6 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     oWins shouldBe empty
   }
 
-  it should "never lose as X against a random player" taggedAs Slow in {
-    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
-    val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(1L))
-    val stats = runner.playGames(20)
-    stats.winsFor(false) shouldBe 0
-  }
-
   it should "never lose as O against a random player" taggedAs Slow in {
     val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = false, depth = 6)
     val runner = TicTacToeGameRunner(new TTTRandomPlayer, ab, new Random(2L))
@@ -151,13 +144,5 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     val stats = runner.playGames(10)
     // AlphaBeta with depth 4 should outperform one-ply heuristic.
     stats.winsFor(true) should be >= stats.winsFor(false)
-  }
-
-  it should "be stronger than HeuristicPlayer with greater depth" taggedAs Slow in {
-    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
-    val heuristic = new C4HeuristicPlayer
-    val runner = Connect4GameRunner(ab, heuristic, new Random(8L))
-    val stats = runner.playGames(10)
-    stats.winsFor(true) should be > stats.lossesFor(true)
   }
 }

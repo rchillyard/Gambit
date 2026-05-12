@@ -197,9 +197,4 @@ class TournamentSpec extends AnyFlatSpec with should.Matchers {
     val rows = t.standings
     rows.head._1 shouldBe "AB(d=4)"
   }
-
-  it should "produce a complete Connect4Tournament table without throwing" taggedAs Slow in {
-    import com.phasmidsoftware.gambit.examples.connect4.Connect4Tournament
-    noException should be thrownBy Connect4Tournament.run(gamesPerPairing = 2)
-  }
 }

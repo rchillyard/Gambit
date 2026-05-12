@@ -6,6 +6,7 @@ import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
 import com.phasmidsoftware.gambit.examples.tictactoe.{Board, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
+import org.scalatest.tagobjects.Slow
 
 import scala.util.Random
 
@@ -32,21 +33,21 @@ class MCTSPlayerSpec extends AnyFlatSpec with should.Matchers {
     mcts.chooseMove(xWin, new Random(1L)) shouldBe None
   }
 
-  it should "never lose as X against a random player" in {
+  it should "never lose as X against a random player" taggedAs Slow in {
     val mcts   = MCTSPlayer[Board, TicTacToe, Int, Boolean](me = true, iterations = 300)
     val runner = TicTacToeGameRunner(mcts, new TTTRandomPlayer, new Random(1L))
     val stats  = runner.playGames(50)
     stats.winsFor(false) shouldBe 0
   }
 
-  it should "never lose as O against a random player" in {
+  it should "never lose as O against a random player" taggedAs Slow in {
     val mcts   = MCTSPlayer[Board, TicTacToe, Int, Boolean](me = false, iterations = 300)
     val runner = TicTacToeGameRunner(new TTTRandomPlayer, mcts, new Random(2L))
     val stats  = runner.playGames(50)
     stats.winsFor(true) shouldBe 0
   }
 
-  it should "draw most games against itself" in {
+  it should "draw most games against itself" taggedAs Slow in {
     val mctsX  = MCTSPlayer[Board, TicTacToe, Int, Boolean](me = true,  iterations = 500)
     val mctsO  = MCTSPlayer[Board, TicTacToe, Int, Boolean](me = false, iterations = 500)
     val runner = TicTacToeGameRunner(mctsX, mctsO, new Random(3L))
@@ -56,7 +57,7 @@ class MCTSPlayerSpec extends AnyFlatSpec with should.Matchers {
     stats.drawsFor(true) should be > 15
   }
 
-  it should "improve with more iterations — fewer losses against random" in {
+  it should "improve with more iterations — fewer losses against random" taggedAs Slow in {
     val rng = new Random(4L)
 
     // Low iterations baseline.
@@ -100,21 +101,21 @@ class MCTSPlayerSpec extends AnyFlatSpec with should.Matchers {
     mcts.chooseMove(win, new Random(1L)) shouldBe None
   }
 
-  it should "win more than it loses as X against a random player" in {
+  it should "win more than it loses as X against a random player" taggedAs Slow in {
     val mcts   = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 200)
     val runner = Connect4GameRunner(mcts, new C4RandomPlayer, new Random(5L))
     val stats  = runner.playGames(20)
     stats.winsFor(true) should be > stats.lossesFor(true)
   }
 
-  it should "win more than it loses as O against a random player" in {
+  it should "win more than it loses as O against a random player" taggedAs Slow in {
     val mcts   = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = false, iterations = 200)
     val runner = Connect4GameRunner(new C4RandomPlayer, mcts, new Random(6L))
     val stats  = runner.playGames(20)
     stats.winsFor(false) should be > stats.lossesFor(false)
   }
 
-  it should "be competitive against HeuristicPlayer" in {
+  it should "be competitive against HeuristicPlayer" taggedAs Slow in {
     val mcts      = MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = 500)
     val heuristic = new C4HeuristicPlayer
     val runner    = Connect4GameRunner(mcts, heuristic, new Random(7L))

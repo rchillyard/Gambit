@@ -3,6 +3,7 @@ package com.phasmidsoftware.gambit.examples.connect4
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
+import org.scalatest.tagobjects.Slow
 
 import scala.util.Random
 
@@ -112,14 +113,14 @@ class Connect4GameSpec extends AnyFlatSpec with should.Matchers {
     result(false) should (be(-1) or be(0) or be(1))
   }
 
-  it should "accumulate correct totals over multiple games" in {
+  it should "accumulate correct totals over multiple games" taggedAs Slow in {
     val runner = Connect4GameRunner(new RandomPlayer, new RandomPlayer, new Random(3L))
     val stats = runner.playGames(100)
     stats.total shouldBe 100
     stats.winsFor(true) + stats.winsFor(false) + stats.drawsFor(true) shouldBe 100
   }
 
-  it should "never produce a result where both players win" in {
+  it should "never produce a result where both players win" taggedAs Slow in {
     val runner = Connect4GameRunner(new RandomPlayer, new RandomPlayer, new Random(4L))
     val stats = runner.playGames(50)
     stats.results.foreach { result =>
@@ -133,13 +134,13 @@ class Connect4GameSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "HeuristicPlayer vs RandomPlayer"
 
-  it should "win more than it loses as X against a random player" in {
+  it should "win more than it loses as X against a random player" taggedAs Slow in {
     val runner = Connect4GameRunner(new HeuristicPlayer, new RandomPlayer, new Random(5L))
     val stats = runner.playGames(50)
     stats.winsFor(true) should be > stats.lossesFor(true)
   }
 
-  it should "win more than it loses as O against a random player" in {
+  it should "win more than it loses as O against a random player" taggedAs Slow in {
     val runner = Connect4GameRunner(new RandomPlayer, new HeuristicPlayer, new Random(6L))
     val stats = runner.playGames(50)
     stats.winsFor(false) should be > stats.lossesFor(false)
@@ -156,7 +157,7 @@ class Connect4GameSpec extends AnyFlatSpec with should.Matchers {
     noException should be thrownBy runner.playGame()
   }
 
-  it should "always produce a valid result" in {
+  it should "always produce a valid result" taggedAs Slow in {
     val runner = Connect4GameRunner(new HeuristicPlayer, new HeuristicPlayer, new Random(8L))
     val stats = runner.playGames(10)
     stats.total shouldBe 10

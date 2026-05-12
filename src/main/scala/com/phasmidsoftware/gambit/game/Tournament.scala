@@ -81,7 +81,7 @@ class Tournament[P, S, M, Pl](
     */
   def standings: Seq[(String, Int, Int, Int, Int, Int, Int)] =
     val totals = scala.collection.mutable.Map(
-      contestants.map(_.name -> TournamentRecord()): _*
+      contestants.map(_.name -> TournamentRecord()) *
     )
     // Every ordered pair (i, j) with i != j: contestant i plays as first player.
     for

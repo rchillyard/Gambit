@@ -25,3 +25,7 @@ libraryDependencies ++= Seq(
   "org.scalatest"              %% "scalatest"        % scalaTestVersion % Test,
   "junit" % "junit" % "4.13.2" % "test" // Used by java unit tests
 )
+
+enablePlugins(GhpagesPlugin, SiteScaladocPlugin)
+
+git.remoteRepo := "git@github.com:rchillyard/Gambit.git"

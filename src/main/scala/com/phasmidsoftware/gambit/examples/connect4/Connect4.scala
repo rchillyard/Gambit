@@ -1,7 +1,5 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
-import com.phasmidsoftware.gambit.game.State
-
 /**
   * Connect Four board state using a column-major bitboard representation.
   *
@@ -12,6 +10,8 @@ import com.phasmidsoftware.gambit.game.State
   *
   * `heights` tracks the next available row index per column (0..5).
   * A column is full when heights(col) == Connect4.rows.
+  *
+  * You can read more about the game here: [[https://en.wikipedia.org/wiki/Connect_Four#cite_note-19]]
   *
   * @param xBits   bit positions of X's pieces
   * @param oBits   bit positions of O's pieces

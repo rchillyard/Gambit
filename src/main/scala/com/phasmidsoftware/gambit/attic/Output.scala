@@ -130,7 +130,7 @@ sealed trait TypedOutput extends Output {
   def append(x: OutputType): Output
 
   def :+(x: Any): Output =
-    this append asOutputType(x)
+    this.append(asOutputType(x))
 
   def ++(xs: Iterator[Output])(implicit separator: Output): Output = xs.foldLeft[Output](this)(_ ++ separator ++ _)
 }
@@ -238,7 +238,7 @@ sealed trait CharacterOutput extends TypedOutput {
   def asLine(x: Any): Output = :+(x).insertBreak()
 }
 
-sealed trait BackedOutput[A <: Appendable with AutoCloseable] extends TypedOutput {
+sealed trait BackedOutput[A <: Appendable & AutoCloseable] extends TypedOutput {
   val appendable: A
 
   /**
@@ -258,7 +258,7 @@ sealed trait BackedOutput[A <: Appendable with AutoCloseable] extends TypedOutpu
  * @param sb          the StringBuilder that we use as temporary storage of characters.
  * @tparam A the underlying (appendable) type.
  */
-sealed abstract class BufferedCharSequenceOutput[A <: Appendable with AutoCloseable with Flushable](val appendable: A, var indentation: CharSequence, val sb: mutable.StringBuilder = new StringBuilder) extends CharacterOutput with BufferedOutput with BackedOutput[A] {
+sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable & Flushable](val appendable: A, var indentation: CharSequence, val sb: mutable.StringBuilder = new StringBuilder) extends CharacterOutput with BufferedOutput with BackedOutput[A] {
 
   val transform: CharSequence => CharSequence = identity
 
@@ -318,15 +318,13 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable with AutoClosea
     case b: BufferedOutput =>
       if (isBacked) backedConcatenate(b)
       else concatenateOther(b)
-    case _ =>
-      throw OutputException(s"unsupported Output type: ${output.getClass}")
   }
 
   def contentBrief: String = content.toString.substring(0, Math.min(20, sb.length))
 
   private def backedConcatenate(output: BufferedOutput): Output = if (output.isBacked) {
     close()
-    val bufferedCharSequenceOutput = output.asInstanceOf[BufferedCharSequenceOutput[_]]
+    val bufferedCharSequenceOutput = output.asInstanceOf[BufferedCharSequenceOutput[?]]
     if (indentation.length > bufferedCharSequenceOutput.indentation.length)
       bufferedCharSequenceOutput.indentation = indentation
     output

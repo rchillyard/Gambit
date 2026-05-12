@@ -26,7 +26,7 @@ its graph and tree traversal engine.
 Gambit is published to Maven Central. Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.0.8"
+libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.1.0"
 ```
 
 Requires Scala 3. Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.6.0,
@@ -139,7 +139,6 @@ sbt ghpagesPushSite
 
 ## Design Documents
 
-- `VisitorDesign.md` — design of the Visitor traversal engine
 - `GamePlayingDesign.md` — design of the game-playing framework: typeclasses,
   alpha-beta, MCTS with tree reuse, MENACE, Connect Four tournament, heuristic
   conventions, and future directions

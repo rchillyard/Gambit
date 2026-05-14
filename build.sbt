@@ -2,15 +2,15 @@ organization := "com.phasmidsoftware"
 
 name := "gambit"
 
-version := "1.1.0"
+version := "1.1.1-SNAPSHOT"
 
 scalaVersion := "3.7.4"
 
 val scalaTestVersion = "3.2.20"
 
 scalacOptions ++= Seq(
-  //  "-unchecked",
-  //  "-Xfatal-warnings",
+  "-unchecked",
+  "-Xfatal-warnings",
   "-deprecation",
   "-feature"
 )

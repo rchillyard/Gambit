@@ -8,6 +8,6 @@
 
 logs/archived/
 
-src/main/scala/com/phasmidsoftware/util/lazylists.sc
+src/main/scala/com/phasmidsoftware/gambit/util/lazylists.sc
 
 linkToCircleCIconfig

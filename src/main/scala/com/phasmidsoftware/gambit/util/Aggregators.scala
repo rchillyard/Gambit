@@ -1,4 +1,4 @@
-package com.phasmidsoftware.util
+package com.phasmidsoftware.gambit.util
 
 import scala.annotation.tailrec
 

@@ -1,4 +1,4 @@
-package com.phasmidsoftware.gambit.attic
+package com.phasmidsoftware.gambit.util
 
 /*
  * Copyright (c) 2019. Phasmid Software
@@ -26,7 +26,7 @@ sealed trait Output extends AutoCloseable {
    *
    * @return this
    */
-  def insertBreak(): Output
+  def insertBreak: Output
 
   /**
    * Append x to this Output.
@@ -235,7 +235,7 @@ sealed trait CharacterOutput extends TypedOutput {
 
   def asOutputType(x: Any): CharSequence = x.toString
 
-  def asLine(x: Any): Output = :+(x).insertBreak()
+  def asLine(x: Any): Output = :+(x).insertBreak
 }
 
 sealed trait BackedOutput[A <: Appendable & AutoCloseable] extends TypedOutput {
@@ -270,7 +270,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
 
   def isEmpty: Boolean = sb.isEmpty
 
-  def insertBreak(): Output = append(s"\n$indentation")
+  def insertBreak: Output = append(s"\n$indentation")
 
   def content: CharSequence = sb.mkString
 

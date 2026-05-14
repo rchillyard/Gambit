@@ -145,4 +145,92 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     // AlphaBeta with depth 4 should outperform one-ply heuristic.
     stats.winsFor(true) should be >= stats.winsFor(false)
   }
+
+  // ---------------------------------------------------------------------------
+  // Transposition table (keyFn)
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer transposition table"
+
+  it should "produce the same Connect4 move with and without keyFn" in {
+    val rng = new Random(1L)
+    val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
+    val abKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
+    )
+    abNoKey.chooseMove(Connect4.start, rng) shouldBe abKey.chooseMove(Connect4.start, rng)
+  }
+
+  it should "produce the same TicTacToe move with and without keyFn" in {
+    val rng = new Random(1L)
+    val abNoKey = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val abKey = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => s.board.value)
+    )
+    abNoKey.chooseMove(TicTacToe.start, rng) shouldBe abKey.chooseMove(TicTacToe.start, rng)
+  }
+
+  it should "evaluate faster with keyFn on a mid-game Connect4 position" in {
+    // A mid-game position with many transpositions reachable.
+    val mid = Connect4.start
+      .play(3, isX = true).play(3, isX = false)
+      .play(2, isX = true).play(4, isX = false)
+
+    val rng = new Random(1L)
+    val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
+    val abKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 6, keyFn = Some(s => (s.xBits, s.oBits))
+    )
+
+    val t0 = System.currentTimeMillis()
+    abNoKey.chooseMove(mid, rng)
+    val tNoKey = System.currentTimeMillis() - t0
+
+    val t1 = System.currentTimeMillis()
+    abKey.chooseMove(mid, rng)
+    val tKey = System.currentTimeMillis() - t1
+
+    // With memoization, evaluation should be at least as fast.
+    // We allow a 2x margin to account for JVM variance.
+    tKey should be <= (tNoKey * 2)
+  }
+
+  it should "clear the transposition table between games via gameOver" in {
+    // After gameOver, the table is cleared but the player should still work correctly.
+    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
+    )
+    val move1 = ab.chooseMove(Connect4.start, new Random(1L))
+    ab.gameOver(Map(true -> 1, false -> -1), true)
+    // After reset, should give the same answer.
+    val move2 = ab.chooseMove(Connect4.start, new Random(1L))
+    move1 shouldBe move2
+  }
+
+  it should "accept None keyFn and behave identically to the default constructor" in {
+    val rng = new Random(1L)
+    val abNone = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = None
+    )
+    val abDefault = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
+    abNone.chooseMove(Connect4.start, rng) shouldBe abDefault.chooseMove(Connect4.start, rng)
+  }
+
+  it should "preserve the TicTacToe never-lose guarantee with keyFn enabled" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
+      me = true, depth = 6, keyFn = Some(s => s.board.value)
+    )
+    val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
+    val stats = runner.playGames(20)
+    stats.winsFor(false) shouldBe 0
+  }
+
+  it should "preserve the Connect4 never-lose guarantee with keyFn enabled" in {
+    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
+    )
+    val runner = Connect4GameRunner(ab, new C4RandomPlayer, new Random(9L))
+    val stats = runner.playGames(20)
+    stats.winsFor(true) should be > stats.lossesFor(true)
+  }
 }

@@ -233,4 +233,72 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     val stats = runner.playGames(20)
     stats.winsFor(true) should be > stats.lossesFor(true)
   }
+
+  // ---------------------------------------------------------------------------
+  // Transposition table modes: flat, depth-tranches exact, depth-tranches reuse
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer transposition table modes"
+
+  it should "produce the same Connect4 move with flat table (default)" in {
+    val rng = new Random(1L)
+    val abFlat = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
+      depthTranches = false
+    )
+    abFlat.chooseMove(Connect4.start, rng) shouldBe Some(3)
+  }
+
+  it should "produce the same Connect4 move with depth-tranche exact mode" in {
+    val rng = new Random(1L)
+    val abTranche = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
+      depthTranches = true, reuseDeeper = false
+    )
+    abTranche.chooseMove(Connect4.start, rng) shouldBe Some(3)
+  }
+
+  it should "produce the same Connect4 move with depth-tranche reuse mode" in {
+    val rng = new Random(1L)
+    val abReuse = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
+      depthTranches = true, reuseDeeper = true
+    )
+    abReuse.chooseMove(Connect4.start, rng) shouldBe Some(3)
+  }
+
+  it should "produce identical moves across all three cache modes" in {
+    val mid = Connect4.start
+      .play(3, isX = true).play(3, isX = false)
+      .play(2, isX = true).play(4, isX = false)
+    val keyFn = Some((s: Connect4) => (s.xBits, s.oBits))
+    val abFlat = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = false)
+    val abExact = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = false)
+    val abReuse = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = true)
+    val moveFlat = abFlat.chooseMove(mid, new Random(1L))
+    val moveExact = abExact.chooseMove(mid, new Random(1L))
+    val moveReuse = abReuse.chooseMove(mid, new Random(1L))
+    moveFlat shouldBe moveExact
+    moveFlat shouldBe moveReuse
+  }
+
+  it should "never lose TicTacToe with depth-tranche exact mode" taggedAs Slow in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
+      me = true, depth = 6, keyFn = Some(s => s.board.value),
+      depthTranches = true, reuseDeeper = false
+    )
+    val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
+    val stats = runner.playGames(20)
+    stats.winsFor(false) shouldBe 0
+  }
+
+  it should "never lose TicTacToe with depth-tranche reuse mode" taggedAs Slow in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
+      me = true, depth = 6, keyFn = Some(s => s.board.value),
+      depthTranches = true, reuseDeeper = true
+    )
+    val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
+    val stats = runner.playGames(20)
+    stats.winsFor(false) shouldBe 0
+  }
 }

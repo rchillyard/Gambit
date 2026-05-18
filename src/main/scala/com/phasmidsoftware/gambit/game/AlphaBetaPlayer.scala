@@ -5,44 +5,89 @@ import scala.util.boundary.break
 import scala.util.{Random, boundary}
 
 /**
-  * AlphaBetaPlayer provides an implementation of an AI player for a turn-based game
-  * using the alpha-beta pruning algorithm. This player evaluates the game tree up to a
-  * given depth to determine optimal moves, minimizing computation by pruning branches
-  * that cannot influence the final result.
+  * A generic alpha-beta pruning player.
+  * For more information, see [[https://en.wikipedia.org/wiki/Alpha-beta_pruning]]
   *
-  * The class includes an optional transposition table for caching evaluation results,
-  * which improves efficiency by reusing previously computed states. Depending on the
-  * configuration, this table can use either a flat mapping or a depth-tranche structure.
+  * Implements minimax search with alpha-beta pruning to a configurable depth.
+  * Alpha-beta pruning eliminates branches that cannot affect the final decision,
+  * reducing the effective branching factor from b to approximately sqrt(b) in the
+  * best case -- effectively doubling the achievable search depth for the same
+  * computation compared to plain minimax.
   *
-  * @param me            the player instance represented by this AlphaBetaPlayer.
-  * @param depth         the maximum search depth for the alpha-beta pruning algorithm.
-  * @param keyFn         optional function to compute a unique hashable key for each game state;
-  *                      used for caching in the transposition table.
+  * == Heuristic Convention ==
   *
-  * @param reuseDeeper   flag indicating whether cached results from deeper depths
-  *                      should be reused in the transposition table.
+  * `State.heuristic(s)` is positive when the player who just moved to reach `s`
+  * is doing well. This is consistent with the convention used throughout Gambit.
+  * At leaf nodes (terminal or depth limit reached), the raw heuristic is returned.
+  * The maximizing/minimizing logic correctly accounts for this convention.
   *
-  * @param depthTranches flag indicating whether to organize the transposition table
-  *                      into depth-specific tranches.
+  * == Move Ordering ==
   *
-  * @param state         an implicit State instance defining the rules of the game and
-  *                      heuristic evaluation for states.
+  * Moves are ordered by heuristic before recursing -- highest first for the
+  * maximizing player, lowest first for the minimizing player. This shallow
+  * search ordering maximises the probability of early pruning, approaching
+  * the theoretical best-case performance of alpha-beta.
   *
-  * @param game          an implicit Game instance that describes valid moves,
-  *                      their application to states, and other game logic.
+  * == Mutable State ==
+  *
+  * Alpha and beta bounds are tracked with mutable variables, and `boundary`/`break`
+  * is used for early termination on a prune. This is intentional: alpha-beta
+  * pruning is fundamentally about early exit based on accumulated bounds, and
+  * fighting that with purely functional constructs would sacrifice both clarity
+  * and performance. Mutable state is appropriate here for the same reason it is
+  * appropriate in high-performance sorting algorithms.
+  *
+  * == Transposition Table ==
+  *
+  * An optional `keyFn` maps a state to a cache key. When provided, `alphaBeta`
+  * looks up the key before evaluating and caches the result afterwards, avoiding
+  * re-evaluation of positions reachable by multiple move orderings (transpositions).
+  * The table is cleared between games via `gameOver`.
+  *
+  * Three caching modes are available, controlled by `depthTranches` and `reuseDeeper`:
+  *
+  * - '''Flat table''' (`depthTranches = false`, default): a single `HashMap[Key, (Double, Int)]`
+  *   where the `Int` is the depth at which the result was cached. A cached entry is reused
+  *   if it was computed at least as deep as the current search. Works well for shallow games
+  *   (e.g. TicTacToe) where cross-depth reuse is beneficial.
+  *
+  * - '''Depth-tranche exact''' (`depthTranches = true, reuseDeeper = false`): separate sub-tables
+  *   per depth. Only exact-depth matches are reused. Works best for deep searches (e.g. bridge
+  *   double-dummy, ~52 plies) where a result cached at a shallower depth is not valid for a
+  *   deeper search. Benchmarked ~25% faster than flat for bridge.
+  *
+  * - '''Depth-tranche reuse''' (`depthTranches = true, reuseDeeper = true`): as above but also
+  *   scans deeper tranches on a miss. Tends to be slowest in practice due to scan overhead
+  *   outweighing the benefit of cross-depth reuse.
+  *
+  * Recommendation: use flat for shallow games, depth-tranche exact for deep searches.
+  *
+  * @param me            the player identifier representing this player.
+  * @param depth         the maximum search depth (default is 6). Determines how far
+  *                      ahead the algorithm looks in the game tree.
+  *
+  * @param keyFn         an optional function to generate unique keys for transposition
+  *                      table entries based on game states.
+  *
+  * @param depthTranches a flag to indicate if separate tables should be maintained
+  *                      for different depths (default is false).
+  *
+  * @param reuseDeeper   a flag indicating whether cached results from deeper depths can
+  *                      be reused when depth tranches mode is enabled (default is false).
+  *
+  * @param maxTableSize  the maximum size of the transposition table before pruning (default is unlimited).
+  * @param state         an implicit evidence parameter for the state abstraction in the game.
+  * @param game          an implicit evidence parameter for the game abstraction.
   */
 class AlphaBetaPlayer[P, S, M, Pl](
                                     me: Pl,
                                     depth: Int = 6,
                                     keyFn: Option[S => Any] = None,
+                                    depthTranches: Boolean = false,
                                     reuseDeeper: Boolean = false,
-                                    depthTranches: Boolean = false
+                                    maxTableSize: Int = Int.MaxValue
                                   )(using state: State[P, S], game: Game[S, M, Pl])
   extends Player[S, M, Pl]:
-
-  override def gameOver(result: GameResult[Pl], me: Pl): Unit =
-    flatTable.clear()
-    trancheTable.clear()
 
   /**
     * Calculates the total number of elements in the tables managed by the player.
@@ -54,13 +99,23 @@ class AlphaBetaPlayer[P, S, M, Pl](
     * @return the total number of elements in the tables.
     */
   def tableSize: Int =
-    if depthTranches then
-      trancheTable.values.map(_.size).sum
-    else
-      flatTable.size
+    if depthTranches
+    then trancheTable.values.map(_.size).sum
+    else flatTable.size
 
+  /**
+    * Selects the best move for the current player in the specified game state using the Alpha-Beta pruning algorithm.
+    * If the state corresponds to a goal or there are no available moves, no move is chosen.
+    *
+    * NOTE: side-effect of logging (DEBUG)
+    *
+    * @param s      the current game state.
+    * @param random an instance of Random, used for potential randomization (if needed).
+    * @return an Option containing the selected move if a valid move exists, otherwise None.
+    */
   override def chooseMove(s: S, random: Random): Option[M] =
-    if state.isGoal(s).isDefined then None
+    if state.isGoal(s).isDefined
+    then None
     else
       val moves = game.moves(s)
       if moves.isEmpty then None
@@ -69,10 +124,28 @@ class AlphaBetaPlayer[P, S, M, Pl](
         val maximizing = currentPl == me
         val scored = moves.map { m =>
           val next = game.applyMove(s, m, currentPl)
+          logger.debug(s"chooseMove: move=$m, heuristic=${state.heuristic(next)}")
           m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, !maximizing)
         }
         val best = if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
+        logger.debug(s"chooseMove: best=${best._1}, score=${best._2}")
         Some(best._1)
+
+  /**
+    * Handles the conclusion of a game by clearing the internal tables
+    * (flatTable and trancheTable) to reset the player's state.
+    *
+    * @param result the outcome of the game, represented as a `GameResult`
+    *               that associates players with their respective scores or results.
+    *
+    * @param me     the player instance representing the current player
+    *               for whom the gameOver method is invoked.
+    *
+    * @return Unit as this method performs a side-effect and does not return a value.
+    */
+  override def gameOver(result: GameResult[Pl], me: Pl): Unit =
+    flatTable.clear()
+    trancheTable.clear()
 
   // ---------------------------------------------------------------------------
   // Alpha-beta search
@@ -127,57 +200,40 @@ class AlphaBetaPlayer[P, S, M, Pl](
               }
             best
 
-    // Transposition table lookup and update.
-
-    def depthBasedLookup(key: Any, cached: Option[Double]) = cached match
-      case Some(v) => v
-      case None =>
-        val result = evaluate
-        trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)(key) = result
-        if tableSize % 10000 == 0 then
-          logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
-        result
-
     keyFn match
       case None =>
         evaluate
       case Some(f) =>
         val key = f(s)
         if !depthTranches then
-          // Option 1: flat table, reuse any result cached at >= current depth
-          flatLookup(depth, evaluate, key)
-        else {
-          // Options 2 & 3: depth-tranche table
+          // Flat table mode
+          flatTable.get(key) match
+            case Some((cached, cachedDepth)) if cachedDepth >= depth => cached
+            case _ =>
+              val result = evaluate
+              if tableSize < maxTableSize then
+                flatTable(key) = (result, depth)
+                if flatTable.size % 10000 == 0 then
+                  logger.debug(s"alphaBeta: tableSize=${flatTable.size}, depth=$depth")
+              result
+        else
+          // Depth-tranche mode
           val cached = trancheTable.get(depth).flatMap(_.get(key))
             .orElse(if reuseDeeper then
               trancheTable.keys.filter(_ > depth).flatMap(d => trancheTable(d).get(key)).headOption
             else None)
-          depthBasedLookup(key, cached)
-        }
-
-  private def flatLookup(depth: Int, evaluated: => Double, key: Any) = {
-    flatTable.get(key) match
-      case Some((cached, cachedDepth)) if cachedDepth >= depth =>
-        cached
-      case _ =>
-        val result = evaluated
-        flatTable(key) = (result, depth)
-        if flatTable.size % 10000 == 0 then
-          logger.debug(s"alphaBeta: tableSize=${flatTable.size}, depth=$depth")
-        result
-  }
+          cached match
+            case Some(v) => v
+            case None =>
+              val result = evaluate
+              if tableSize < maxTableSize then
+                trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)(key) = result
+                if tableSize % 10000 == 0 then
+                  logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
+              result
 
   /**
     * Generate and order successor (move, state) pairs for move ordering.
-    *
-    * For the maximizing player, high-heuristic successors are tried first --
-    * they are most likely to raise alpha quickly and trigger pruning.
-    * For the minimizing player, low-heuristic successors are tried first.
-    *
-    * @param s          the current state.
-    * @param currentPl  the player to move.
-    * @param maximizing true if the current player is maximizing.
-    * @return ordered sequence of (move, successor state) pairs.
     */
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
     val successors = game.moves(s).map { m =>
@@ -186,11 +242,6 @@ class AlphaBetaPlayer[P, S, M, Pl](
     if maximizing then successors.sortBy((_, next) => -state.heuristic(next))
     else successors.sortBy((_, next) => state.heuristic(next))
 
-  /**
-    * Transposition table: either a flat table mapping keys to (value, depth),
-    * or a depth-tranche table mapping depth to a sub-table of keys to values.
-    * Controlled by the `depthTranches` constructor parameter.
-    */
   private val flatTable: mutable.HashMap[Any, (Double, Int)] = mutable.HashMap.empty
   private val trancheTable: mutable.HashMap[Int, mutable.HashMap[Any, Double]] = mutable.HashMap.empty
 

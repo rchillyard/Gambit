@@ -46,7 +46,7 @@ import scala.util.{Random, boundary}
   *
   * Three caching modes are available, controlled by `depthTranches` and `reuseDeeper`:
   *
-  * - '''Flat table''' (`depthTranches = false`, default): a single `HashMap[Key, (Double, Int)]`
+  * - '''Flat table''' (`depthTranches = false`, default): a single `HashMap[K, (Double, Int)]`
   *   where the `Int` is the depth at which the result was cached. A cached entry is reused
   *   if it was computed at least as deep as the current search. Works well for shallow games
   *   (e.g. TicTacToe) where cross-depth reuse is beneficial.
@@ -66,24 +66,28 @@ import scala.util.{Random, boundary}
   * @tparam S  The type representing the game state.
   * @tparam M  The type representing the move in the game.
   * @tparam Pl The type representing the players in the game.
-  * @tparam K  The type representing the key for the transposition table entries in the game.
-  * @constructor Creates a new AlphaBetaPlayer instance.
+  * @tparam K  The type of the transposition table key. Use `Any` when no caching is needed
+  *            (via the companion `apply`); otherwise a compact type such as `Int`,
+  *            `(Long, Long)`, or a case class that has correct `equals`/`hashCode`.
+  *
   * @param me            the player identifier representing this player.
   * @param depth         the maximum search depth (default is 6). Determines how far
   *                      ahead the algorithm looks in the game tree.
   *
-  * @param keyFn         an optional function to generate unique keys for transposition
-  *                      table entries based on game states.
+  * @param keyFn         an optional function mapping a state to a transposition table key.
+  *                      When `None` (default) no memoization is performed.
   *
   * @param depthTranches a flag to indicate if separate tables should be maintained
   *                      for different depths (default is false).
   *
-  * @param reuseDeeper   Whether to reuse cached evaluations from deeper depths during
-  *                      evaluation. Only valid if `depthTranches` is true. Default is false.
+  * @param reuseDeeper   whether to reuse cached evaluations from deeper depths during
+  *                      evaluation. Only meaningful if `depthTranches` is true. Default is false.
   *
-  * @param maxTableSize  The maximum size of the transposition table. Default is Int.MaxValue.
-  * @param state         The typeclass providing state-specific functionalities.
-  * @param game          The typeclass providing game-specific behaviors.
+  * @param maxTableSize  the maximum size of the transposition table before writes are
+  *                      suppressed. Default is `Int.MaxValue` (unlimited).
+  *
+  * @param state         the typeclass providing state-specific functionalities.
+  * @param game          the typeclass providing game-specific behaviours.
   */
 class AlphaBetaPlayer[P, S, M, Pl, K](
                                        me: Pl,
@@ -110,13 +114,14 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     else flatTable.size
 
   /**
-    * Selects the best move for the current player in the specified game state using the Alpha-Beta pruning algorithm.
-    * If the state corresponds to a goal or there are no available moves, no move is chosen.
+    * Selects the best move for the current player in the specified game state using the
+    * alpha-beta pruning algorithm. Returns `None` if the state is already terminal or
+    * there are no available moves.
     *
-    * NOTE: side-effect of logging (DEBUG)
+    * NOTE: side-effect of logging (DEBUG).
     *
     * @param s      the current game state.
-    * @param random an instance of Random, used for potential randomization (if needed).
+    * @param random an instance of Random (reserved for future randomisation).
     * @return an Option containing the selected move if a valid move exists, otherwise None.
     */
   override def chooseMove(s: S, random: Random): Option[M] =
@@ -138,14 +143,11 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         Some(best._1)
 
   /**
-    * Handles the conclusion of a game by clearing the internal tables
-    * (flatTable and trancheTable) to reset the player's state.
+    * Handles the conclusion of a game by clearing both transposition tables,
+    * resetting the player's memoization state ready for the next game.
     *
-    * @param result the outcome of the game, represented as a `GameResult`
-    *               that associates players with their respective scores or results.
-    * @param me     the player instance representing the current player
-    *               for whom the gameOver method is invoked.
-    * @return Unit as this method performs a side-effect and does not return a value.
+    * @param result the outcome of the game.
+    * @param me     the player instance for whom the game is over.
     */
   override def gameOver(result: GameResult[Pl], me: Pl): Unit =
     flatTable.clear()
@@ -183,66 +185,120 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         case None =>
           val currentPl = game.currentPlayer(s)(using state)
           val moves = orderedMoves(s, currentPl, maximizing)
-          if maximizing then
-            var a = alpha
-            var best = -Double.MaxValue
-            boundary:
-              moves.foreach { (m, next) =>
-                best = best.max(alphaBeta(next, depth - 1, a, beta, false))
-                a = a.max(best)
-                if a >= beta then break(best) // prune: minimizer won't allow this
-              }
-            best
-          else
-            var b = beta
-            var best = Double.MaxValue
-            boundary:
-              moves.foreach { (m, next) =>
-                best = best.min(alphaBeta(next, depth - 1, alpha, b, true))
-                b = b.min(best)
-                if alpha >= b then break(best) // prune: maximizer won't allow this
-              }
-            best
+          if maximizing then maximizingSearch(moves, depth - 1, alpha, beta)
+          else minimizingSearch(moves, depth - 1, alpha, beta)
 
-    keyFn match
-      case None =>
-        evaluate
-      case Some(f) =>
-        val key = f(s)
-        if !depthTranches then
-          // Flat table mode
-          flatTable.get(key) match
-            case Some((cached, cachedDepth)) if cachedDepth >= depth => cached
-            case _ =>
-              val result = evaluate
-              if tableSize < maxTableSize then
-                flatTable(key) = (result, depth)
-                if flatTable.size % 10000 == 0 then
-                  logger.debug(s"alphaBeta: tableSize=${flatTable.size}, depth=$depth")
-              result
-        else
-          // Depth-tranche mode
-          val cached = trancheTable.get(depth).flatMap(_.get(key))
-            .orElse(if reuseDeeper then
-              trancheTable.keys.filter(_ > depth).flatMap(d => trancheTable(d).get(key)).headOption
-            else None)
-          cached match
-            case Some(v) => v
-            case None =>
-              val result = evaluate
-              if tableSize < maxTableSize then
-                trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)(key) = result
-                if tableSize % 10000 == 0 then
-                  logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
-              result
+    cachedEvaluate(s, depth, evaluate)
 
   /**
-    * Generate and order successor (move, state) pairs for move ordering.
+    * Maximizing half of alpha-beta: iterates over successor states, updating
+    * the alpha bound and pruning when alpha >= beta.
+    *
+    * @param moves the ordered sequence of (move, successor-state) pairs.
+    * @param depth remaining search depth to pass to recursive calls.
+    * @param alpha current alpha bound.
+    * @param beta  current beta bound.
+    * @return the best (highest) score found for the maximizing player.
+    */
+  private def maximizingSearch(moves: Seq[(M, S)], depth: Int, alpha: Double, beta: Double): Double =
+    var a = alpha
+    var best = -Double.MaxValue
+    boundary:
+      moves.foreach { (_, next) =>
+        best = best.max(alphaBeta(next, depth, a, beta, false))
+        a = a.max(best)
+        if a >= beta then break(best) // prune: minimizer won't allow this
+      }
+    best
+
+  /**
+    * Minimizing half of alpha-beta: iterates over successor states, updating
+    * the beta bound and pruning when alpha >= beta.
+    *
+    * @param moves the ordered sequence of (move, successor-state) pairs.
+    * @param depth remaining search depth to pass to recursive calls.
+    * @param alpha current alpha bound.
+    * @param beta  current beta bound.
+    * @return the best (lowest) score found for the minimizing player.
+    */
+  private def minimizingSearch(moves: Seq[(M, S)], depth: Int, alpha: Double, beta: Double): Double =
+    var b = beta
+    var best = Double.MaxValue
+    boundary:
+      moves.foreach { (_, next) =>
+        best = best.min(alphaBeta(next, depth, alpha, b, true))
+        b = b.min(best)
+        if alpha >= b then break(best) // prune: maximizer won't allow this
+      }
+    best
+
+  /**
+    * Wraps `evaluate` with transposition-table lookup and store.
+    * The `evaluate` argument is by-name so it is only called on a cache miss.
+    *
+    * When `keyFn` is `None`, evaluates directly with no caching.
+    * When `depthTranches` is false, uses the flat table (reuses entries cached
+    * at equal or greater depth).
+    * When `depthTranches` is true, uses per-depth sub-tables; optionally also
+    * checks deeper tranches when `reuseDeeper` is true.
+    *
+    * @param s        the state being evaluated (used to compute the cache key).
+    * @param depth    the current search depth (used as part of the cache key in tranche mode).
+    * @param evaluate the evaluation thunk, called only on a cache miss.
+    * @return the cached or freshly computed minimax value.
+    */
+  private def cachedEvaluate(s: S, depth: Int, evaluate: => Double): Double =
+    keyFn match
+      case None => evaluate
+      case Some(f) =>
+        val key = f(s)
+        if !depthTranches then cachedEvaluateFlat(key, depth, evaluate)
+        else cachedEvaluateTranche(key, depth, evaluate)
+
+  /**
+    * Flat-table cache lookup and store.
+    * Reuses a cached entry if it was computed at least as deep as the current search.
+    */
+  private def cachedEvaluateFlat(key: K, depth: Int, evaluate: => Double): Double =
+    flatTable.get(key) match
+      case Some((cached, cachedDepth)) if cachedDepth >= depth => cached
+      case _ =>
+        val result = evaluate
+        if tableSize < maxTableSize then
+          flatTable(key) = (result, depth)
+          if flatTable.size % 10000 == 0 then
+            logger.debug(s"alphaBeta: tableSize=${flatTable.size}, depth=$depth")
+        result
+
+  /**
+    * Depth-tranche cache lookup and store.
+    * Looks up the exact-depth sub-table first; optionally scans deeper tranches
+    * when `reuseDeeper` is true.
+    */
+  private def cachedEvaluateTranche(key: K, depth: Int, evaluate: => Double): Double =
+    val cached = trancheTable.get(depth).flatMap(_.get(key))
+      .orElse(
+        if reuseDeeper then
+          trancheTable.keys.filter(_ > depth).flatMap(d => trancheTable(d).get(key)).headOption
+        else None
+      )
+    cached match
+      case Some(v) => v
+      case None =>
+        val result = evaluate
+        if tableSize < maxTableSize then
+          trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)(key) = result
+          if tableSize % 10000 == 0 then
+            logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
+        result
+
+  /**
+    * Generates and orders successor (move, state) pairs for move ordering.
+    * Maximizing player gets successors sorted highest-heuristic first;
+    * minimizing player gets lowest-heuristic first.
     */
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
-    val successors = game.moves(s).map { m =>
-      m -> game.applyMove(s, m, currentPl)
-    }
+    val successors = game.moves(s).map(m => m -> game.applyMove(s, m, currentPl))
     if maximizing then successors.sortBy((_, next) => -state.heuristic(next))
     else successors.sortBy((_, next) => state.heuristic(next))
 
@@ -252,31 +308,26 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
   private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
 /**
-  * A singleton object that provides a way to create an instance of `AlphaBetaPlayer`.
-  * The `AlphaBetaPlayer` is a game-playing agent that uses the Alpha-Beta pruning algorithm
-  * to efficiently evaluate and select moves in a game environment. This is typically used in
-  * games involving heuristic tree searches, such as chess or tic-tac-toe.
+  * Companion object for `AlphaBetaPlayer`.
   *
-  * The `apply` method allows for the construction of an `AlphaBetaPlayer` with customizable
-  * parameters.
+  * Provides a convenience `apply` for the common case where no transposition
+  * table is needed. The key type is erased to `Any`; callers that want a typed
+  * key should use `new AlphaBetaPlayer[P, S, M, Pl, K](...)` directly.
   */
 object AlphaBetaPlayer:
+
   /**
-    * Applies the Alpha-Beta search algorithm to create an `AlphaBetaPlayer` for decision-making
-    * in a game scenario. This method constructs a player object tailored to evaluate and choose
-    * optimal moves using the provided state, game, and depth parameters.
+    * Creates an `AlphaBetaPlayer` with no transposition table.
     *
-    * @tparam P  The type representing a proto-state, which helps transition between game states.
-    * @tparam S  The type representing the game state.
-    * @tparam M  The type representing the move in the game.
-    * @tparam Pl The type representing the players in the game.
-    * @param me    the player instance being used for the game.
-    * @param depth the maximum search depth for the Alpha-Beta search algorithm. Defaults to 6.
-    * @param state an implicit parameter describing the state of the game, including rules for transitions
-    *              and heuristic evaluations.
-    *
-    * @param game  an implicit parameter representing the game mechanics, including valid moves and turn alternations.
-    * @return an `AlphaBetaPlayer` initialized with the given player, depth, and supporting game logic.
+    * @tparam P  proto-state type.
+    * @tparam S  state type.
+    * @tparam M  move type.
+    * @tparam Pl player-identity type.
+    * @param me    the player identifier for this player.
+    * @param depth maximum search depth (default 6).
+    * @param state implicit `State[P, S]` typeclass instance.
+    * @param game  implicit `Game[S, M, Pl]` typeclass instance.
+    * @return a new `AlphaBetaPlayer` with no caching.
     */
   def apply[P, S, M, Pl](me: Pl, depth: Int = 6)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayer[P, S, M, Pl, Any] =
     new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game)

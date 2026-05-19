@@ -1,7 +1,7 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
-import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Contestant, GambitConfig, MCTSPlayer, Tournament}
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayerKeyed, Contestant, GambitConfig, MCTSPlayer, Tournament}
 
 import scala.util.Random
 
@@ -83,8 +83,8 @@ object Connect4Tournament:
     val contestants = Seq(
       Contestant("Random",            new RandomPlayer),
       Contestant("Heuristic",         new HeuristicPlayer),
-      Contestant(s"AlphaBeta(d=$d1)", AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = d1)),
-      Contestant(s"AlphaBeta(d=$d2)", AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = d2)),
+      Contestant(s"AlphaBeta(d=$d1)", AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me = true, depth = d1)),
+      Contestant(s"AlphaBeta(d=$d2)", AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me = true, depth = d2)),
       Contestant(s"MCTS(i=$i1)",      MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i1, explorationConstant = c)),
       Contestant(s"MCTS(i=$i2)",      MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i2, explorationConstant = c)),
     )

@@ -79,14 +79,14 @@ import scala.util.{Random, boundary}
   * @param state         an implicit evidence parameter for the state abstraction in the game.
   * @param game          an implicit evidence parameter for the game abstraction.
   */
-class AlphaBetaPlayer[P, S, M, Pl](
-                                    me: Pl,
-                                    depth: Int = 6,
-                                    keyFn: Option[S => Any] = None,
-                                    depthTranches: Boolean = false,
-                                    reuseDeeper: Boolean = false,
-                                    maxTableSize: Int = Int.MaxValue
-                                  )(using state: State[P, S], game: Game[S, M, Pl])
+class AlphaBetaPlayerKeyed[P, S, M, Pl, K](
+                                       me: Pl,
+                                       depth: Int = 6,
+                                       keyFn: Option[S => K] = None,
+                                       depthTranches: Boolean = false,
+                                       reuseDeeper: Boolean = false,
+                                       maxTableSize: Int = Int.MaxValue
+                                     )(using state: State[P, S], game: Game[S, M, Pl])
   extends Player[S, M, Pl]:
 
   /**
@@ -242,7 +242,11 @@ class AlphaBetaPlayer[P, S, M, Pl](
     if maximizing then successors.sortBy((_, next) => -state.heuristic(next))
     else successors.sortBy((_, next) => state.heuristic(next))
 
-  private val flatTable: mutable.HashMap[Any, (Double, Int)] = mutable.HashMap.empty
-  private val trancheTable: mutable.HashMap[Int, mutable.HashMap[Any, Double]] = mutable.HashMap.empty
+  private val flatTable: mutable.HashMap[K, (Double, Int)] = mutable.HashMap.empty
+  private val trancheTable: mutable.HashMap[Int, mutable.HashMap[K, Double]] = mutable.HashMap.empty
 
   private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
+
+object AlphaBetaPlayer:
+  def apply[P, S, M, Pl](me: Pl, depth: Int = 6, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayerKeyed[P, S, M, Pl, Any] =
+  new AlphaBetaPlayerKeyed[P, S, M, Pl, Any](me, depth, None, depthTranches, reuseDeeper, maxTableSize)(using state, game)

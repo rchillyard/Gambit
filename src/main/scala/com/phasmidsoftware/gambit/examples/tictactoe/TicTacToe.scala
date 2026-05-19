@@ -1,10 +1,11 @@
 package com.phasmidsoftware.gambit.examples.tictactoe
 
 import com.phasmidsoftware.flog.{Flog, Loggable}
+import com.phasmidsoftware.gambit.examples.connect4.Connect4
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
-import com.phasmidsoftware.gambit.game.{Move, State, Transition}
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayerKeyed, Game, Move, State, Transition}
 import com.phasmidsoftware.gambit.util.Aggregators.{hasOne, hasTwo}
 import com.phasmidsoftware.gambit.util.{GambitException, Shuffle}
 
@@ -543,3 +544,6 @@ case class Board(sequence: Int, value: Int) {
     (value & 0xC00000) != 0
 
 }
+
+class AlphaBetaPlayerTicTacToe(me: Boolean, depth: Int = 6, keyFn: Option[TicTacToe => Int] = None, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[Board, TicTacToe], game: Game[TicTacToe, Int, Boolean]) extends
+  AlphaBetaPlayerKeyed[Board, TicTacToe, Int, Boolean, Int](me, depth, keyFn, depthTranches, reuseDeeper, maxTableSize)(using state, game)

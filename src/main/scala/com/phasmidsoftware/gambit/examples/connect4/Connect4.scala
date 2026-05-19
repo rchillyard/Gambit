@@ -1,5 +1,7 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayerKeyed, Game, State}
+
 /**
   * Connect Four board state using a column-major bitboard representation.
   *
@@ -170,3 +172,7 @@ object Connect4:
           case '.' | ' ' => // empty
           case c => throw new IllegalArgumentException(s"Connect4.parse: illegal char '$c'")
     Connect4(xBits, oBits, heights.toVector)
+
+
+class AlphaBetaPlayerConnect4(me: Boolean, depth: Int = 6, keyFn: Option[Connect4 => (Long, Long)] = None, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[Connect4, Connect4], game: Game[Connect4, Int, Boolean]) extends
+  AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth, keyFn, depthTranches, reuseDeeper, maxTableSize)(using state, game)    

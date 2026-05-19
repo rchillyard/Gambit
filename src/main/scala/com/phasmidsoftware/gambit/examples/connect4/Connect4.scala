@@ -1,6 +1,6 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
-import com.phasmidsoftware.gambit.game.{AlphaBetaPlayerKeyed, Game, State}
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Game, State}
 
 /**
   * Connect Four board state using a column-major bitboard representation.
@@ -174,5 +174,34 @@ object Connect4:
     Connect4(xBits, oBits, heights.toVector)
 
 
+/**
+  * An implementation of an Alpha-Beta pruning player for the game of Connect 4.
+  *
+  * This class extends `AlphaBetaPlayer`, specifically tailored for the Connect 4 game.
+  * It utilizes the Alpha-Beta pruning algorithm to search through the game tree
+  * and determine the optimal move by minimizing the branching factor and evaluating
+  * the most promising paths. The class integrates enhancements such as state reuse
+  * and transposition table usage to optimize the search process.
+  *
+  * @param me            Indicates whether the player is X (`true`) or O (`false`).
+  * @param depth         The maximum search depth for the algorithm. Defaults to 6.
+  * @param keyFn         An optional function to compute hash keys for states.
+  *                      These keys facilitate faster lookups in a transposition table.
+  *
+  * @param depthTranches If `true`, search is organized in tranches by depth to 
+  *                      allow progressive depth increases during iterative deepening.
+  *
+  * @param reuseDeeper   If `true`, leverages previous deeper search results to avoid
+  *                      recomputing already explored portions of the game tree.
+  *
+  * @param maxTableSize  The maximum allowed size of the transposition table used
+  *                      for memoization.
+  *
+  * @param state         An implicit state management typeclass, used to manage and 
+  *                      manipulate the Connect 4 game state.
+  *
+  * @param game          An implicit game typeclass that defines the rules, moves,
+  *                      and evaluation for the Connect 4 game.
+  */
 class AlphaBetaPlayerConnect4(me: Boolean, depth: Int = 6, keyFn: Option[Connect4 => (Long, Long)] = None, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[Connect4, Connect4], game: Game[Connect4, Int, Boolean]) extends
-  AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth, keyFn, depthTranches, reuseDeeper, maxTableSize)(using state, game)    
+  AlphaBetaPlayer[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth, keyFn, depthTranches, reuseDeeper, maxTableSize)(using state, game)    

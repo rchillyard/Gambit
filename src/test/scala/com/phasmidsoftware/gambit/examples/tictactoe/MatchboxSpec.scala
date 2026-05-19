@@ -37,7 +37,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   it should "create a matchbox for a mid-game position with correct open cells" in {
     // X plays cell 0 (top-left), O plays cell 4 (centre) → 7 open cells remain
     val ttt = pos("X...0....")
-    val mb  = Matchbox.fromPosition(ttt)
+    val mb = Matchbox.fromPosition(ttt)
     mb.moveCount shouldBe 7
     mb.beads.keys should not contain 0
     mb.beads.keys should not contain 4
@@ -56,7 +56,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   behavior of "Matchbox.select"
 
   it should "always return a cell contained in the matchbox" in {
-    val mb  = Matchbox.fromPosition(empty)
+    val mb = Matchbox.fromPosition(empty)
     val rng = new Random(0L)
     (1 to 50).foreach { _ =>
       val cell = mb.select(rng)
@@ -70,15 +70,15 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "return the only available move when there is one" in {
-    val mb  = Matchbox(Map(5 -> 10))
+    val mb = Matchbox(Map(5 -> 10))
     val rng = new Random(0L)
     (1 to 20).foreach(_ => mb.select(rng) shouldBe Some(5))
   }
 
   it should "be weighted — heavily-loaded cell wins most of the time" in {
     // Cell 2 has 100 beads, cell 7 has 1 bead.
-    val mb   = Matchbox(Map(2 -> 100, 7 -> 1))
-    val rng  = new Random(42L)
+    val mb = Matchbox(Map(2 -> 100, 7 -> 1))
+    val rng = new Random(42L)
     val picks = (1 to 200).map(_ => mb.select(rng).get)
     val cell2Count = picks.count(_ == 2)
     // With 100:1 odds, cell 2 should win the vast majority of trials.
@@ -86,8 +86,8 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "distribute uniformly when all beads are equal" in {
-    val mb   = Matchbox(Map(0 -> 10, 1 -> 10, 2 -> 10))
-    val rng  = new Random(99L)
+    val mb = Matchbox(Map(0 -> 10, 1 -> 10, 2 -> 10))
+    val rng = new Random(99L)
     val picks = (1 to 3000).map(_ => mb.select(rng).get)
     // Each cell should appear roughly 1000 times; allow ±20% tolerance.
     picks.count(_ == 0) should (be > 700 and be < 1300)
@@ -102,13 +102,13 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   behavior of "Matchbox.reward and penalise"
 
   it should "add winDelta beads on reward" in {
-    val mb      = Matchbox(Map(3 -> 4))
+    val mb = Matchbox(Map(3 -> 4))
     val updated = mb.reward(3)
     updated.beads(3) shouldBe 4 + Matchbox.winDelta
   }
 
   it should "subtract lossDelta beads on penalise" in {
-    val mb      = Matchbox(Map(3 -> 4))
+    val mb = Matchbox(Map(3 -> 4))
     val updated = mb.penalise(3)
     updated.beads(3) shouldBe 4 - Matchbox.lossDelta
   }
@@ -122,7 +122,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "only update the targeted cell" in {
-    val mb      = Matchbox(Map(0 -> 4, 1 -> 4, 2 -> 4))
+    val mb = Matchbox(Map(0 -> 4, 1 -> 4, 2 -> 4))
     val updated = mb.reward(1)
     updated.beads(0) shouldBe 4
     updated.beads(2) shouldBe 4
@@ -152,13 +152,13 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   it should "map rotationally equivalent positions to the same matchbox" in {
     val mbs = Matchboxes()
     // X in top-left corner (cell 0) = 0x40000000
-    val topLeft     = pos("X........")
+    val topLeft = pos("X........")
     // X in top-right corner (cell 2) — a 90° rotation of top-left
-    val topRight    = pos("..X......")
+    val topRight = pos("..X......")
     // X in bottom-right corner (cell 8) — 180° rotation
     val bottomRight = pos("........X")
     // X in bottom-left corner (cell 6) — 270° rotation
-    val bottomLeft  = pos("......X..")
+    val bottomLeft = pos("......X..")
 
     mbs.get(topLeft)
     mbs.get(topRight)
@@ -172,7 +172,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   it should "map a position and its transpose to the same matchbox" in {
     val mbs = Matchboxes()
     // X in top-right (cell 2) and X in bottom-left (cell 6) are transposes.
-    val topRight  = pos("..X......")
+    val topRight = pos("..X......")
     val bottomLeft = pos("......X..")
     mbs.get(topRight)
     mbs.get(bottomLeft)
@@ -182,17 +182,17 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   it should "use distinct matchboxes for non-equivalent positions" in {
     val mbs = Matchboxes()
     // Corner vs edge — not equivalent under D4.
-    val corner = pos("X........")  // cell 0, corner
-    val edge   = pos(".X.......")  // cell 1, top edge
+    val corner = pos("X........") // cell 0, corner
+    val edge = pos(".X.......") // cell 1, top edge
     mbs.get(corner)
     mbs.get(edge)
     mbs.size shouldBe 2
   }
 
   it should "update beads correctly for a win" in {
-    val mbs  = Matchboxes()
-    val ttt  = empty
-    val mb0  = mbs.get(ttt)
+    val mbs = Matchboxes()
+    val ttt = empty
+    val mb0 = mbs.get(ttt)
     val cell = mb0.select(new Random(0L)).get
     mbs.update(ttt, cell, Win)
     val mb1 = mbs.get(ttt)
@@ -202,9 +202,9 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "update beads correctly for a loss" in {
-    val mbs  = Matchboxes()
-    val ttt  = empty
-    val mb0  = mbs.get(ttt)
+    val mbs = Matchboxes()
+    val ttt = empty
+    val mb0 = mbs.get(ttt)
     val cell = mb0.select(new Random(0L)).get
     mbs.update(ttt, cell, Loss)
     val mb1 = mbs.get(ttt)
@@ -212,9 +212,9 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "leave beads unchanged for a draw" in {
-    val mbs  = Matchboxes()
-    val ttt  = empty
-    val mb0  = mbs.get(ttt)
+    val mbs = Matchboxes()
+    val ttt = empty
+    val mb0 = mbs.get(ttt)
     val cell = mb0.select(new Random(0L)).get
     mbs.update(ttt, cell, Draw)
     val mb1 = mbs.get(ttt)
@@ -249,8 +249,8 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   it should "round-trip a move through canonicalize and back for corner positions" in {
     // For the empty board, canonical form is the empty board (value 0),
     // so the transform is identity and cell indices are unchanged.
-    val mbs  = Matchboxes()
-    val mb0  = mbs.get(empty)
+    val mbs = Matchboxes()
+    val mb0 = mbs.get(empty)
     val cell = 4 // centre
     mbs.update(empty, cell, Win)
     val mb1 = mbs.get(empty)
@@ -265,9 +265,9 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   behavior of "MenacePlayer"
 
   it should "choose a move from the starting position" in {
-    val mbs    = Matchboxes()
+    val mbs = Matchboxes()
     val player = new MenacePlayer(mbs)
-    val move   = player.chooseMove(empty, new Random(0L))
+    val move = player.chooseMove(empty, new Random(0L))
     move shouldBe defined
     move.get should (be >= 0 and be <= 8)
   }
@@ -290,9 +290,9 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "clear history after gameOver so the next game starts fresh" in {
-    val mbs    = Matchboxes()
+    val mbs = Matchboxes()
     val player = new MenacePlayer(mbs)
-    val rng    = new Random(0L)
+    val rng = new Random(0L)
 
     player.chooseMove(empty, rng)
     player.gameOver(Map(true -> -1, false -> 1), true)
@@ -316,13 +316,13 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
   import TicTacToe.TicTacToeState$
 
   it should "play a single game without throwing" in {
-    val mbs    = Matchboxes()
+    val mbs = Matchboxes()
     val runner = TicTacToeGameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(1L))
     noException should be thrownBy runner.playGame()
   }
 
   it should "return a valid GameResult" in {
-    val mbs    = Matchboxes()
+    val mbs = Matchboxes()
     val runner = TicTacToeGameRunner(new MenacePlayer(mbs), new RandomPlayer, new Random(2L))
     val result = runner.playGame()
     // Result must have scores for both players summing to 0 (zero-sum) or both 0 (draw).
@@ -334,16 +334,16 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
 
   it should "accumulate correct totals over multiple games" in {
     val runner = TicTacToeGameRunner(new RandomPlayer, new RandomPlayer, new Random(3L))
-    val stats  = runner.playGames(100)
+    val stats = runner.playGames(100)
     stats.total shouldBe 100
     stats.winsFor(true) + stats.winsFor(false) + stats.drawsFor(true) shouldBe 100
   }
 
   it should "show MENACE improving against a random player over many games" in {
     // Train for 2000 games, then test win rate over the next 200.
-    val mbs    = Matchboxes()
+    val mbs = Matchboxes()
     val menace = new MenacePlayer(mbs)
-    val rng    = new Random(7L)
+    val rng = new Random(7L)
 
     // Training phase.
     val trainer = TicTacToeGameRunner(menace, new RandomPlayer, rng)

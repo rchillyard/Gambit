@@ -62,6 +62,12 @@ import scala.util.{Random, boundary}
   *
   * Recommendation: use flat for shallow games, depth-tranche exact for deep searches.
   *
+  * @tparam P  The type representing a proto-state, which helps transition between game states.
+  * @tparam S  The type representing the game state.
+  * @tparam M  The type representing the move in the game.
+  * @tparam Pl The type representing the players in the game.
+  * @tparam K  The type representing the key for the transposition table entries in the game.
+  * @constructor Creates a new AlphaBetaPlayer instance.
   * @param me            the player identifier representing this player.
   * @param depth         the maximum search depth (default is 6). Determines how far
   *                      ahead the algorithm looks in the game tree.
@@ -72,14 +78,14 @@ import scala.util.{Random, boundary}
   * @param depthTranches a flag to indicate if separate tables should be maintained
   *                      for different depths (default is false).
   *
-  * @param reuseDeeper   a flag indicating whether cached results from deeper depths can
-  *                      be reused when depth tranches mode is enabled (default is false).
+  * @param reuseDeeper   Whether to reuse cached evaluations from deeper depths during
+  *                      evaluation. Only valid if `depthTranches` is true. Default is false.
   *
-  * @param maxTableSize  the maximum size of the transposition table before pruning (default is unlimited).
-  * @param state         an implicit evidence parameter for the state abstraction in the game.
-  * @param game          an implicit evidence parameter for the game abstraction.
+  * @param maxTableSize  The maximum size of the transposition table. Default is Int.MaxValue.
+  * @param state         The typeclass providing state-specific functionalities.
+  * @param game          The typeclass providing game-specific behaviors.
   */
-class AlphaBetaPlayerKeyed[P, S, M, Pl, K](
+class AlphaBetaPlayer[P, S, M, Pl, K](
                                        me: Pl,
                                        depth: Int = 6,
                                        keyFn: Option[S => K] = None,
@@ -137,10 +143,8 @@ class AlphaBetaPlayerKeyed[P, S, M, Pl, K](
     *
     * @param result the outcome of the game, represented as a `GameResult`
     *               that associates players with their respective scores or results.
-    *
     * @param me     the player instance representing the current player
     *               for whom the gameOver method is invoked.
-    *
     * @return Unit as this method performs a side-effect and does not return a value.
     */
   override def gameOver(result: GameResult[Pl], me: Pl): Unit =
@@ -247,6 +251,32 @@ class AlphaBetaPlayerKeyed[P, S, M, Pl, K](
 
   private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
+/**
+  * A singleton object that provides a way to create an instance of `AlphaBetaPlayer`.
+  * The `AlphaBetaPlayer` is a game-playing agent that uses the Alpha-Beta pruning algorithm
+  * to efficiently evaluate and select moves in a game environment. This is typically used in
+  * games involving heuristic tree searches, such as chess or tic-tac-toe.
+  *
+  * The `apply` method allows for the construction of an `AlphaBetaPlayer` with customizable
+  * parameters.
+  */
 object AlphaBetaPlayer:
-  def apply[P, S, M, Pl](me: Pl, depth: Int = 6, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayerKeyed[P, S, M, Pl, Any] =
-  new AlphaBetaPlayerKeyed[P, S, M, Pl, Any](me, depth, None, depthTranches, reuseDeeper, maxTableSize)(using state, game)
+  /**
+    * Applies the Alpha-Beta search algorithm to create an `AlphaBetaPlayer` for decision-making
+    * in a game scenario. This method constructs a player object tailored to evaluate and choose
+    * optimal moves using the provided state, game, and depth parameters.
+    *
+    * @tparam P  The type representing a proto-state, which helps transition between game states.
+    * @tparam S  The type representing the game state.
+    * @tparam M  The type representing the move in the game.
+    * @tparam Pl The type representing the players in the game.
+    * @param me    the player instance being used for the game.
+    * @param depth the maximum search depth for the Alpha-Beta search algorithm. Defaults to 6.
+    * @param state an implicit parameter describing the state of the game, including rules for transitions
+    *              and heuristic evaluations.
+    *
+    * @param game  an implicit parameter representing the game mechanics, including valid moves and turn alternations.
+    * @return an `AlphaBetaPlayer` initialized with the given player, depth, and supporting game logic.
+    */
+  def apply[P, S, M, Pl](me: Pl, depth: Int = 6)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayer[P, S, M, Pl, Any] =
+    new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game)

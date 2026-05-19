@@ -36,7 +36,7 @@ public class TicTacToeOps {
         System.arraycopy(empty, 0, result, 0, count);
         return result;
     }
-    
+
     /**
      * Method to render a Board as three lines of X, 0, and '.' separated by newlines.
      *

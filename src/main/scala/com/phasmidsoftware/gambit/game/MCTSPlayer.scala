@@ -224,6 +224,7 @@ class MCTSPlayer[P, S, M, Pl](
   * @param visits       number of times this node has been visited.
   * @param wins         cumulative score from simulations through this node,
   *                     from the perspective of `movedBy`.
+  *
   * @param children     expanded child nodes.
   * @param untriedMoves moves not yet expanded into children.
   * @tparam S  the state type.

@@ -1,7 +1,7 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
-import com.phasmidsoftware.gambit.game.{AlphaBetaPlayerKeyed, Contestant, GambitConfig, MCTSPlayer, Tournament}
+import com.phasmidsoftware.gambit.game.{Contestant, GambitConfig, MCTSPlayer, Tournament}
 
 import scala.util.Random
 
@@ -54,48 +54,49 @@ object Connect4Tournament:
     *
     * @param gamesPerPairing number of games each ordered pair plays
     *                        (default from config: `gambit.tournament.gamesPerPairing`).
+    *
     * @param seed            random seed; default is `System.currentTimeMillis()`.
     * @param out             output function for progress lines (default `println`).
     * @param flush           flush function called after progress lines (default stdout flush).
     * @return the formatted league table string.
     */
   def run(
-           gamesPerPairing: Int            = GambitConfig.tournamentGamesPerPairing,
-           seed:            Long           = System.currentTimeMillis(),
-           out:             String => Unit = println,
-           flush:           () => Unit     = () => ()   // no-op by default
+           gamesPerPairing: Int = GambitConfig.tournamentGamesPerPairing,
+           seed: Long = System.currentTimeMillis(),
+           out: String => Unit = println,
+           flush: () => Unit = () => () // no-op by default
          ): String =
     val announcement = s"Connect Four Tournament ($gamesPerPairing games per pairing)"
-    val marquee      = "*" * announcement.length
+    val marquee = "*" * announcement.length
     out(marquee)
     out(announcement)
     out(marquee)
 
     val rng = new Random(seed)
-    val d1  = GambitConfig.alphaBetaDepth1
-    val d2  = GambitConfig.alphaBetaDepth2
-    val i1  = GambitConfig.mctsIterations1
-    val i2  = GambitConfig.mctsIterations2
-    val c   = GambitConfig.mctsExplorationConstant
+    val d1 = GambitConfig.alphaBetaDepth1
+    val d2 = GambitConfig.alphaBetaDepth2
+    val i1 = GambitConfig.mctsIterations1
+    val i2 = GambitConfig.mctsIterations2
+    val c = GambitConfig.mctsExplorationConstant
 
     out(s"depth1=$d1, depth2=$d2, iterations1=$i1, iterations2=$i2, explorationConstant=$c")
 
     val contestants = Seq(
-      Contestant("Random",            new RandomPlayer),
-      Contestant("Heuristic",         new HeuristicPlayer),
-      Contestant(s"AlphaBeta(d=$d1)", AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me = true, depth = d1)),
-      Contestant(s"AlphaBeta(d=$d2)", AlphaBetaPlayerKeyed[Connect4, Connect4, Int, Boolean, (Long, Long)](me = true, depth = d2)),
-      Contestant(s"MCTS(i=$i1)",      MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i1, explorationConstant = c)),
-      Contestant(s"MCTS(i=$i2)",      MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i2, explorationConstant = c)),
+      Contestant("Random", new RandomPlayer),
+      Contestant("Heuristic", new HeuristicPlayer),
+      Contestant(s"AlphaBeta(d=$d1)", AlphaBetaPlayerConnect4(me = true, depth = d1)),
+      Contestant(s"AlphaBeta(d=$d2)", AlphaBetaPlayerConnect4(me = true, depth = d2)),
+      Contestant(s"MCTS(i=$i1)", MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i1, explorationConstant = c)),
+      Contestant(s"MCTS(i=$i2)", MCTSPlayer[Connect4, Connect4, Int, Boolean](me = true, iterations = i2, explorationConstant = c)),
     )
 
     out(s"Contestants: ${contestants.map(_.name).mkString(", ")}")
     flush()
 
     val tournament = Tournament[Connect4, Connect4, Int, Boolean](
-      contestants     = contestants,
+      contestants = contestants,
       gamesPerPairing = gamesPerPairing,
-      random          = rng
+      random = rng
     )
 
     s"\n${tournament.leagueTable}"

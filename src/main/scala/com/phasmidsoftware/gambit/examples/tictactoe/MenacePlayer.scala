@@ -84,7 +84,9 @@ class HeuristicPlayer(implicit state: State[Board, TicTacToe])
   */
 given tictactoeGame(using state: State[Board, TicTacToe]): Game[TicTacToe, Int, Boolean] with
   def start: TicTacToe = TicTacToe.start
+
   def startingPlayer: Boolean = true
+
   def players: Seq[Boolean] = Seq(true, false)
 
   def moves(ttt: TicTacToe): Seq[Int] =

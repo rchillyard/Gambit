@@ -43,7 +43,6 @@ case class Contestant[S, M, Pl](name: String, player: Player[S, M, Pl])
   * @param gamesPerPairing number of games each ordered pair plays (A-as-first
   *                        vs B-as-second). Each unordered pair therefore plays
   *                        2 * gamesPerPairing games in total.
-  *
   * @param random          random source passed to each GameRunner.
   * @param state           implicit State[P, S].
   * @param game            implicit Game[S, M, Pl].

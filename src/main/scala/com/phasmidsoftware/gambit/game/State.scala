@@ -148,4 +148,5 @@ trait Transition[P, S] extends (S => (P, S))
   */
 case class Move[P, S](f: S => P, desc: String) extends Transition[P, S]:
   override def apply(s: S): (P, S) = f(s) -> s
+
   override def toString: String = desc

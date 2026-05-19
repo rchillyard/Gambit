@@ -118,7 +118,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * alpha-beta pruning algorithm. Returns `None` if the state is already terminal or
     * there are no available moves.
     *
-    * NOTE: side-effect of logging (DEBUG).
+    * NOTE: has side-effect of logging (DEBUG).
     *
     * @param s      the current game state.
     * @param random an instance of Random (reserved for future randomisation).
@@ -180,8 +180,10 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
 
     def evaluate: Double =
       state.isGoal(s) match
-        case Some(_) => leafValue
-        case None if depth == 0 => leafValue
+        case Some(_) =>
+          leafValue
+        case None if depth == 0 =>
+          leafValue
         case None =>
           val currentPl = game.currentPlayer(s)(using state)
           val moves = orderedMoves(s, currentPl, maximizing)
@@ -249,7 +251,8 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   private def cachedEvaluate(s: S, depth: Int, evaluate: => Double): Double =
     keyFn match
-      case None => evaluate
+      case None =>
+        evaluate
       case Some(f) =>
         val key = f(s)
         if !depthTranches then cachedEvaluateFlat(key, depth, evaluate)
@@ -261,7 +264,8 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   private def cachedEvaluateFlat(key: K, depth: Int, evaluate: => Double): Double =
     flatTable.get(key) match
-      case Some((cached, cachedDepth)) if cachedDepth >= depth => cached
+      case Some((cached, cachedDepth)) if cachedDepth >= depth =>
+        cached
       case _ =>
         val result = evaluate
         if tableSize < maxTableSize then
@@ -283,11 +287,13 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         else None
       )
     cached match
-      case Some(v) => v
+      case Some(v) =>
+        v
       case None =>
         val result = evaluate
         if tableSize < maxTableSize then
-          trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)(key) = result
+          val innerTable = trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)
+          innerTable(key) = result
           if tableSize % 10000 == 0 then
             logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
         result

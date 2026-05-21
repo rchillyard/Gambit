@@ -19,7 +19,7 @@ AlphaBeta.
 | `Game.scala` | `Game[S, M, Pl]` — game mechanics typeclass |
 | `Player.scala` | `Player[S, M, Pl]`; `GameResult[Pl]`, `MatchResult[Pl]` |
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
-| `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl]` — minimax with alpha-beta pruning |
+| `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl, K]` — minimax with alpha-beta pruning |
 | `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
 | `Tournament.scala` | `Tournament[P, S, M, Pl]`, `Contestant[S, M, Pl]` — round-robin league |
 
@@ -54,12 +54,12 @@ AlphaBeta.
 
 ```
 State[P, S]              — game state: legal moves, goal detection, heuristic,
-                           isFirstPlayerToMove
+                           isMaximizing, leafValue
 Game[S, M, Pl]           — game mechanics: start, moves, applyMove, nextPlayer,
                            currentPlayer, winner
 Player[S, M, Pl]         — player strategy: chooseMove, gameOver
 GameRunner[P, S, M, Pl]  — execution: driven by State and Game givens
-AlphaBetaPlayer[P,S,M,Pl]— generic minimax player with alpha-beta pruning
+AlphaBetaPlayer[P,S,M,Pl,K] — generic minimax player with alpha-beta pruning
 MCTSPlayer[P, S, M, Pl]  — generic MCTS player with tree reuse
 Tournament[P, S, M, Pl]  — round-robin league with 3-1-0 scoring
 ```
@@ -69,8 +69,21 @@ Tournament[P, S, M, Pl]  — round-robin league with 3-1-0 scoring
 The existing Visitor-derived typeclass, extended with:
 
 - `isFirstPlayerToMove(s: S): Boolean` — `sequence(s) % 2 == 0`; true when
-  it is the first player's turn to move. Unambiguous: it is the player who
-  will make the *next* move from `s`, NOT the player who made the last move.
+  it is the first player's turn to move.
+
+- `isMaximizing(s: S, currentMaximizing: Boolean): Boolean` — determines whether
+  the player to move at `s` is the maximizing player. The default implementation
+  returns `!currentMaximizing` (strict alternation, suitable for TicTacToe and
+  Connect Four). Games where the same player can move consecutively (e.g. bridge,
+  where the trick winner leads the next trick) must override this method using
+  `game.currentPlayer(s)`.
+
+- `leafValue(s: S, maximizing: Boolean): Double` — the value to return at a
+  terminal or depth-limited node. The default implementation follows the negamax
+  convention: `if maximizing then -heuristic(s) else heuristic(s)`, which
+  assumes `heuristic` is positive when the player who just moved is doing well.
+  Games that use an absolute heuristic (e.g. always positive for NS in bridge)
+  must override this to return `heuristic(s)` directly.
 
 ### Game[S, M, Pl]
 
@@ -84,7 +97,7 @@ Separates game *rules* from game *strategy*:
 - `nextPlayer(s, pl): Pl` — whose turn is next after `pl` moves
 - `currentPlayer[P](s)(using State[P,S]): Pl` — default implementation via
   `isFirstPlayerToMove`; returns `startingPlayer` on even sequence, the other
-  player on odd. Override for games with more than two players (e.g. bridge).
+  player on odd. Override for games with non-alternating play (e.g. bridge).
 - `winner(s, current): GameResult[Pl]` — default zero-sum two-player winner;
   override for multiplayer or non-zero-sum games
 
@@ -124,17 +137,22 @@ Driven entirely by `given State[P, S]` and `given Game[S, M, Pl]`. Takes only
 
 ## AlphaBeta
 
-### AlphaBetaPlayer[P, S, M, Pl]
+### AlphaBetaPlayer[P, S, M, Pl, K]
 
-Generic minimax player with alpha-beta pruning to a configurable depth.
+Generic minimax player with alpha-beta pruning to a configurable depth. The
+fifth type parameter `K` is the transposition table key type; use `Any` (via
+the companion `apply`) when no caching is needed.
 
-**Heuristic convention** — `heuristic(s)` is from the perspective of whoever
-just moved INTO `s`. `alphaBeta` returns a value from `me`'s perspective;
-leaf nodes negate the heuristic when the minimizing player just moved:
+**Heuristic convention** — `heuristic(s)` follows whatever convention the
+`State` typeclass defines. At leaf nodes, `state.leafValue(s, maximizing)` is
+called — the default negamax convention negates when the minimizing player just
+moved, but games with an absolute heuristic override `leafValue` to return
+`heuristic(s)` directly.
 
-```scala
-def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuristic(s)
-```
+**`isMaximizing` delegation** — rather than hardcoding `!maximizing` at each
+recursive call, `AlphaBetaPlayer` calls `state.isMaximizing(next, maximizing)`
+to determine the next node's maximizing flag. This correctly handles games where
+the same player can move twice in a row (non-alternating turn order).
 
 **Alpha-beta bounds** — initial alpha is `-Double.MaxValue` (not
 `Double.MinValue`, which is the smallest *positive* double ~5e-324).
@@ -143,9 +161,15 @@ def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuris
 first for maximizer, lowest first for minimizer), maximising the probability
 of early pruning and approaching best-case O(b^(d/2)) node count.
 
-**`maximizing` flag** — true when `currentPlayer(s) == me`; correctly handles
-positions where it is the opponent's turn at the root (e.g. when `AlphaBetaPlayer`
-is called as `me=true` but the board has an odd number of pieces).
+**Transposition table** — an optional `keyFn: Option[S => K]` maps a state to
+a cache key. Three caching modes are available via `depthTranches` and
+`reuseDeeper`. **Important:** the naive transposition table can produce incorrect
+results because cached values computed under one set of alpha-beta bounds may
+be reused in a context with different bounds, poisoning the search. The correct
+fix (Issue #14) is to store TT flags (exact / lower bound / upper bound) with
+each cached entry and only reuse entries whose flag is compatible with the
+current alpha-beta window. Until Issue #14 is implemented, pass `keyFn = None`
+for correctness.
 
 ---
 
@@ -187,8 +211,7 @@ Tree matching uses `==` on `S`; requires meaningful equality (satisfied by
 `case class`).
 
 **`me` parameter** — the player identity this instance represents; used in
-backpropagation to correctly credit wins. Must be set to `true` (X) when
-playing as X and `false` (O) when playing as O.
+backpropagation to correctly credit wins.
 
 **`currentPlayer`** — uses `game.currentPlayer(s)(using state)` to determine
 who moves at the root, correctly handling mid-game positions.
@@ -356,19 +379,22 @@ given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean
 
 ## Heuristic Convention
 
-Both `TicTacToe` and Connect Four follow the same convention:
+Both `TicTacToe` and Connect Four follow the negamax convention:
 
 > `heuristic(s)` is positive when the player who **just moved** to reach `s`
 > is doing well. `HeuristicPlayer.chooseMove` uses `maxBy(heuristic)` over
 > successors — since each successor was reached by the current player moving,
 > the maximum heuristic successor is the best move.
 
-`AlphaBetaPlayer` accounts for this at leaf nodes by negating the heuristic
-when the minimizing player just moved, ensuring the returned value is always
-from `me`'s perspective regardless of search depth.
+`AlphaBetaPlayer` accounts for this at leaf nodes via `state.leafValue(s, maximizing)`,
+which by default negates the heuristic when the minimizing player just moved,
+ensuring the returned value is always from `me`'s perspective regardless of
+search depth.
 
-This was the source of several bugs during development when the convention
-was inconsistently applied between `State.heuristic` and `Player.chooseMove`.
+Games that maintain an absolute heuristic (always from one side's perspective,
+e.g. always positive for NS in bridge) override `leafValue` to return
+`heuristic(s)` directly, and override `isMaximizing` to compute the next
+player from the game state rather than assuming strict alternation.
 
 ---
 
@@ -402,13 +428,12 @@ sbt ghpagesPushSite
 
 ## Future Work
 
+- **Issue #14: TT flags** — implement exact/lower-bound/upper-bound flags in the
+  transposition table so cached values are only reused when their bounds are
+  compatible with the current alpha-beta window; re-enable caching for bridge
 - **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
 - **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries
 - **MENACE X/O symmetry** — `exchangeBoard` to halve matchbox count
 - **MENACE persistence** — serialise registry for trained agent reuse
 - **Chess** — `given chessGame: Game[ChessState, ChessMove, Boolean]`
-- **Bridge** — `given bridgeGame: Game[BridgeState, Card, Seat]`;
-  four-player; `winner` returns tricks per side; MCTS with determinization
-  for hidden information (sample possible hand distributions, run MCTS
-  on each as perfect-information, aggregate)

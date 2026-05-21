@@ -125,6 +125,23 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @return an Option containing the selected move if a valid move exists, otherwise None.
     */
   override def chooseMove(s: S, random: Random): Option[M] =
+    chooseMoveWithScore(s, random).map(_._1)
+
+  /**
+    * Selects the best move and returns it together with its minimax score.
+    * Returns `None` if the state is already terminal or there are no available moves.
+    *
+    * The score is from the perspective of `me`: positive means `me` is doing well.
+    * Callers can use the score directly to determine win/loss without re-evaluating
+    * the heuristic on the resulting state (which would only be a shallow estimate).
+    *
+    * NOTE: has side-effect of logging (DEBUG).
+    *
+    * @param s      the current game state.
+    * @param random an instance of Random (reserved for future randomisation).
+    * @return an Option containing the (move, score) pair if a valid move exists, otherwise None.
+    */
+  def chooseMoveWithScore(s: S, random: Random): Option[(M, Double)] =
     if state.isGoal(s).isDefined
     then None
     else
@@ -133,14 +150,16 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
       else
         val currentPl = game.currentPlayer(s)(using state)
         val maximizing = currentPl == me
+        logger.debug(s"chooseMove: currentPl=$currentPl, me=$me, maximizing=$maximizing")
         val scored = moves.map { m =>
           val next = game.applyMove(s, m, currentPl)
-          logger.debug(s"chooseMove: move=$m, heuristic=${state.heuristic(next)}")
-          m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, !maximizing)
+          val nextMaximizing = state.isMaximizing(next, maximizing)
+          logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
+          m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, nextMaximizing)
         }
         val best = if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
         logger.debug(s"chooseMove: best=${best._1}, score=${best._2}")
-        Some(best._1)
+        Some(best._1, best._2)
 
   /**
     * Handles the conclusion of a game by clearing both transposition tables,
@@ -176,11 +195,12 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     // alphaBeta returns a value from me's perspective (positive = good for me).
     // When the maximizing player (me) just moved: heuristic sign is correct.
     // When the minimizing player just moved: heuristic must be negated.
-    def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuristic(s)
+    lazy val leafValue: Double = state.leafValue(s, maximizing)
 
     def evaluate: Double =
       state.isGoal(s) match
         case Some(_) =>
+          logger.debug(s"alphaBeta: terminal, maximizing=$maximizing, leafValue=$leafValue, heuristic=${state.heuristic(s)}")
           leafValue
         case None if depth == 0 =>
           leafValue
@@ -207,7 +227,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     var best = -Double.MaxValue
     boundary:
       moves.foreach { (_, next) =>
-        best = best.max(alphaBeta(next, depth, a, beta, false))
+        best = best.max(alphaBeta(next, depth, a, beta, state.isMaximizing(next, true)))
         a = a.max(best)
         if a >= beta then break(best) // prune: minimizer won't allow this
       }
@@ -228,7 +248,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     var best = Double.MaxValue
     boundary:
       moves.foreach { (_, next) =>
-        best = best.min(alphaBeta(next, depth, alpha, b, true))
+        best = best.min(alphaBeta(next, depth, alpha, b, state.isMaximizing(next, false)))
         b = b.min(best)
         if alpha >= b then break(best) // prune: maximizer won't allow this
       }

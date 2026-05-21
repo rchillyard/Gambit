@@ -301,4 +301,35 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
   }
+
+  // ---------------------------------------------------------------------------
+  // chooseMoveWithScore
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.chooseMoveWithScore"
+
+  it should "return the same move as chooseMove" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val move = ab.chooseMove(TicTacToe.start, new Random(1L))
+    val moveWithScore = ab.chooseMoveWithScore(TicTacToe.start, new Random(1L))
+    moveWithScore.map(_._1) shouldBe move
+  }
+
+  it should "return a positive score for a position where X is about to win" in {
+    // X at (0,0),(0,1); O at (1,0),(1,1) — X to move, wins at (0,2).
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveWithScore(ttt, new Random(1L))
+    result shouldBe defined
+    result.get._2 should be > 0.0
+  }
+
+  it should "return a negative score for a position where X is about to lose" in {
+    // O at (0,0),(0,1),(1,0),(1,1) — X to move but cannot prevent O winning.
+    val ttt = TicTacToe.parse("00 -00 -X  ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveWithScore(ttt, new Random(1L))
+    result shouldBe defined
+    result.get._2 should be < 0.0
+  }
 }

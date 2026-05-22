@@ -1,6 +1,5 @@
 package com.phasmidsoftware.gambit.game
 
-import scala.collection.mutable
 import scala.util.boundary.break
 import scala.util.{Random, boundary}
 
@@ -44,23 +43,17 @@ import scala.util.{Random, boundary}
   * re-evaluation of positions reachable by multiple move orderings (transpositions).
   * The table is cleared between games via `gameOver`.
   *
-  * Three caching modes are available, controlled by `depthTranches` and `reuseDeeper`:
+  * Caching behaviour is controlled by the `given TTCache[K]` in scope:
   *
-  * - '''Flat table''' (`depthTranches = false`, default): a single `HashMap[K, (Double, Int)]`
-  *   where the `Int` is the depth at which the result was cached. A cached entry is reused
-  *   if it was computed at least as deep as the current search. Works well for shallow games
-  *   (e.g. TicTacToe) where cross-depth reuse is beneficial.
+  * - `FlatTTCache[K]`   — single `HashMap[K, TTEntry]`; reuses entries cached at equal or
+  *   greater depth. Suitable for shallow games (TicTacToe, Connect Four).
   *
-  * - '''Depth-tranche exact''' (`depthTranches = true, reuseDeeper = false`): separate sub-tables
-  *   per depth. Only exact-depth matches are reused. Works best for deep searches (e.g. bridge
-  *   double-dummy, ~52 plies) where a result cached at a shallower depth is not valid for a
-  *   deeper search. Benchmarked ~25% faster than flat for bridge.
+  * - `TrancheTTCache[K]` — separate sub-table per depth; benchmarked ~25% faster for deep
+  *   searches (bridge double-dummy, ~52 plies).
   *
-  * - '''Depth-tranche reuse''' (`depthTranches = true, reuseDeeper = true`): as above but also
-  *   scans deeper tranches on a miss. Tends to be slowest in practice due to scan overhead
-  *   outweighing the benefit of cross-depth reuse.
-  *
-  * Recommendation: use flat for shallow games, depth-tranche exact for deep searches.
+  * Both implementations store [[TTFlag]] (Exact / LowerBound / UpperBound) with each entry
+  * and only reuse entries whose flag is compatible with the current alpha-beta window,
+  * preventing cache poisoning from incompatible bounds.
   *
   * @tparam P  The type representing a proto-state, which helps transition between game states.
   * @tparam S  The type representing the game state.
@@ -69,49 +62,39 @@ import scala.util.{Random, boundary}
   * @tparam K  The type of the transposition table key. Use `Any` when no caching is needed
   *            (via the companion `apply`); otherwise a compact type such as `Int`,
   *            `(Long, Long)`, or a case class that has correct `equals`/`hashCode`.
-  *
   * @param me            the player identifier representing this player.
   * @param depth         the maximum search depth (default is 6). Determines how far
   *                      ahead the algorithm looks in the game tree.
-  *
   * @param keyFn         an optional function mapping a state to a transposition table key.
   *                      When `None` (default) no memoization is performed.
-  *
-  * @param depthTranches a flag to indicate if separate tables should be maintained
-  *                      for different depths (default is false).
-  *
-  * @param reuseDeeper   whether to reuse cached evaluations from deeper depths during
-  *                      evaluation. Only meaningful if `depthTranches` is true. Default is false.
-  *
-  * @param maxTableSize  the maximum size of the transposition table before writes are
-  *                      suppressed. Default is `Int.MaxValue` (unlimited).
-  *
+  * @param ttCache       the [[TTCache]] typeclass instance that handles probe/store/clear.
+  *                      Supply a `given FlatTTCache[K]` for shallow games or a
+  *                      `given TrancheTTCache[K]` for deep searches.  Only consulted
+  *                      when `keyFn` is defined.
   * @param state         the typeclass providing state-specific functionalities.
   * @param game          the typeclass providing game-specific behaviours.
   */
 class AlphaBetaPlayer[P, S, M, Pl, K](
                                        me: Pl,
                                        depth: Int = 6,
-                                       keyFn: Option[S => K] = None,
-                                       depthTranches: Boolean = false,
-                                       reuseDeeper: Boolean = false,
-                                       maxTableSize: Int = Int.MaxValue
-                                     )(using state: State[P, S], game: Game[S, M, Pl])
+                                       keyFn: Option[S => K] = None
+                                     )(using state: State[P, S], game: Game[S, M, Pl], ttCache: TTCache[K])
   extends Player[S, M, Pl]:
 
   /**
-    * Calculates the total number of elements in the tables managed by the player.
-    * If `depthTranches` is true, the sizes of all the tranche tables are summed up.
-    * Otherwise, the size of the flat table is returned.
+    * Returns the total number of entries currently held in the transposition table.
+    * Returns 0 when `keyFn` is `None` (no caching).
     *
     * NOTE: do not make this private.
     *
-    * @return the total number of elements in the tables.
+    * @return the total number of elements in the cache.
     */
-  def tableSize: Int =
-    if depthTranches
-    then trancheTable.values.map(_.size).sum
-    else flatTable.size
+  def tableSize: Int = keyFn match
+    case None => 0
+    case Some(_) => ttCache match
+      case c: FlatTTCache[K] => c.size
+      case c: TrancheTTCache[K] => c.size
+      case _ => 0
 
   /**
     * Selects the best move for the current player in the specified game state using the
@@ -169,8 +152,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @param me     the player instance for whom the game is over.
     */
   override def gameOver(result: GameResult[Pl], me: Pl): Unit =
-    flatTable.clear()
-    trancheTable.clear()
+    ttCache.clear()
 
   // ---------------------------------------------------------------------------
   // Alpha-beta search
@@ -191,10 +173,6 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @return the minimax value of `s`.
     */
   private def alphaBeta(s: S, depth: Int, alpha: Double, beta: Double, maximizing: Boolean): Double =
-    // heuristic(s) is from the perspective of the player who just moved INTO s.
-    // alphaBeta returns a value from me's perspective (positive = good for me).
-    // When the maximizing player (me) just moved: heuristic sign is correct.
-    // When the minimizing player just moved: heuristic must be negated.
     lazy val leafValue: Double = state.leafValue(s, maximizing)
 
     def evaluate: Double =
@@ -210,7 +188,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
           if maximizing then maximizingSearch(moves, depth - 1, alpha, beta)
           else minimizingSearch(moves, depth - 1, alpha, beta)
 
-    cachedEvaluate(s, depth, evaluate)
+    cachedEvaluate(s, depth, alpha, beta, evaluate)
 
   /**
     * Maximizing half of alpha-beta: iterates over successor states, updating
@@ -259,64 +237,26 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * The `evaluate` argument is by-name so it is only called on a cache miss.
     *
     * When `keyFn` is `None`, evaluates directly with no caching.
-    * When `depthTranches` is false, uses the flat table (reuses entries cached
-    * at equal or greater depth).
-    * When `depthTranches` is true, uses per-depth sub-tables; optionally also
-    * checks deeper tranches when `reuseDeeper` is true.
+    * Otherwise delegates to the `given TTCache[K]` for probe/store.
     *
-    * @param s        the state being evaluated (used to compute the cache key).
-    * @param depth    the current search depth (used as part of the cache key in tranche mode).
+    * @param s     the state being evaluated.
+    * @param depth the current search depth.
+    * @param alpha the alpha bound in effect on entry to this node.
+    * @param beta  the beta bound in effect on entry to this node.
     * @param evaluate the evaluation thunk, called only on a cache miss.
     * @return the cached or freshly computed minimax value.
     */
-  private def cachedEvaluate(s: S, depth: Int, evaluate: => Double): Double =
+  private def cachedEvaluate(s: S, depth: Int, alpha: Double, beta: Double, evaluate: => Double): Double =
     keyFn match
-      case None =>
-        evaluate
+      case None => evaluate
       case Some(f) =>
         val key = f(s)
-        if !depthTranches then cachedEvaluateFlat(key, depth, evaluate)
-        else cachedEvaluateTranche(key, depth, evaluate)
-
-  /**
-    * Flat-table cache lookup and store.
-    * Reuses a cached entry if it was computed at least as deep as the current search.
-    */
-  private def cachedEvaluateFlat(key: K, depth: Int, evaluate: => Double): Double =
-    flatTable.get(key) match
-      case Some((cached, cachedDepth)) if cachedDepth >= depth =>
-        cached
-      case _ =>
-        val result = evaluate
-        if tableSize < maxTableSize then
-          flatTable(key) = (result, depth)
-          if flatTable.size % 10000 == 0 then
-            logger.debug(s"alphaBeta: tableSize=${flatTable.size}, depth=$depth")
-        result
-
-  /**
-    * Depth-tranche cache lookup and store.
-    * Looks up the exact-depth sub-table first; optionally scans deeper tranches
-    * when `reuseDeeper` is true.
-    */
-  private def cachedEvaluateTranche(key: K, depth: Int, evaluate: => Double): Double =
-    val cached = trancheTable.get(depth).flatMap(_.get(key))
-      .orElse(
-        if reuseDeeper then
-          trancheTable.keys.filter(_ > depth).flatMap(d => trancheTable(d).get(key)).headOption
-        else None
-      )
-    cached match
-      case Some(v) =>
-        v
-      case None =>
-        val result = evaluate
-        if tableSize < maxTableSize then
-          val innerTable = trancheTable.getOrElseUpdate(depth, mutable.HashMap.empty)
-          innerTable(key) = result
-          if tableSize % 10000 == 0 then
-            logger.debug(s"alphaBeta: tableSize=$tableSize, depth=$depth")
-        result
+        ttCache.probe(key, depth, alpha, beta) match
+          case Some(cached) => cached
+          case None =>
+            val result = evaluate
+            ttCache.store(key, depth, result, alpha, beta)
+            result
 
   /**
     * Generates and orders successor (move, state) pairs for move ordering.
@@ -327,9 +267,6 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     val successors = game.moves(s).map(m => m -> game.applyMove(s, m, currentPl))
     if maximizing then successors.sortBy((_, next) => -state.heuristic(next))
     else successors.sortBy((_, next) => state.heuristic(next))
-
-  private val flatTable: mutable.HashMap[K, (Double, Int)] = mutable.HashMap.empty
-  private val trancheTable: mutable.HashMap[Int, mutable.HashMap[K, Double]] = mutable.HashMap.empty
 
   private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
@@ -345,6 +282,9 @@ object AlphaBetaPlayer:
   /**
     * Creates an `AlphaBetaPlayer` with no transposition table.
     *
+    * A `FlatTTCache[Any]` is provided implicitly but never consulted since
+    * `keyFn` defaults to `None`.
+    *
     * @tparam P  proto-state type.
     * @tparam S  state type.
     * @tparam M  move type.
@@ -356,4 +296,6 @@ object AlphaBetaPlayer:
     * @return a new `AlphaBetaPlayer` with no caching.
     */
   def apply[P, S, M, Pl](me: Pl, depth: Int = 6)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayer[P, S, M, Pl, Any] =
-    new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game)
+    given TTCache[Any] = FlatTTCache[Any]()
+
+    new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game, summon[TTCache[Any]])

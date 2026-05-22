@@ -12,6 +12,7 @@ import scala.util.Random
 
 class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
+
   // ---------------------------------------------------------------------------
   // TicTacToe — AlphaBetaPlayer
   // ---------------------------------------------------------------------------
@@ -154,6 +155,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "produce the same Connect4 move with and without keyFn" in {
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
     val abKey = AlphaBetaPlayerConnect4(
       me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
@@ -163,6 +166,9 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "produce the same TicTacToe move with and without keyFn" in {
     val rng = new Random(1L)
+
+    given TTCache[Int] = FlatTTCache[Int]()
+
     val abNoKey = AlphaBetaPlayerTicTacToe(me = true, depth = 4)
     val abKey = AlphaBetaPlayerTicTacToe(
       me = true, depth = 4, keyFn = Some(s => s.board.value)
@@ -177,6 +183,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
       .play(2, isX = true).play(4, isX = false)
 
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
     val abKey = AlphaBetaPlayerConnect4(
       me = true, depth = 6, keyFn = Some(s => (s.xBits, s.oBits))
@@ -197,6 +205,7 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "clear the transposition table between games via gameOver" in {
     // After gameOver, the table is cleared but the player should still work correctly.
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val ab = AlphaBetaPlayerConnect4(
       me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
     )
@@ -217,6 +226,7 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "preserve the TicTacToe never-lose guarantee with keyFn enabled" in {
+    given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
       me = true, depth = 6, keyFn = Some(s => s.board.value)
     )
@@ -226,6 +236,7 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "preserve the Connect4 never-lose guarantee with keyFn enabled" in {
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val ab = AlphaBetaPlayerConnect4(
       me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
     )
@@ -242,39 +253,43 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "produce the same Connect4 move with flat table (default)" in {
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abFlat = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = false
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
     )
     abFlat.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce the same Connect4 move with depth-tranche exact mode" in {
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abTranche = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = true, reuseDeeper = false
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
     )
     abTranche.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce the same Connect4 move with depth-tranche reuse mode" in {
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abReuse = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = true, reuseDeeper = true
+      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
     )
     abReuse.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce identical moves across all three cache modes" in {
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val mid = Connect4.start
       .play(3, isX = true).play(3, isX = false)
       .play(2, isX = true).play(4, isX = false)
     val keyFn = Some((s: Connect4) => (s.xBits, s.oBits))
-    val abFlat = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn, depthTranches = false)
-    val abExact = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = false)
-    val abReuse = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = true)
+    val abFlat = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
+    val abExact = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
+    val abReuse = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
     val moveFlat = abFlat.chooseMove(mid, new Random(1L))
     val moveExact = abExact.chooseMove(mid, new Random(1L))
     val moveReuse = abReuse.chooseMove(mid, new Random(1L))
@@ -283,9 +298,9 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "never lose TicTacToe with depth-tranche exact mode" taggedAs Slow in {
+    given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 6, keyFn = Some(s => s.board.value),
-      depthTranches = true, reuseDeeper = false
+      me = true, depth = 6, keyFn = Some(s => s.board.value)
     )
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
@@ -293,9 +308,9 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "never lose TicTacToe with depth-tranche reuse mode" taggedAs Slow in {
+    given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 6, keyFn = Some(s => s.board.value),
-      depthTranches = true, reuseDeeper = true
+      me = true, depth = 6, keyFn = Some(s => s.board.value)
     )
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)

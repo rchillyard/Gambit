@@ -4,7 +4,7 @@ import com.phasmidsoftware.flog.{Flog, Loggable}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
-import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Game, Move, State, Transition}
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Game, Move, State, TTCache, Transition}
 import com.phasmidsoftware.gambit.util.Aggregators.{hasOne, hasTwo}
 import com.phasmidsoftware.gambit.util.{GambitException, Shuffle}
 
@@ -546,20 +546,26 @@ case class Board(sequence: Int, value: Int) {
 }
 
 /**
-  * An AI player for Tic-Tac-Toe implementing the Alpha-Beta pruning algorithm.
+  * Represents a Tic-Tac-Toe player that uses the Alpha-Beta pruning algorithm
+  * for making decisions. This player is designed to work with a specified game state
+  * and evaluation model to optimize gameplay.
   *
-  * This class extends the generic `AlphaBetaPlayer` and specializes it for the Tic-Tac-Toe game.
-  * It uses alpha-beta pruning to efficiently evaluate potential moves by minimizing the computational
-  * overhead of exploring less promising branches of the game tree.
-  *
-  * @param me            A boolean indicating whether this player is the maximizing player (true) or the minimizing player (false).
-  * @param depth         The maximum depth to which the game tree should be explored. Default is 6.
-  * @param keyFn         An optional function mapping game states to unique integer keys, primarily used for caching evaluations.
-  * @param depthTranches A boolean indicating if the tree should be explored at different depth levels based on game state.
-  * @param reuseDeeper   A boolean determining whether results from deeper recalculations can be reused.
-  * @param maxTableSize  The maximum size of the transposition table used for caching during searches. Default is `Int.MaxValue`.
-  * @param state         An implicit `State` instance representing the mapping between the board and the game state.
-  * @param game          An implicit `Game` instance representing the rules and logic of Tic-Tac-Toe.
+  * @param me      A boolean indicating if this player is the "me" player
+  *                (e.g., the one currently making a move in the game).
+  * @param depth   The maximum depth of the game tree to explore during
+  *                the Alpha-Beta pruning search. Defaults to 6.
+  * @param keyFn   An optional function to assign heuristic values to specific game states.
+  *                If not provided, a default heuristic may be used.
+  * @param state   The state implementation that maintains and verifies
+  *                the current game board data and its manipulations.
+  * @param game    The game implementation providing rules and mechanisms
+  *                for Tic-Tac-Toe, including move generation and state evaluation.
+  * @param ttCache The transposition table cache used to store and retrieve
+  *                intermediate evaluations for optimizing Alpha-Beta pruning.
   */
-class AlphaBetaPlayerTicTacToe(me: Boolean, depth: Int = 6, keyFn: Option[TicTacToe => Int] = None, depthTranches: Boolean = false, reuseDeeper: Boolean = false, maxTableSize: Int = Int.MaxValue)(using state: State[Board, TicTacToe], game: Game[TicTacToe, Int, Boolean]) extends
-  AlphaBetaPlayer[Board, TicTacToe, Int, Boolean, Int](me, depth, keyFn, depthTranches, reuseDeeper, maxTableSize)(using state, game)
+class AlphaBetaPlayerTicTacToe(
+                                me: Boolean,
+                                depth: Int = 6,
+                                keyFn: Option[TicTacToe => Int] = None
+                              )(using state: State[Board, TicTacToe], game: Game[TicTacToe, Int, Boolean], ttCache: TTCache[Int])
+  extends AlphaBetaPlayer[Board, TicTacToe, Int, Boolean, Int](me, depth, keyFn)(using state, game, ttCache)

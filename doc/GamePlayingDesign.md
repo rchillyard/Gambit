@@ -20,6 +20,7 @@ AlphaBeta.
 | `Player.scala` | `Player[S, M, Pl]`; `GameResult[Pl]`, `MatchResult[Pl]` |
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
 | `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl, K]` — minimax with alpha-beta pruning |
+| `TTCache.scala` | `TTCache[K]` typeclass; `TTFlag`, `TTEntry`; `FlatTTCache[K]`, `TrancheTTCache[K]` |
 | `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
 | `Tournament.scala` | `Tournament[P, S, M, Pl]`, `Contestant[S, M, Pl]` — round-robin league |
 
@@ -161,15 +162,24 @@ the same player can move twice in a row (non-alternating turn order).
 first for maximizer, lowest first for minimizer), maximising the probability
 of early pruning and approaching best-case O(b^(d/2)) node count.
 
-**Transposition table** — an optional `keyFn: Option[S => K]` maps a state to
-a cache key. Three caching modes are available via `depthTranches` and
-`reuseDeeper`. **Important:** the naive transposition table can produce incorrect
-results because cached values computed under one set of alpha-beta bounds may
-be reused in a context with different bounds, poisoning the search. The correct
-fix (Issue #14) is to store TT flags (exact / lower bound / upper bound) with
-each cached entry and only reuse entries whose flag is compatible with the
-current alpha-beta window. Until Issue #14 is implemented, pass `keyFn = None`
-for correctness.
+**Transposition table** — controlled by a `given TTCache[K]` in scope and an
+optional `keyFn: Option[S => K]` that maps a state to a cache key. When
+`keyFn = None` (default via the companion `apply`) no caching is performed.
+
+Two implementations are provided:
+
+- `FlatTTCache[K]` — single `HashMap[K, TTEntry]`; reuses entries cached at
+  equal or greater depth. Suitable for shallow games (TicTacToe, Connect Four).
+- `TrancheTTCache[K]` — separate sub-table per depth; ~25% faster for deep
+  searches (bridge double-dummy). Optionally reuses deeper-tranche entries when
+  `reuseDeeper = true`.
+
+Each entry stores a `TTFlag` (Exact / LowerBound / UpperBound) computed from
+the alpha-beta window at store time. Currently **only `Exact` entries are
+returned on probe** — `LowerBound`/`UpperBound` entries are stored correctly
+but not reused, because doing so requires propagating tightened bounds back to
+the caller, which `Option[Double]` cannot express. Full bound propagation is
+deferred as a future enhancement.
 
 ---
 
@@ -428,9 +438,10 @@ sbt ghpagesPushSite
 
 ## Future Work
 
-- **Issue #14: TT flags** — implement exact/lower-bound/upper-bound flags in the
-  transposition table so cached values are only reused when their bounds are
-  compatible with the current alpha-beta window; re-enable caching for bridge
+- **Issue #14: TT flags (partial)** — `TTFlag` enum, `TTEntry`, and `TTCache`
+  typeclass implemented; `Exact` entries are reused correctly. Full
+  `LowerBound`/`UpperBound` bound propagation deferred: requires exposing
+  `TTEntry` from `probe` and handling window tightening in `cachedEvaluate`
 - **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
 - **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries

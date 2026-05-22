@@ -1,7 +1,7 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
-import com.phasmidsoftware.gambit.game.{Contestant, GambitConfig, MCTSPlayer, Tournament}
+import com.phasmidsoftware.gambit.game.{Contestant, FlatTTCache, GambitConfig, MCTSPlayer, TTCache, Tournament}
 
 import scala.util.Random
 
@@ -80,6 +80,8 @@ object Connect4Tournament:
     val c = GambitConfig.mctsExplorationConstant
 
     out(s"depth1=$d1, depth2=$d2, iterations1=$i1, iterations2=$i2, explorationConstant=$c")
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
 
     val contestants = Seq(
       Contestant("Random", new RandomPlayer),

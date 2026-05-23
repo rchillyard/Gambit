@@ -162,6 +162,13 @@ the same player can move twice in a row (non-alternating turn order).
 first for maximizer, lowest first for minimizer), maximising the probability
 of early pruning and approaching best-case O(b^(d/2)) node count.
 
+**Node limit** — `withMaxNodes(n: Int): this.type` sets a cap on the number of
+nodes evaluated. When the limit is exceeded, `NodeLimitException` is thrown.
+`getBestSoFar: Option[(M, Double)]` returns the best top-level result fully
+evaluated before the limit was hit, allowing callers to use a partial result
+rather than discarding the search entirely. Both `withMaxNodes` and `gameOver`
+reset the counter and clear `bestSoFar`.
+
 **Transposition table** — controlled by a `given TTCache[K]` in scope and an
 optional `keyFn: Option[S => K]` that maps a state to a cache key. When
 `keyFn = None` (default via the companion `apply`) no caching is performed.
@@ -442,6 +449,9 @@ sbt ghpagesPushSite
   typeclass implemented; `Exact` entries are reused correctly. Full
   `LowerBound`/`UpperBound` bound propagation deferred: requires exposing
   `TTEntry` from `probe` and handling window tightening in `cachedEvaluate`
+- **Aspiration search** — narrow the initial alpha-beta window to
+  `[neededTricks - ε, neededTricks + ε]` for binary yes/no queries; would
+  dramatically reduce node count by failing fast on both sides
 - **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
 - **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries

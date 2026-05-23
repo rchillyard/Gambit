@@ -84,6 +84,31 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
                                      )(using state: State[P, S], game: Game[S, M, Pl], ttCache: TTCache[K])
   extends Player[S, M, Pl]:
 
+  private val nodeCount = new java.util.concurrent.atomic.AtomicInteger(0)
+  private var maxNodes: Int = Int.MaxValue
+
+  /** The best (move, score) pair evaluated so far at the top level.
+    * Updated after each top-level move is fully scored.
+    * Returned by `runPlayer` when a [[NodeLimitException]] is thrown mid-search.
+    */
+  private var bestSoFar: Option[(M, Double)] = None
+
+  /**
+    * Sets the maximum number of nodes to evaluate before throwing [[NodeLimitException]].
+    * Returns `this` for chaining.
+    */
+  def withMaxNodes(n: Int): this.type =
+    maxNodes = n
+    nodeCount.set(0)
+    bestSoFar = None
+    this
+
+  /**
+    * Returns the best (move, score) pair found so far at the top level.
+    * Only meaningful after a [[NodeLimitException]] has been thrown.
+    */
+  def getBestSoFar: Option[(M, Double)] = bestSoFar
+
   /**
     * Returns the total number of entries currently held in the transposition table.
     * Returns 0 when `keyFn` is `None` (no caching).
@@ -138,7 +163,15 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         val currentPl = game.currentPlayer(s)(using state)
         val maximizing = currentPl == me
         logger.debug(s"chooseMove: currentPl=$currentPl, me=$me, maximizing=$maximizing")
-        val scored = moves.map(invokeAlphaBeta(s, currentPl, maximizing))
+        bestSoFar = None
+        val scored = moves.map { m =>
+          val result = invokeAlphaBeta(s, currentPl, maximizing)(m)
+          bestSoFar = Some(bestSoFar.fold(result) { current =>
+            if maximizing then if result._2 > current._2 then result else current
+            else if result._2 < current._2 then result else current
+          })
+          result
+        }
         val best = if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
         logger.debug(s"chooseMove: best=${best._1}, score=${best._2}")
         Some(best._1, best._2)
@@ -152,6 +185,8 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   override def gameOver(result: GameResult[Pl], me: Pl): Unit =
     ttCache.clear()
+    nodeCount.set(0)
+    bestSoFar = None
 
   // ---------------------------------------------------------------------------
   // Alpha-beta search
@@ -191,6 +226,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @return the minimax value of `s`.
     */
   private def alphaBeta(s: S, depth: Int, alpha: Double, beta: Double, maximizing: Boolean): Double =
+    if nodeCount.incrementAndGet() > maxNodes then throw NodeLimitException(nodeCount.get)
     lazy val leafValue: Double = state.leafValue(s, maximizing)
 
     def evaluate: Double =
@@ -321,3 +357,10 @@ object AlphaBetaPlayer:
     new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game, summon[TTCache[Any]])
 
   private val logger = LazyLogger(getClass)
+
+/**
+  * Exception thrown when the node count limit is exceeded.
+  * Caught by `analyzeDoubleDummy` to return the best result found so far.
+  */
+class NodeLimitException(val nodes: Int)
+  extends Exception(s"Node limit reached at $nodes nodes")

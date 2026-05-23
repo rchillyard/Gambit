@@ -347,4 +347,77 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     result shouldBe defined
     result.get._2 should be < 0.0
   }
+  // ---------------------------------------------------------------------------
+  // Node limit — withMaxNodes / NodeLimitException
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.withMaxNodes"
+
+  it should "return this for chaining" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+    ab.withMaxNodes(1000) shouldBe ab
+  }
+
+  it should "complete normally when node limit is not reached" in {
+    // Depth-4 TicTacToe from start is well under 1,000,000 nodes
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "throw NodeLimitException when limit is set to 1" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(1)
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "throw NodeLimitException for Connect4 with a tight limit" in {
+    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(10)
+    an[NodeLimitException] should be thrownBy ab.chooseMove(Connect4.start, new Random(1L))
+  }
+
+  it should "reset node count after withMaxNodes is called again" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    // First call hits the limit
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+    // Reset with a generous limit — should now complete
+    ab.withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "reset node count via gameOver" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    // First call hits the limit
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+    // gameOver resets the counter; withMaxNodes raises the limit
+    ab.gameOver(Map(true -> 1, false -> -1), true)
+    ab.withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "report the node count in the exception message" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(5)
+    val ex = intercept[NodeLimitException] {
+      ab.chooseMove(TicTacToe.start, new Random(1L))
+    }
+    ex.nodes should be > 5
+    ex.getMessage should include("nodes")
+  }
+
+  it should "return a valid move as bestSoFar when limit fires after first move" in {
+    // X at (0,0),(0,1); O at (1,0),(1,1) — X wins at (0,2), several open cells remain.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+      .withMaxNodes(2)
+    intercept[NodeLimitException] {
+      ab.chooseMove(ttt, new Random(1L))
+    }
+    ab.getBestSoFar shouldBe defined
+    val move = ab.getBestSoFar.get._1
+    move should (be >= 0 and be <= 8)
+  }
 }

@@ -1,5 +1,8 @@
 package com.phasmidsoftware.gambit.game
 
+import com.phasmidsoftware.gambit.game.AlphaBetaPlayer.logger
+import com.phasmidsoftware.gambit.util.LazyLogger
+
 import scala.util.boundary.break
 import scala.util.{Random, boundary}
 
@@ -129,17 +132,13 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     then None
     else
       val moves = game.moves(s)
-      if moves.isEmpty then None
+      if moves.isEmpty
+      then None
       else
         val currentPl = game.currentPlayer(s)(using state)
         val maximizing = currentPl == me
         logger.debug(s"chooseMove: currentPl=$currentPl, me=$me, maximizing=$maximizing")
-        val scored = moves.map { m =>
-          val next = game.applyMove(s, m, currentPl)
-          val nextMaximizing = state.isMaximizing(next, maximizing)
-          logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
-          m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, nextMaximizing)
-        }
+        val scored = moves.map(invokeAlphaBeta(s, currentPl, maximizing))
         val best = if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
         logger.debug(s"chooseMove: best=${best._1}, score=${best._2}")
         Some(best._1, best._2)
@@ -157,6 +156,25 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
   // ---------------------------------------------------------------------------
   // Alpha-beta search
   // ---------------------------------------------------------------------------
+
+  /**
+    * Invokes the alpha-beta pruning algorithm for a given game state and move, returning the move
+    * with its computed minimax score. This helper function evaluates the score of a successor
+    * state resulting from the applied move, logging diagnostic information about the state,
+    * heuristic value, and whether the next player is maximizing or minimizing.
+    *
+    * @param s          the current game state.
+    * @param currentPl  the player making the move in the current state.
+    * @param maximizing a Boolean indicating whether the current player is maximizing.
+    * @param m          the move to evaluate.
+    * @return a tuple containing the move `m` and its computed minimax score.
+    */
+  private def invokeAlphaBeta(s: S, currentPl: Pl, maximizing: Boolean)(m: M): (M, Double) = {
+    val next = game.applyMove(s, m, currentPl)
+    val nextMaximizing = state.isMaximizing(next, maximizing)
+    logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
+    m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, nextMaximizing)
+  }
 
   /**
     * Recursive alpha-beta search.
@@ -177,15 +195,16 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
 
     def evaluate: Double =
       state.isGoal(s) match
-        case Some(_) =>
-          logger.debug(s"alphaBeta: terminal, maximizing=$maximizing, leafValue=$leafValue, heuristic=${state.heuristic(s)}")
+        case Some(b) =>
+          logger.debug(s"alphaBeta: terminal: win: $b, maximizing=$maximizing, leafValue=$leafValue, heuristic=${state.heuristic(s)}")
           leafValue
         case None if depth == 0 =>
           leafValue
         case None =>
           val currentPl = game.currentPlayer(s)(using state)
           val moves = orderedMoves(s, currentPl, maximizing)
-          if maximizing then maximizingSearch(moves, depth - 1, alpha, beta)
+          if maximizing
+          then maximizingSearch(moves, depth - 1, alpha, beta)
           else minimizingSearch(moves, depth - 1, alpha, beta)
 
     cachedEvaluate(s, depth, alpha, beta, evaluate)
@@ -248,11 +267,13 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   private def cachedEvaluate(s: S, depth: Int, alpha: Double, beta: Double, evaluate: => Double): Double =
     keyFn match
-      case None => evaluate
+      case None =>
+        evaluate
       case Some(f) =>
         val key = f(s)
         ttCache.probe(key, depth, alpha, beta) match
-          case Some(cached) => cached
+          case Some(cached) =>
+            cached
           case None =>
             val result = evaluate
             ttCache.store(key, depth, result, alpha, beta)
@@ -265,10 +286,9 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
     val successors = game.moves(s).map(m => m -> game.applyMove(s, m, currentPl))
-    if maximizing then successors.sortBy((_, next) => -state.heuristic(next))
+    if maximizing
+    then successors.sortBy((_, next) => -state.heuristic(next))
     else successors.sortBy((_, next) => state.heuristic(next))
-
-  private val logger = org.slf4j.LoggerFactory.getLogger(getClass)
 
 /**
   * Companion object for `AlphaBetaPlayer`.
@@ -299,3 +319,5 @@ object AlphaBetaPlayer:
     given TTCache[Any] = FlatTTCache[Any]()
 
     new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game, summon[TTCache[Any]])
+
+  private val logger = LazyLogger(getClass)

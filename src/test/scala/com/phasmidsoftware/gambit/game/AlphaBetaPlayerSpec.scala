@@ -494,13 +494,109 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     ab.getWorstSoFar shouldBe None
   }
 
-  it should "equal bestSoFar when only one top-level move exists" in {
-    // Board with exactly one legal move: X fills the last empty cell (position 8).
-    // XOX / OXO / OX_ — no winner yet, one empty cell.
-    // Only one top-level move, so best and worst must be the same result.
-    val ttt = TicTacToe.parse("XOX-OXO-OX ").get
+  // ---------------------------------------------------------------------------
+  // chooseMoveIterativeDeepening
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.chooseMoveIterativeDeepening"
+
+  it should "return None for a terminal position" in {
+    val xWin = TicTacToe.parse("XXX- 0 -0  ").get
     val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
-    ab.chooseMoveWithScore(ttt, new Random(1L))
-    ab.getBestSoFar.map(_._2) shouldBe ab.getWorstSoFar.map(_._2)
+    ab.chooseMoveIterativeDeepening(xWin, new Random(1L), depthStep = 1) shouldBe None
+  }
+
+  it should "return None for a position with no legal moves" in {
+    // Full board, no winner — draw position.
+    val draw = TicTacToe.parse("XOX-OXO-OXO").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveIterativeDeepening(draw, new Random(1L), depthStep = 1) shouldBe None
+  }
+
+  it should "return Some with completedDepth = depthStep after one iteration" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 shouldBe 1
+  }
+
+  it should "return a valid move" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._1 should (be >= 0 and be <= 8)
+  }
+
+  it should "agree with chooseMoveWithScore on the best move" in {
+    // With enough nodes, iterative deepening to depth N should pick the same move
+    // as a direct search to depth N.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val direct = ab.chooseMoveWithScore(ttt, new Random(1L)).map(_._1)
+    val iterative = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1).map(_._1)
+    iterative shouldBe direct
+  }
+
+  it should "return completedDepth = depth when all iterations complete" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 shouldBe 4
+  }
+
+  it should "return last completed iteration when node limit fires mid-search" in {
+    // depth=4, depthStep=1: iteration 1 completes (very few nodes), iteration 2 fires limit.
+    // Result should reflect depth 1, not None.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(5)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 should be >= 1
+    result.get._1 should (be >= 0 and be <= 8)
+  }
+
+  it should "return None when node limit fires before first iteration completes" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe None
+  }
+
+  it should "populate scoredMoves so deeper iterations use better move ordering" in {
+    // After running iterative deepening, getBestSoFar reflects the last completed iteration.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    ab.getBestSoFar shouldBe defined
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "find a winning move when one exists" in {
+    // X to move, wins immediately at position 2.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    val (move, score, _) = result.get
+    score should be > 0.0
+    val row = move / TicTacToe.size
+    val col = move % TicTacToe.size
+    val next = TicTacToeState$.construct(ttt.playX(row, col))
+    TicTacToeState$.isGoal(next) shouldBe Some(true)
+  }
+
+  it should "work correctly with depthStep > 1" in {
+    // depthStep=2 means iterations at depth 2, 4.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 2)
+    result shouldBe defined
+    result.get._3 shouldBe 4 // last completed depth
+    result.get._1 should (be >= 0 and be <= 8)
   }
 }

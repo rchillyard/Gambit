@@ -105,6 +105,10 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     */
   private var worstSoFar: Option[(M, Double)] = None
 
+  /** All (move, score) pairs from the most recently completed iteration,
+    * used to re-order moves for the next iterative-deepening iteration. */
+  private var scoredMoves: Seq[(M, Double)] = Seq.empty
+
   /**
     * Sets the maximum number of nodes to evaluate before throwing [[NodeLimitException]].
     * Returns `this` for chaining.
@@ -114,6 +118,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     nodeCount.set(0)
     bestSoFar = None
     worstSoFar = None
+    scoredMoves = Seq.empty
     this
 
   /**
@@ -207,27 +212,86 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         val currentPl = game.currentPlayer(s)(using state)
         val maximizing = currentPl == me
         logger.debug(s"chooseMove: currentPl=$currentPl, me=$me, maximizing=$maximizing")
-        bestSoFar = None
-        worstSoFar = None
-        val scored = moves.map { m =>
-          val result = invokeAlphaBeta(s, currentPl, maximizing)(m)
-          bestSoFar = Some(bestSoFar.fold(result) { current =>
-            if maximizing then if result._2 > current._2 then result else current
-            else if result._2 < current._2 then result else current
-          })
-          worstSoFar = Some(worstSoFar.fold(result) { current =>
-            if maximizing then if result._2 < current._2 then result else current
-            else if result._2 > current._2 then result else current
-          })
-          result
-        }
-        val best = if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
-        logger.debug(s"chooseMove: best=${best._1}, score=${best._2}")
-        Some(best._1, best._2)
+        Some(chooseMoveWithScoreAtDepth(s, currentPl, maximizing, depth, moves))
 
   /**
-    * Handles the conclusion of a game by clearing both transposition tables,
-    * resetting the player's memoization state ready for the next game.
+    * Runs iterative deepening alpha-beta search, increasing depth by `depthStep`
+    * each iteration until the node limit is hit or `depth` is reached.
+    *
+    * At each depth, top-level moves are ordered by the scores from the previous
+    * iteration (best first for the maximizing player), giving the move-ordering
+    * benefit of iterative deepening. The shared node counter runs down across all
+    * iterations so the total node budget is respected.
+    *
+    * @param s         the root state to search from.
+    * @param random    a Random instance (reserved for future use).
+    * @param depthStep the depth increment per iteration (4 for bridge: trick boundaries).
+    * @return the (move, score, completedDepth) of the last fully completed
+    *         iteration, or `None` if not even the first iteration completed.
+    */
+  def chooseMoveIterativeDeepening(s: S, random: Random, depthStep: Int): Option[(M, Double, Int)] =
+    if state.isGoal(s).isDefined
+    then None
+    else
+      val moves = game.moves(s)
+      if moves.isEmpty
+      then None
+      else
+        val currentPl = game.currentPlayer(s)(using state)
+        val maximizing = currentPl == me
+        var lastCompleted: Option[(M, Double, Int)] = None
+        var orderedMs = moves
+        var currentDepth = depthStep
+        var continue = true
+        while continue && currentDepth <= depth do
+          try
+            val (bestM, bestScore) = chooseMoveWithScoreAtDepth(s, currentPl, maximizing, currentDepth, orderedMs)
+            lastCompleted = Some(bestM, bestScore, currentDepth)
+            orderedMs = if maximizing
+            then scoredMoves.sortBy(-_._2).map(_._1)
+            else scoredMoves.sortBy(_._2).map(_._1)
+            logger.info(s"iterativeDeepening: completed depth=$currentDepth, best=$bestM, score=$bestScore")
+            currentDepth += depthStep
+          catch
+            case _: NodeLimitException =>
+              logger.info(s"iterativeDeepening: node limit at depth=$currentDepth, returning completedDepth=${lastCompleted.map(_._3)}")
+              continue = false
+        lastCompleted
+
+  /**
+    * Runs a single alpha-beta iteration at the given depth over the provided
+    * (pre-ordered) top-level move list. Updates `bestSoFar`, `worstSoFar`, and
+    * `scoredMoves` as side-effects.
+    *
+    * @param s          the root state.
+    * @param currentPl  the player to move at the root.
+    * @param maximizing whether `currentPl` is the maximizing player.
+    * @param d          the search depth for this iteration.
+    * @param ms         the pre-ordered sequence of top-level moves.
+    * @return the (move, score) pair of the best move found.
+    */
+  private def chooseMoveWithScoreAtDepth(s: S, currentPl: Pl, maximizing: Boolean, d: Int, ms: Seq[M]): (M, Double) =
+    bestSoFar = None
+    worstSoFar = None
+    scoredMoves = Seq.empty
+    val scored = ms.map { m =>
+      val result = invokeAlphaBetaAtDepth(s, currentPl, maximizing, d)(m)
+      bestSoFar = Some(bestSoFar.fold(result) { current =>
+        if maximizing then if result._2 > current._2 then result else current
+        else if result._2 < current._2 then result else current
+      })
+      worstSoFar = Some(worstSoFar.fold(result) { current =>
+        if maximizing then if result._2 < current._2 then result else current
+        else if result._2 > current._2 then result else current
+      })
+      result
+    }
+    scoredMoves = scored
+    if maximizing then scored.maxBy(_._2) else scored.minBy(_._2)
+
+  /**
+    * Handles the conclusion of a game by clearing the transposition table and
+    * resetting all mutable player state ready for the next game.
     *
     * @param result the outcome of the game.
     * @param me     the player instance for whom the game is over.
@@ -237,29 +301,28 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     nodeCount.set(0)
     bestSoFar = None
     worstSoFar = None
+    scoredMoves = Seq.empty
 
   // ---------------------------------------------------------------------------
   // Alpha-beta search
   // ---------------------------------------------------------------------------
 
   /**
-    * Invokes the alpha-beta pruning algorithm for a given game state and move, returning the move
-    * with its computed minimax score. This helper function evaluates the score of a successor
-    * state resulting from the applied move, logging diagnostic information about the state,
-    * heuristic value, and whether the next player is maximizing or minimizing.
+    * Invokes the alpha-beta pruning algorithm for a given game state and move at
+    * the specified depth, returning the move with its computed minimax score.
     *
     * @param s          the current game state.
     * @param currentPl  the player making the move in the current state.
     * @param maximizing a Boolean indicating whether the current player is maximizing.
+    * @param d          the search depth for this invocation.
     * @param m          the move to evaluate.
     * @return a tuple containing the move `m` and its computed minimax score.
     */
-  private def invokeAlphaBeta(s: S, currentPl: Pl, maximizing: Boolean)(m: M): (M, Double) = {
+  private def invokeAlphaBetaAtDepth(s: S, currentPl: Pl, maximizing: Boolean, d: Int)(m: M): (M, Double) =
     val next = game.applyMove(s, m, currentPl)
     val nextMaximizing = state.isMaximizing(next, maximizing)
     logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
-    m -> alphaBeta(next, depth - 1, window.alpha, window.beta, nextMaximizing)
-  }
+    m -> alphaBeta(next, d - 1, window.alpha, window.beta, nextMaximizing)
 
   /**
     * Recursive alpha-beta search.

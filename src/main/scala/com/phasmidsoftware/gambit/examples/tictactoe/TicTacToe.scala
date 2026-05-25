@@ -5,8 +5,8 @@ import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.{Prototype, rowsW
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
 import com.phasmidsoftware.gambit.game.{Move, State, Transition}
-import com.phasmidsoftware.util.Aggregators.{hasOne, hasTwo}
-import com.phasmidsoftware.util.{GambitException, Shuffle}
+import com.phasmidsoftware.gambit.util.Aggregators.{hasOne, hasTwo}
+import com.phasmidsoftware.gambit.util.{GambitException, Shuffle}
 
 import scala.util.{Failure, Success, Try}
 

@@ -200,7 +200,6 @@ object Connect4:
   */
 class AlphaBetaPlayerConnect4(
                                me: Boolean,
-                               depth: Int = 6,
-                               keyFn: Option[Connect4 => (Long, Long)] = None
+                               depth: Int = 6
                              )(using state: State[Connect4, Connect4], game: Game[Connect4, Int, Boolean], ttCache: TTCache[(Long, Long)])
-  extends AlphaBetaPlayer[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth, keyFn)(using state, game, ttCache)
+  extends AlphaBetaPlayer[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth)(using state, game, ttCache)

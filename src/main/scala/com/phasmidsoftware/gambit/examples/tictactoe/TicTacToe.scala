@@ -565,7 +565,6 @@ case class Board(sequence: Int, value: Int) {
   */
 class AlphaBetaPlayerTicTacToe(
                                 me: Boolean,
-                                depth: Int = 6,
-                                keyFn: Option[TicTacToe => Int] = None
+                                depth: Int = 6
                               )(using state: State[Board, TicTacToe], game: Game[TicTacToe, Int, Boolean], ttCache: TTCache[Int])
-  extends AlphaBetaPlayer[Board, TicTacToe, Int, Boolean, Int](me, depth, keyFn)(using state, game, ttCache)
+  extends AlphaBetaPlayer[Board, TicTacToe, Int, Boolean, Int](me, depth)(using state, game, ttCache)

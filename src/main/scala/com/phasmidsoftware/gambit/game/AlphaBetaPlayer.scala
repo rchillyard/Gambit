@@ -41,10 +41,10 @@ import scala.util.{Random, boundary}
   *
   * == Transposition Table ==
   *
-  * An optional `keyFn` maps a state to a cache key. When provided, `alphaBeta`
-  * looks up the key before evaluating and caches the result afterwards, avoiding
-  * re-evaluation of positions reachable by multiple move orderings (transpositions).
-  * The table is cleared between games via `gameOver`.
+  * An optional key function maps a state to a cache key. When set via [[withKeyFn]],
+  * `alphaBeta` looks up the key before evaluating and caches the result afterwards,
+  * avoiding re-evaluation of positions reachable by multiple move orderings
+  * (transpositions). The table is cleared between games via `gameOver`.
   *
   * Caching behaviour is controlled by the `given TTCache[K]` in scope:
   *
@@ -65,33 +65,45 @@ import scala.util.{Random, boundary}
   * @tparam K  The type of the transposition table key. Use `Any` when no caching is needed
   *            (via the companion `apply`); otherwise a compact type such as `Int`,
   *            `(Long, Long)`, or a case class that has correct `equals`/`hashCode`.
-  * @param me            the player identifier representing this player.
-  * @param depth         the maximum search depth (default is 6). Determines how far
-  *                      ahead the algorithm looks in the game tree.
-  * @param keyFn         an optional function mapping a state to a transposition table key.
-  *                      When `None` (default) no memoization is performed.
-  * @param ttCache       the [[TTCache]] typeclass instance that handles probe/store/clear.
-  *                      Supply a `given FlatTTCache[K]` for shallow games or a
-  *                      `given TrancheTTCache[K]` for deep searches.  Only consulted
-  *                      when `keyFn` is defined.
-  * @param state         the typeclass providing state-specific functionalities.
-  * @param game          the typeclass providing game-specific behaviours.
+  *
+  * @param me      the player identifier representing this player.
+  * @param depth   the maximum search depth (default is 6). Determines how far
+  *                ahead the algorithm looks in the game tree.
+  *
+  * @param ttCache the [[TTCache]] typeclass instance that handles probe/store/clear.
+  *                Supply a `given FlatTTCache[K]` for shallow games or a
+  *                `given TrancheTTCache[K]` for deep searches. Only consulted
+  *                when a key function has been set via [[withKeyFn]].
+  *
+  * @param state   the typeclass providing state-specific functionalities.
+  * @param game    the typeclass providing game-specific behaviours.
   */
 class AlphaBetaPlayer[P, S, M, Pl, K](
                                        me: Pl,
-                                       depth: Int = 6,
-                                       keyFn: Option[S => K] = None
+                                       depth: Int = 6
                                      )(using state: State[P, S], game: Game[S, M, Pl], ttCache: TTCache[K])
   extends Player[S, M, Pl]:
 
   private val nodeCount = new java.util.concurrent.atomic.AtomicInteger(0)
   private var maxNodes: Int = Int.MaxValue
+  private var keyFn: Option[S => K] = None
+  private var window: AlphaBetaWindow = AlphaBetaWindow.full
 
   /** The best (move, score) pair evaluated so far at the top level.
     * Updated after each top-level move is fully scored.
     * Returned by `runPlayer` when a [[NodeLimitException]] is thrown mid-search.
     */
   private var bestSoFar: Option[(M, Double)] = None
+
+  /** The worst (move, score) pair evaluated so far at the top level from the
+    * protagonist's perspective — i.e. the best defensive result the antagonist
+    * has achieved across fully-evaluated top-level moves.
+    * Updated in the same loop as [[bestSoFar]].
+    * Together with [[bestSoFar]], used after a [[NodeLimitException]] to return a
+    * qualified partial result rather than [[DDResult.Inconclusive]] when one side
+    * has a witness.
+    */
+  private var worstSoFar: Option[(M, Double)] = None
 
   /**
     * Sets the maximum number of nodes to evaluate before throwing [[NodeLimitException]].
@@ -101,6 +113,31 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     maxNodes = n
     nodeCount.set(0)
     bestSoFar = None
+    worstSoFar = None
+    this
+
+  /**
+    * Sets the transposition table key function.
+    * When set, `alphaBeta` looks up the key before evaluating and caches the result
+    * afterwards, avoiding re-evaluation of transposed positions.
+    * Returns `this` for chaining.
+    */
+  def withKeyFn(f: S => K): this.type =
+    keyFn = Some(f)
+    this
+
+  /**
+    * Narrows the initial alpha-beta window for the root search (aspiration search).
+    * Replaces the default full window `[-∞, +∞]` with the given [[AlphaBetaWindow]].
+    *
+    * For bridge double-dummy, where the question is purely binary ("can NS make N tricks?"),
+    * `AlphaBetaWindow(-0.5, 0.5)` is ideal: any positive terminal score maps to `Some(true)`,
+    * any non-positive to `Some(false)`, so the search fails fast on both sides.
+    *
+    * Returns `this` for chaining.
+    */
+  def withAspirationWindow(w: AlphaBetaWindow): this.type =
+    window = w
     this
 
   /**
@@ -108,6 +145,13 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * Only meaningful after a [[NodeLimitException]] has been thrown.
     */
   def getBestSoFar: Option[(M, Double)] = bestSoFar
+
+  /**
+    * Returns the worst (move, score) pair found so far at the top level —
+    * i.e. the best result achieved by the antagonist across fully-evaluated moves.
+    * Only meaningful after a [[NodeLimitException]] has been thrown.
+    */
+  def getWorstSoFar: Option[(M, Double)] = worstSoFar
 
   /**
     * Returns the total number of entries currently held in the transposition table.
@@ -164,11 +208,16 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         val maximizing = currentPl == me
         logger.debug(s"chooseMove: currentPl=$currentPl, me=$me, maximizing=$maximizing")
         bestSoFar = None
+        worstSoFar = None
         val scored = moves.map { m =>
           val result = invokeAlphaBeta(s, currentPl, maximizing)(m)
           bestSoFar = Some(bestSoFar.fold(result) { current =>
             if maximizing then if result._2 > current._2 then result else current
             else if result._2 < current._2 then result else current
+          })
+          worstSoFar = Some(worstSoFar.fold(result) { current =>
+            if maximizing then if result._2 < current._2 then result else current
+            else if result._2 > current._2 then result else current
           })
           result
         }
@@ -187,6 +236,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     ttCache.clear()
     nodeCount.set(0)
     bestSoFar = None
+    worstSoFar = None
 
   // ---------------------------------------------------------------------------
   // Alpha-beta search
@@ -208,7 +258,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     val next = game.applyMove(s, m, currentPl)
     val nextMaximizing = state.isMaximizing(next, maximizing)
     logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
-    m -> alphaBeta(next, depth - 1, -Double.MaxValue, Double.MaxValue, nextMaximizing)
+    m -> alphaBeta(next, depth - 1, window.alpha, window.beta, nextMaximizing)
   }
 
   /**
@@ -226,7 +276,17 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @return the minimax value of `s`.
     */
   private def alphaBeta(s: S, depth: Int, alpha: Double, beta: Double, maximizing: Boolean): Double =
-    if nodeCount.incrementAndGet() > maxNodes then throw NodeLimitException(nodeCount.get)
+    val n = nodeCount.incrementAndGet()
+    if n > maxNodes
+    then throw NodeLimitException(nodeCount.get)
+
+    if n % 100_000 == 0 then
+      val rt = Runtime.getRuntime
+      val used = (rt.totalMemory - rt.freeMemory) / 1024 / 1024
+      val total = rt.totalMemory / 1024 / 1024
+      val max = rt.maxMemory / 1024 / 1024
+      logger.info(f"nodes=$n%,d  heap used=${used}MB / total=${total}MB / max=${max}MB")
+
     lazy val leafValue: Double = state.leafValue(s, maximizing)
 
     def evaluate: Double =
@@ -354,9 +414,25 @@ object AlphaBetaPlayer:
   def apply[P, S, M, Pl](me: Pl, depth: Int = 6)(using state: State[P, S], game: Game[S, M, Pl]): AlphaBetaPlayer[P, S, M, Pl, Any] =
     given TTCache[Any] = FlatTTCache[Any]()
 
-    new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth, None)(using state, game, summon[TTCache[Any]])
+    new AlphaBetaPlayer[P, S, M, Pl, Any](me, depth)(using state, game, summon[TTCache[Any]])
 
   private val logger = LazyLogger(getClass)
+
+/**
+  * The alpha-beta window for the root search.
+  *
+  * @param alpha the lower bound: the maximizing player is guaranteed at least this score.
+  * @param beta  the upper bound: the minimizing player is guaranteed at most this score.
+  */
+case class AlphaBetaWindow(alpha: Double, beta: Double)
+
+/**
+  * Object representing constants or utilities related to the `AlphaBetaWindow`.
+  */
+object AlphaBetaWindow:
+  /** The full window: no pruning at the root. */
+  val full: AlphaBetaWindow = AlphaBetaWindow(-Double.MaxValue, Double.MaxValue)
+
 
 /**
   * Exception thrown when the node count limit is exceeded.

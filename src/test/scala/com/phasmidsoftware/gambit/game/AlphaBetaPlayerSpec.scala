@@ -159,8 +159,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
     val abKey = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abNoKey.chooseMove(Connect4.start, rng) shouldBe abKey.chooseMove(Connect4.start, rng)
   }
 
@@ -171,8 +171,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
     val abNoKey = AlphaBetaPlayerTicTacToe(me = true, depth = 4)
     val abKey = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 4, keyFn = Some(s => s.board.value)
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => s.board.value)
     abNoKey.chooseMove(TicTacToe.start, rng) shouldBe abKey.chooseMove(TicTacToe.start, rng)
   }
 
@@ -187,8 +187,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
     val abKey = AlphaBetaPlayerConnect4(
-      me = true, depth = 6, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 6
+    ).withKeyFn(s => (s.xBits, s.oBits))
 
     val t0 = System.currentTimeMillis()
     abNoKey.chooseMove(mid, rng)
@@ -207,8 +207,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     // After gameOver, the table is cleared but the player should still work correctly.
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val ab = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     val move1 = ab.chooseMove(Connect4.start, new Random(1L))
     ab.gameOver(Map(true -> 1, false -> -1), true)
     // After reset, should give the same answer.
@@ -228,8 +228,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   it should "preserve the TicTacToe never-lose guarantee with keyFn enabled" in {
     given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 6, keyFn = Some(s => s.board.value)
-    )
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
@@ -238,8 +238,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   it should "preserve the Connect4 never-lose guarantee with keyFn enabled" in {
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val ab = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     val runner = Connect4GameRunner(ab, new C4RandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(true) should be > stats.lossesFor(true)
@@ -256,8 +256,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abFlat = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abFlat.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
@@ -266,8 +266,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abTranche = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abTranche.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
@@ -276,8 +276,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
     given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abReuse = AlphaBetaPlayerConnect4(
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abReuse.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
@@ -286,10 +286,10 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     val mid = Connect4.start
       .play(3, isX = true).play(3, isX = false)
       .play(2, isX = true).play(4, isX = false)
-    val keyFn = Some((s: Connect4) => (s.xBits, s.oBits))
-    val abFlat = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
-    val abExact = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
-    val abReuse = AlphaBetaPlayerConnect4(me = true, depth = 4, keyFn = keyFn)
+    val keyFn: Connect4 => (Long, Long) = (s: Connect4) => (s.xBits, s.oBits)
+    val abFlat = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
+    val abExact = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
+    val abReuse = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
     val moveFlat = abFlat.chooseMove(mid, new Random(1L))
     val moveExact = abExact.chooseMove(mid, new Random(1L))
     val moveReuse = abReuse.chooseMove(mid, new Random(1L))
@@ -300,8 +300,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   it should "never lose TicTacToe with depth-tranche exact mode" taggedAs Slow in {
     given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 6, keyFn = Some(s => s.board.value)
-    )
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
@@ -310,8 +310,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   it should "never lose TicTacToe with depth-tranche reuse mode" taggedAs Slow in {
     given TTCache[Int] = FlatTTCache[Int]()
     val ab = AlphaBetaPlayerTicTacToe(
-      me = true, depth = 6, keyFn = Some(s => s.board.value)
-    )
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
@@ -419,5 +419,88 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     ab.getBestSoFar shouldBe defined
     val move = ab.getBestSoFar.get._1
     move should (be >= 0 and be <= 8)
+  }
+
+  // ---------------------------------------------------------------------------
+  // worstSoFar / getWorstSoFar
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.getWorstSoFar"
+
+  it should "be None before any search" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  it should "be defined after a complete search" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L)) shouldBe defined
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "have a score <= bestSoFar score for a maximizing player" in {
+    // After a full search, worstSoFar is the antagonist's best line —
+    // always <= the protagonist's best line.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    val best = ab.getBestSoFar.map(_._2)
+    val worst = ab.getWorstSoFar.map(_._2)
+    best shouldBe defined
+    worst shouldBe defined
+    worst.get should be <= best.get
+  }
+
+  it should "have a score >= bestSoFar score for a minimizing player" in {
+    // Symmetric: when me=false, worstSoFar is the highest score seen.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = false, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    val best = ab.getBestSoFar.map(_._2)
+    val worst = ab.getWorstSoFar.map(_._2)
+    best shouldBe defined
+    worst shouldBe defined
+    worst.get should be >= best.get
+  }
+
+  it should "be defined after a NodeLimitException when at least one move completed" in {
+    // Depth-1 search on this position scores each move in very few nodes;
+    // with limit=2 the first move completes, then the limit fires on the second.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+      .withMaxNodes(2)
+    intercept[NodeLimitException] {
+      ab.chooseMove(ttt, new Random(1L))
+    }
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "reset to None when withMaxNodes is called" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    ab.getWorstSoFar shouldBe defined
+    ab.withMaxNodes(1000000)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  it should "reset to None via gameOver" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    ab.getWorstSoFar shouldBe defined
+    ab.gameOver(Map(true -> 1, false -> -1), true)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  it should "equal bestSoFar when only one top-level move exists" in {
+    // Board with exactly one legal move: X fills the last empty cell (position 8).
+    // XOX / OXO / OX_ — no winner yet, one empty cell.
+    // Only one top-level move, so best and worst must be the same result.
+    val ttt = TicTacToe.parse("XOX-OXO-OX ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    ab.getBestSoFar.map(_._2) shouldBe ab.getWorstSoFar.map(_._2)
   }
 }

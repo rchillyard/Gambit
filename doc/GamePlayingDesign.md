@@ -165,13 +165,25 @@ of early pruning and approaching best-case O(b^(d/2)) node count.
 **Node limit** — `withMaxNodes(n: Int): this.type` sets a cap on the number of
 nodes evaluated. When the limit is exceeded, `NodeLimitException` is thrown.
 `getBestSoFar: Option[(M, Double)]` returns the best top-level result fully
-evaluated before the limit was hit, allowing callers to use a partial result
-rather than discarding the search entirely. Both `withMaxNodes` and `gameOver`
-reset the counter and clear `bestSoFar`.
+evaluated before the limit was hit. `getWorstSoFar: Option[(M, Double)]` returns
+the antagonist's best result across fully-evaluated top-level moves — the lowest
+score seen when maximizing, highest when minimizing. Both `withMaxNodes` and
+`gameOver` reset the counter and clear both `bestSoFar` and `worstSoFar`.
 
-**Transposition table** — controlled by a `given TTCache[K]` in scope and an
-optional `keyFn: Option[S => K]` that maps a state to a cache key. When
-`keyFn = None` (default via the companion `apply`) no caching is performed.
+**Aspiration window** — `withAspirationWindow(w: AlphaBetaWindow): this.type`
+narrows the initial root alpha-beta window from `[-∞, +∞]` to `[w.alpha, w.beta]`
+where `AlphaBetaWindow` is a case class `AlphaBetaWindow(alpha: Double, beta: Double)`.
+`AlphaBetaWindow.full` is the full-window default. A score ≤ alpha is a fail-low;
+a score ≥ beta is a fail-high. Both failures prune subtrees that cannot affect
+the answer, dramatically reducing node count for binary queries.
+
+**Key function** — `withKeyFn(f: S => K): this.type` sets the transposition table
+key function. When set, `alphaBeta` looks up the key before evaluating and caches
+the result afterwards. When not set, no caching is performed. All three optional
+features return `this` for chaining.
+
+**Transposition table** — controlled by a `given TTCache[K]` in scope. The key
+function is set via `withKeyFn`.
 
 Two implementations are provided:
 
@@ -445,13 +457,14 @@ sbt ghpagesPushSite
 
 ## Future Work
 
+- **Iterative deepening** — search to depth 4, 8, 12, … so every depth
+  completes all top-level moves, ensuring `bestSoFar`/`worstSoFar` are always
+  populated and providing move ordering for deeper iterations; primary remaining
+  lever for full 52-card bridge analysis
 - **Issue #14: TT flags (partial)** — `TTFlag` enum, `TTEntry`, and `TTCache`
   typeclass implemented; `Exact` entries are reused correctly. Full
   `LowerBound`/`UpperBound` bound propagation deferred: requires exposing
   `TTEntry` from `probe` and handling window tightening in `cachedEvaluate`
-- **Aspiration search** — narrow the initial alpha-beta window to
-  `[neededTricks - ε, neededTricks + ε]` for binary yes/no queries; would
-  dramatically reduce node count by failing fast on both sides
 - **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
 - **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries

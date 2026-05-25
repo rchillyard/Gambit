@@ -68,7 +68,7 @@ class Matchboxes {
     val canonCell = transformCell(cell, transform)
     val current = registry.getOrElseUpdate(canon, canonicalMatchbox(ttt, transform))
     val updated = result match {
-      case Win  => current.reward(canonCell)
+      case Win => current.reward(canonCell)
       case Loss => current.penalise(canonCell)
       case Draw => current
     }

@@ -78,6 +78,29 @@ trait State[P, S] extends Ordering[S]:
   def moves(s: S): Seq[Transition[P, S]]
 
   /**
+    * Computes the terminal value of a given state `s` based on the heuristic evaluation.
+    * The value is negated if the `maximizing` parameter is true, representing an adversarial game scenario.
+    *
+    * @param s          the current state of type `S`.
+    * @param maximizing a Boolean indicating if the current player is the maximizing player.
+    * @return a Double representing the evaluated value of the state, negated for the maximizing player.
+    */
+  def leafValue(s: S, maximizing: Boolean): Double =
+    if maximizing then -heuristic(s) else heuristic(s)
+
+  /**
+    * Determines if the current player is the maximizing player.
+    *
+    * @param s                 the current state of type `S`.
+    * @param currentMaximizing a Boolean indicating if the current player is
+    *                          currently considered the maximizing player.
+    *
+    * @return a Boolean value negating the input `currentMaximizing`,
+    *         indicating the next player's maximizing status.
+    */
+  def isMaximizing(s: S, currentMaximizing: Boolean): Boolean = !currentMaximizing
+
+  /**
     * Concrete method to get the possible states to follow the given state s.
     * The resulting sequence is in no particular order.
     *
@@ -148,4 +171,5 @@ trait Transition[P, S] extends (S => (P, S))
   */
 case class Move[P, S](f: S => P, desc: String) extends Transition[P, S]:
   override def apply(s: S): (P, S) = f(s) -> s
+
   override def toString: String = desc

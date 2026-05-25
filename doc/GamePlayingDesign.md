@@ -19,7 +19,8 @@ AlphaBeta.
 | `Game.scala` | `Game[S, M, Pl]` — game mechanics typeclass |
 | `Player.scala` | `Player[S, M, Pl]`; `GameResult[Pl]`, `MatchResult[Pl]` |
 | `GameRunner.scala` | `GameRunner[P, S, M, Pl]` — generic game execution |
-| `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl]` — minimax with alpha-beta pruning |
+| `AlphaBetaPlayer.scala` | `AlphaBetaPlayer[P, S, M, Pl, K]` — minimax with alpha-beta pruning |
+| `TTCache.scala` | `TTCache[K]` typeclass; `TTFlag`, `TTEntry`; `FlatTTCache[K]`, `TrancheTTCache[K]` |
 | `MCTSPlayer.scala` | `MCTSPlayer[P, S, M, Pl]`, `MCTSNode[S, M, Pl]` — Monte Carlo Tree Search |
 | `Tournament.scala` | `Tournament[P, S, M, Pl]`, `Contestant[S, M, Pl]` — round-robin league |
 
@@ -54,12 +55,12 @@ AlphaBeta.
 
 ```
 State[P, S]              — game state: legal moves, goal detection, heuristic,
-                           isFirstPlayerToMove
+                           isMaximizing, leafValue
 Game[S, M, Pl]           — game mechanics: start, moves, applyMove, nextPlayer,
                            currentPlayer, winner
 Player[S, M, Pl]         — player strategy: chooseMove, gameOver
 GameRunner[P, S, M, Pl]  — execution: driven by State and Game givens
-AlphaBetaPlayer[P,S,M,Pl]— generic minimax player with alpha-beta pruning
+AlphaBetaPlayer[P,S,M,Pl,K] — generic minimax player with alpha-beta pruning
 MCTSPlayer[P, S, M, Pl]  — generic MCTS player with tree reuse
 Tournament[P, S, M, Pl]  — round-robin league with 3-1-0 scoring
 ```
@@ -69,8 +70,21 @@ Tournament[P, S, M, Pl]  — round-robin league with 3-1-0 scoring
 The existing Visitor-derived typeclass, extended with:
 
 - `isFirstPlayerToMove(s: S): Boolean` — `sequence(s) % 2 == 0`; true when
-  it is the first player's turn to move. Unambiguous: it is the player who
-  will make the *next* move from `s`, NOT the player who made the last move.
+  it is the first player's turn to move.
+
+- `isMaximizing(s: S, currentMaximizing: Boolean): Boolean` — determines whether
+  the player to move at `s` is the maximizing player. The default implementation
+  returns `!currentMaximizing` (strict alternation, suitable for TicTacToe and
+  Connect Four). Games where the same player can move consecutively (e.g. bridge,
+  where the trick winner leads the next trick) must override this method using
+  `game.currentPlayer(s)`.
+
+- `leafValue(s: S, maximizing: Boolean): Double` — the value to return at a
+  terminal or depth-limited node. The default implementation follows the negamax
+  convention: `if maximizing then -heuristic(s) else heuristic(s)`, which
+  assumes `heuristic` is positive when the player who just moved is doing well.
+  Games that use an absolute heuristic (e.g. always positive for NS in bridge)
+  must override this to return `heuristic(s)` directly.
 
 ### Game[S, M, Pl]
 
@@ -84,7 +98,7 @@ Separates game *rules* from game *strategy*:
 - `nextPlayer(s, pl): Pl` — whose turn is next after `pl` moves
 - `currentPlayer[P](s)(using State[P,S]): Pl` — default implementation via
   `isFirstPlayerToMove`; returns `startingPlayer` on even sequence, the other
-  player on odd. Override for games with more than two players (e.g. bridge).
+  player on odd. Override for games with non-alternating play (e.g. bridge).
 - `winner(s, current): GameResult[Pl]` — default zero-sum two-player winner;
   override for multiplayer or non-zero-sum games
 
@@ -124,17 +138,22 @@ Driven entirely by `given State[P, S]` and `given Game[S, M, Pl]`. Takes only
 
 ## AlphaBeta
 
-### AlphaBetaPlayer[P, S, M, Pl]
+### AlphaBetaPlayer[P, S, M, Pl, K]
 
-Generic minimax player with alpha-beta pruning to a configurable depth.
+Generic minimax player with alpha-beta pruning to a configurable depth. The
+fifth type parameter `K` is the transposition table key type; use `Any` (via
+the companion `apply`) when no caching is needed.
 
-**Heuristic convention** — `heuristic(s)` is from the perspective of whoever
-just moved INTO `s`. `alphaBeta` returns a value from `me`'s perspective;
-leaf nodes negate the heuristic when the minimizing player just moved:
+**Heuristic convention** — `heuristic(s)` follows whatever convention the
+`State` typeclass defines. At leaf nodes, `state.leafValue(s, maximizing)` is
+called — the default negamax convention negates when the minimizing player just
+moved, but games with an absolute heuristic override `leafValue` to return
+`heuristic(s)` directly.
 
-```scala
-def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuristic(s)
-```
+**`isMaximizing` delegation** — rather than hardcoding `!maximizing` at each
+recursive call, `AlphaBetaPlayer` calls `state.isMaximizing(next, maximizing)`
+to determine the next node's maximizing flag. This correctly handles games where
+the same player can move twice in a row (non-alternating turn order).
 
 **Alpha-beta bounds** — initial alpha is `-Double.MaxValue` (not
 `Double.MinValue`, which is the smallest *positive* double ~5e-324).
@@ -143,9 +162,53 @@ def leafValue: Double = if maximizing then -state.heuristic(s) else state.heuris
 first for maximizer, lowest first for minimizer), maximising the probability
 of early pruning and approaching best-case O(b^(d/2)) node count.
 
-**`maximizing` flag** — true when `currentPlayer(s) == me`; correctly handles
-positions where it is the opponent's turn at the root (e.g. when `AlphaBetaPlayer`
-is called as `me=true` but the board has an odd number of pieces).
+**Node limit** — `withMaxNodes(n: Int): this.type` sets a cap on the number of
+nodes evaluated. When the limit is exceeded, `NodeLimitException` is thrown.
+`getBestSoFar: Option[(M, Double)]` returns the best top-level result fully
+evaluated before the limit was hit. `getWorstSoFar: Option[(M, Double)]` returns
+the antagonist's best result across fully-evaluated top-level moves — the lowest
+score seen when maximizing, highest when minimizing. Both `withMaxNodes` and
+`gameOver` reset the counter and clear `bestSoFar`, `worstSoFar`, and `scoredMoves`.
+
+**Iterative deepening** — `chooseMoveIterativeDeepening(s, random, depthStep)`
+searches to depth `depthStep`, then `2*depthStep`, … up to `depth`, re-ordering
+top-level moves at each iteration using the previous iteration's actual minimax
+scores (`scoredMoves`). The node budget is shared across all iterations via the
+same counter as `withMaxNodes`. When `NodeLimitException` fires mid-iteration,
+the last fully-completed iteration's `(move, score, completedDepth)` is returned,
+or `None` if not even the first iteration completed. This guarantees `bestSoFar`
+and `worstSoFar` are always populated after any completed iteration, and that
+move ordering improves with each successive depth.
+
+**Aspiration window** — `withAspirationWindow(w: AlphaBetaWindow): this.type`
+narrows the initial root alpha-beta window from `[-∞, +∞]` to `[w.alpha, w.beta]`
+where `AlphaBetaWindow` is a case class `AlphaBetaWindow(alpha: Double, beta: Double)`.
+`AlphaBetaWindow.full` is the full-window default. A score ≤ alpha is a fail-low;
+a score ≥ beta is a fail-high. Both failures prune subtrees that cannot affect
+the answer, dramatically reducing node count for binary queries.
+
+**Key function** — `withKeyFn(f: S => K): this.type` sets the transposition table
+key function. When set, `alphaBeta` looks up the key before evaluating and caches
+the result afterwards. When not set, no caching is performed. All three optional
+features return `this` for chaining.
+
+**Transposition table** — controlled by a `given TTCache[K]` in scope. The key
+function is set via `withKeyFn`.
+
+Two implementations are provided:
+
+- `FlatTTCache[K]` — single `HashMap[K, TTEntry]`; reuses entries cached at
+  equal or greater depth. Suitable for shallow games (TicTacToe, Connect Four).
+- `TrancheTTCache[K]` — separate sub-table per depth; ~25% faster for deep
+  searches (bridge double-dummy). Optionally reuses deeper-tranche entries when
+  `reuseDeeper = true`.
+
+Each entry stores a `TTFlag` (Exact / LowerBound / UpperBound) computed from
+the alpha-beta window at store time. Currently **only `Exact` entries are
+returned on probe** — `LowerBound`/`UpperBound` entries are stored correctly
+but not reused, because doing so requires propagating tightened bounds back to
+the caller, which `Option[Double]` cannot express. Full bound propagation is
+deferred as a future enhancement.
 
 ---
 
@@ -187,8 +250,7 @@ Tree matching uses `==` on `S`; requires meaningful equality (satisfied by
 `case class`).
 
 **`me` parameter** — the player identity this instance represents; used in
-backpropagation to correctly credit wins. Must be set to `true` (X) when
-playing as X and `false` (O) when playing as O.
+backpropagation to correctly credit wins.
 
 **`currentPlayer`** — uses `game.currentPlayer(s)(using state)` to determine
 who moves at the root, correctly handling mid-game positions.
@@ -356,19 +418,22 @@ given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean
 
 ## Heuristic Convention
 
-Both `TicTacToe` and Connect Four follow the same convention:
+Both `TicTacToe` and Connect Four follow the negamax convention:
 
 > `heuristic(s)` is positive when the player who **just moved** to reach `s`
 > is doing well. `HeuristicPlayer.chooseMove` uses `maxBy(heuristic)` over
 > successors — since each successor was reached by the current player moving,
 > the maximum heuristic successor is the best move.
 
-`AlphaBetaPlayer` accounts for this at leaf nodes by negating the heuristic
-when the minimizing player just moved, ensuring the returned value is always
-from `me`'s perspective regardless of search depth.
+`AlphaBetaPlayer` accounts for this at leaf nodes via `state.leafValue(s, maximizing)`,
+which by default negates the heuristic when the minimizing player just moved,
+ensuring the returned value is always from `me`'s perspective regardless of
+search depth.
 
-This was the source of several bugs during development when the convention
-was inconsistently applied between `State.heuristic` and `Player.chooseMove`.
+Games that maintain an absolute heuristic (always from one side's perspective,
+e.g. always positive for NS in bridge) override `leafValue` to return
+`heuristic(s)` directly, and override `isMaximizing` to compute the next
+player from the game state rather than assuming strict alternation.
 
 ---
 
@@ -402,13 +467,16 @@ sbt ghpagesPushSite
 
 ## Future Work
 
+- **Per-iteration node budget** — reset the node counter between iterative
+  deepening iterations so GC can recover between depths; prevents GC thrashing
+  at depth 32+ observed with the current shared budget approach
+- **Issue #14: TT flags (partial)** — `TTFlag` enum, `TTEntry`, and `TTCache`
+  typeclass implemented; `Exact` entries are reused correctly. Full
+  `LowerBound`/`UpperBound` bound propagation deferred: requires exposing
+  `TTEntry` from `probe` and handling window tightening in `cachedEvaluate`
 - **Actor-based parallel rollouts** (Akka/Pekko) for MCTS
 - **Heuristic rollouts** for stronger MCTS play
 - **MENACE self-play** — two instances with shared or separate registries
 - **MENACE X/O symmetry** — `exchangeBoard` to halve matchbox count
 - **MENACE persistence** — serialise registry for trained agent reuse
 - **Chess** — `given chessGame: Game[ChessState, ChessMove, Boolean]`
-- **Bridge** — `given bridgeGame: Game[BridgeState, Card, Seat]`;
-  four-player; `winner` returns tricks per side; MCTS with determinization
-  for hidden information (sample possible hand distributions, run MCTS
-  on each as perfect-information, aggregate)

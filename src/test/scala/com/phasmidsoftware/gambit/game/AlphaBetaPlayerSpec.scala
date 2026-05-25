@@ -1,9 +1,9 @@
 package com.phasmidsoftware.gambit.game
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
-import com.phasmidsoftware.gambit.examples.connect4.{Connect4, Connect4GameRunner, Connect4State, connect4Game, HeuristicPlayer as C4HeuristicPlayer, RandomPlayer as C4RandomPlayer}
+import com.phasmidsoftware.gambit.examples.connect4.{AlphaBetaPlayerConnect4, Connect4, Connect4GameRunner, Connect4State, connect4Game, HeuristicPlayer as C4HeuristicPlayer, RandomPlayer as C4RandomPlayer}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
-import com.phasmidsoftware.gambit.examples.tictactoe.{Board, PerfectPlayer, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
+import com.phasmidsoftware.gambit.examples.tictactoe.{AlphaBetaPlayerTicTacToe, Board, PerfectPlayer, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 import org.scalatest.tagobjects.Slow
@@ -12,11 +12,12 @@ import scala.util.Random
 
 class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
+
   // ---------------------------------------------------------------------------
   // TicTacToe — AlphaBetaPlayer
   // ---------------------------------------------------------------------------
 
-  behavior of "AlphaBetaPlayer on TicTacToe"
+  behavior of "AlphaBetaPlayerTicTacToe on TicTacToe"
 
   it should "choose a valid move from the starting position" in {
     val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
@@ -150,23 +151,28 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   // Transposition table (keyFn)
   // ---------------------------------------------------------------------------
 
-  behavior of "AlphaBetaPlayer transposition table"
+  behavior of "AlphaBetaPlayerTicTacToe transposition table"
 
   it should "produce the same Connect4 move with and without keyFn" in {
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
-    val abKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+    val abKey = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abNoKey.chooseMove(Connect4.start, rng) shouldBe abKey.chooseMove(Connect4.start, rng)
   }
 
   it should "produce the same TicTacToe move with and without keyFn" in {
     val rng = new Random(1L)
-    val abNoKey = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
-    val abKey = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => s.board.value)
-    )
+
+    given TTCache[Int] = FlatTTCache[Int]()
+
+    val abNoKey = AlphaBetaPlayerTicTacToe(me = true, depth = 4)
+    val abKey = AlphaBetaPlayerTicTacToe(
+      me = true, depth = 4
+    ).withKeyFn(s => s.board.value)
     abNoKey.chooseMove(TicTacToe.start, rng) shouldBe abKey.chooseMove(TicTacToe.start, rng)
   }
 
@@ -177,10 +183,12 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
       .play(2, isX = true).play(4, isX = false)
 
     val rng = new Random(1L)
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val abNoKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
-    val abKey = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 6, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+    val abKey = AlphaBetaPlayerConnect4(
+      me = true, depth = 6
+    ).withKeyFn(s => (s.xBits, s.oBits))
 
     val t0 = System.currentTimeMillis()
     abNoKey.chooseMove(mid, rng)
@@ -197,9 +205,10 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
 
   it should "clear the transposition table between games via gameOver" in {
     // After gameOver, the table is cleared but the player should still work correctly.
-    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
+    val ab = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     val move1 = ab.chooseMove(Connect4.start, new Random(1L))
     ab.gameOver(Map(true -> 1, false -> -1), true)
     // After reset, should give the same answer.
@@ -210,25 +219,27 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   it should "accept None keyFn and behave identically to the default constructor" in {
     val rng = new Random(1L)
     val abNone = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = None
+      me = true, depth = 4
     )
     val abDefault = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4)
     abNone.chooseMove(Connect4.start, rng) shouldBe abDefault.chooseMove(Connect4.start, rng)
   }
 
   it should "preserve the TicTacToe never-lose guarantee with keyFn enabled" in {
-    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
-      me = true, depth = 6, keyFn = Some(s => s.board.value)
-    )
+    given TTCache[Int] = FlatTTCache[Int]()
+    val ab = AlphaBetaPlayerTicTacToe(
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
   }
 
   it should "preserve the Connect4 never-lose guarantee with keyFn enabled" in {
-    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits))
-    )
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
+    val ab = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     val runner = Connect4GameRunner(ab, new C4RandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(true) should be > stats.lossesFor(true)
@@ -238,43 +249,47 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   // Transposition table modes: flat, depth-tranches exact, depth-tranches reuse
   // ---------------------------------------------------------------------------
 
-  behavior of "AlphaBetaPlayer transposition table modes"
+  behavior of "AlphaBetaPlayerTicTacToe transposition table modes"
 
   it should "produce the same Connect4 move with flat table (default)" in {
     val rng = new Random(1L)
-    val abFlat = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = false
-    )
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
+    val abFlat = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abFlat.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce the same Connect4 move with depth-tranche exact mode" in {
     val rng = new Random(1L)
-    val abTranche = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = true, reuseDeeper = false
-    )
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
+    val abTranche = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abTranche.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce the same Connect4 move with depth-tranche reuse mode" in {
     val rng = new Random(1L)
-    val abReuse = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](
-      me = true, depth = 4, keyFn = Some(s => (s.xBits, s.oBits)),
-      depthTranches = true, reuseDeeper = true
-    )
+
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
+    val abReuse = AlphaBetaPlayerConnect4(
+      me = true, depth = 4
+    ).withKeyFn(s => (s.xBits, s.oBits))
     abReuse.chooseMove(Connect4.start, rng) shouldBe Some(3)
   }
 
   it should "produce identical moves across all three cache modes" in {
+    given TTCache[(Long, Long)] = FlatTTCache[(Long, Long)]()
     val mid = Connect4.start
       .play(3, isX = true).play(3, isX = false)
       .play(2, isX = true).play(4, isX = false)
-    val keyFn = Some((s: Connect4) => (s.xBits, s.oBits))
-    val abFlat = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = false)
-    val abExact = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = false)
-    val abReuse = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 4, keyFn = keyFn, depthTranches = true, reuseDeeper = true)
+    val keyFn: Connect4 => (Long, Long) = (s: Connect4) => (s.xBits, s.oBits)
+    val abFlat = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
+    val abExact = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
+    val abReuse = AlphaBetaPlayerConnect4(me = true, depth = 4).withKeyFn(keyFn)
     val moveFlat = abFlat.chooseMove(mid, new Random(1L))
     val moveExact = abExact.chooseMove(mid, new Random(1L))
     val moveReuse = abReuse.chooseMove(mid, new Random(1L))
@@ -283,22 +298,305 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "never lose TicTacToe with depth-tranche exact mode" taggedAs Slow in {
-    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
-      me = true, depth = 6, keyFn = Some(s => s.board.value),
-      depthTranches = true, reuseDeeper = false
-    )
+    given TTCache[Int] = FlatTTCache[Int]()
+    val ab = AlphaBetaPlayerTicTacToe(
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
   }
 
   it should "never lose TicTacToe with depth-tranche reuse mode" taggedAs Slow in {
-    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](
-      me = true, depth = 6, keyFn = Some(s => s.board.value),
-      depthTranches = true, reuseDeeper = true
-    )
+    given TTCache[Int] = FlatTTCache[Int]()
+    val ab = AlphaBetaPlayerTicTacToe(
+      me = true, depth = 6
+    ).withKeyFn(s => s.board.value)
     val runner = TicTacToeGameRunner(ab, new TTTRandomPlayer, new Random(9L))
     val stats = runner.playGames(20)
     stats.winsFor(false) shouldBe 0
+  }
+
+  // ---------------------------------------------------------------------------
+  // chooseMoveWithScore
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.chooseMoveWithScore"
+
+  it should "return the same move as chooseMove" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val move = ab.chooseMove(TicTacToe.start, new Random(1L))
+    val moveWithScore = ab.chooseMoveWithScore(TicTacToe.start, new Random(1L))
+    moveWithScore.map(_._1) shouldBe move
+  }
+
+  it should "return a positive score for a position where X is about to win" in {
+    // X at (0,0),(0,1); O at (1,0),(1,1) — X to move, wins at (0,2).
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveWithScore(ttt, new Random(1L))
+    result shouldBe defined
+    result.get._2 should be > 0.0
+  }
+
+  it should "return a negative score for a position where X is about to lose" in {
+    // O at (0,0),(0,1),(1,0),(1,1) — X to move but cannot prevent O winning.
+    val ttt = TicTacToe.parse("00 -00 -X  ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveWithScore(ttt, new Random(1L))
+    result shouldBe defined
+    result.get._2 should be < 0.0
+  }
+  // ---------------------------------------------------------------------------
+  // Node limit — withMaxNodes / NodeLimitException
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.withMaxNodes"
+
+  it should "return this for chaining" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+    ab.withMaxNodes(1000) shouldBe ab
+  }
+
+  it should "complete normally when node limit is not reached" in {
+    // Depth-4 TicTacToe from start is well under 1,000,000 nodes
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "throw NodeLimitException when limit is set to 1" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(1)
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "throw NodeLimitException for Connect4 with a tight limit" in {
+    val ab = AlphaBetaPlayer[Connect4, Connect4, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(10)
+    an[NodeLimitException] should be thrownBy ab.chooseMove(Connect4.start, new Random(1L))
+  }
+
+  it should "reset node count after withMaxNodes is called again" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    // First call hits the limit
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+    // Reset with a generous limit — should now complete
+    ab.withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "reset node count via gameOver" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    // First call hits the limit
+    an[NodeLimitException] should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+    // gameOver resets the counter; withMaxNodes raises the limit
+    ab.gameOver(Map(true -> 1, false -> -1), true)
+    ab.withMaxNodes(1000000)
+    noException should be thrownBy ab.chooseMove(TicTacToe.start, new Random(1L))
+  }
+
+  it should "report the node count in the exception message" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 6)
+      .withMaxNodes(5)
+    val ex = intercept[NodeLimitException] {
+      ab.chooseMove(TicTacToe.start, new Random(1L))
+    }
+    ex.nodes should be > 5
+    ex.getMessage should include("nodes")
+  }
+
+  it should "return a valid move as bestSoFar when limit fires after first move" in {
+    // X at (0,0),(0,1); O at (1,0),(1,1) — X wins at (0,2), several open cells remain.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+      .withMaxNodes(2)
+    intercept[NodeLimitException] {
+      ab.chooseMove(ttt, new Random(1L))
+    }
+    ab.getBestSoFar shouldBe defined
+    val move = ab.getBestSoFar.get._1
+    move should (be >= 0 and be <= 8)
+  }
+
+  // ---------------------------------------------------------------------------
+  // worstSoFar / getWorstSoFar
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.getWorstSoFar"
+
+  it should "be None before any search" in {
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  it should "be defined after a complete search" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L)) shouldBe defined
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "have a score <= bestSoFar score for a maximizing player" in {
+    // After a full search, worstSoFar is the antagonist's best line —
+    // always <= the protagonist's best line.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    val best = ab.getBestSoFar.map(_._2)
+    val worst = ab.getWorstSoFar.map(_._2)
+    best shouldBe defined
+    worst shouldBe defined
+    worst.get should be <= best.get
+  }
+
+  it should "have a score >= bestSoFar score for a minimizing player" in {
+    // Symmetric: when me=false, worstSoFar is the highest score seen.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = false, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    val best = ab.getBestSoFar.map(_._2)
+    val worst = ab.getWorstSoFar.map(_._2)
+    best shouldBe defined
+    worst shouldBe defined
+    worst.get should be >= best.get
+  }
+
+  it should "be defined after a NodeLimitException when at least one move completed" in {
+    // Depth-1 search on this position scores each move in very few nodes;
+    // with limit=2 the first move completes, then the limit fires on the second.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+      .withMaxNodes(2)
+    intercept[NodeLimitException] {
+      ab.chooseMove(ttt, new Random(1L))
+    }
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "reset to None when withMaxNodes is called" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    ab.getWorstSoFar shouldBe defined
+    ab.withMaxNodes(1000000)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  it should "reset to None via gameOver" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveWithScore(ttt, new Random(1L))
+    ab.getWorstSoFar shouldBe defined
+    ab.gameOver(Map(true -> 1, false -> -1), true)
+    ab.getWorstSoFar shouldBe None
+  }
+
+  // ---------------------------------------------------------------------------
+  // chooseMoveIterativeDeepening
+  // ---------------------------------------------------------------------------
+
+  behavior of "AlphaBetaPlayer.chooseMoveIterativeDeepening"
+
+  it should "return None for a terminal position" in {
+    val xWin = TicTacToe.parse("XXX- 0 -0  ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveIterativeDeepening(xWin, new Random(1L), depthStep = 1) shouldBe None
+  }
+
+  it should "return None for a position with no legal moves" in {
+    // Full board, no winner — draw position.
+    val draw = TicTacToe.parse("XOX-OXO-OXO").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveIterativeDeepening(draw, new Random(1L), depthStep = 1) shouldBe None
+  }
+
+  it should "return Some with completedDepth = depthStep after one iteration" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 1)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 shouldBe 1
+  }
+
+  it should "return a valid move" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._1 should (be >= 0 and be <= 8)
+  }
+
+  it should "agree with chooseMoveWithScore on the best move" in {
+    // With enough nodes, iterative deepening to depth N should pick the same move
+    // as a direct search to depth N.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val direct = ab.chooseMoveWithScore(ttt, new Random(1L)).map(_._1)
+    val iterative = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1).map(_._1)
+    iterative shouldBe direct
+  }
+
+  it should "return completedDepth = depth when all iterations complete" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 shouldBe 4
+  }
+
+  it should "return last completed iteration when node limit fires mid-search" in {
+    // depth=4, depthStep=1: iteration 1 completes (very few nodes), iteration 2 fires limit.
+    // Result should reflect depth 1, not None.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(5)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    result.get._3 should be >= 1
+    result.get._1 should (be >= 0 and be <= 8)
+  }
+
+  it should "return None when node limit fires before first iteration completes" in {
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+      .withMaxNodes(1)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe None
+  }
+
+  it should "populate scoredMoves so deeper iterations use better move ordering" in {
+    // After running iterative deepening, getBestSoFar reflects the last completed iteration.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    ab.getBestSoFar shouldBe defined
+    ab.getWorstSoFar shouldBe defined
+  }
+
+  it should "find a winning move when one exists" in {
+    // X to move, wins immediately at position 2.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 1)
+    result shouldBe defined
+    val (move, score, _) = result.get
+    score should be > 0.0
+    val row = move / TicTacToe.size
+    val col = move % TicTacToe.size
+    val next = TicTacToeState$.construct(ttt.playX(row, col))
+    TicTacToeState$.isGoal(next) shouldBe Some(true)
+  }
+
+  it should "work correctly with depthStep > 1" in {
+    // depthStep=2 means iterations at depth 2, 4.
+    val ttt = TicTacToe.parse("XX -00 -   ").get
+    val ab = AlphaBetaPlayer[Board, TicTacToe, Int, Boolean](me = true, depth = 4)
+    val result = ab.chooseMoveIterativeDeepening(ttt, new Random(1L), depthStep = 2)
+    result shouldBe defined
+    result.get._3 shouldBe 4 // last completed depth
+    result.get._1 should (be >= 0 and be <= 8)
   }
 }

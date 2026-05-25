@@ -4,62 +4,62 @@ import com.phasmidsoftware.flog.{Flog, Loggable}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.{Prototype, rowsWithMask, size}
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps
 import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToeOps.*
-import com.phasmidsoftware.gambit.game.{Move, State, Transition}
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Game, Move, State, TTCache, Transition}
 import com.phasmidsoftware.gambit.util.Aggregators.{hasOne, hasTwo}
 import com.phasmidsoftware.gambit.util.{GambitException, Shuffle}
 
 import scala.util.{Failure, Success, Try}
 
 /**
- * Case class to represent a TicTacToe state (layout).
- *
- * @param board      the current state.
- * @param maybePrior the prior state.
- */
+  * Case class to represent a TicTacToe state (layout).
+  *
+  * @param board      the current state.
+  * @param maybePrior the prior state.
+  */
 case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
 
   /**
-   * Defines a Matching type which takes a Row and returns a Cell.
-   */
+    * Defines a Matching type which takes a Row and returns a Cell.
+    */
   type Matching = RowWithMask => Cell
 
   /**
-   * Method to determine which player was responsible for creating this state.
-   * The empty state will yield false (0 player).
-   * A goal state will yield the winner.
-   *
-   * @return true for the first player (X), false for the second player (0)
-   */
+    * Method to determine which player was responsible for creating this state.
+    * The empty state will yield false (0 player).
+    * A goal state will yield the winner.
+    *
+    * @return true for the first player (X), false for the second player (0)
+    */
   lazy val player: Boolean =
     (size * size - open.size) % 2 == 1
 
   /**
-   * Method to determine whether there is a line of marks for one player.
-   * The line may be horizontal (a row), vertical (a column) or diagonal.
-   *
-   * @return Some(b) if there is a line of similar marks in this `TicTacToe` otherwise `None`.
-   *         The `Boolean` b is true for player X, and false for player 0.
-   */
+    * Method to determine whether there is a line of marks for one player.
+    * The line may be horizontal (a row), vertical (a column) or diagonal.
+    *
+    * @return Some(b) if there is a line of similar marks in this `TicTacToe` otherwise `None`.
+    *         The `Boolean` b is true for player X, and false for player 0.
+    */
   lazy val win: Cell =
     isWin(rowsR0) orElse isWin(rowsL0) orElse isWin(diagonals)
 
   /**
-   * Method to determine whether there is a block by one player against his opponent..
-   * The line may be horizontal (a row), vertical (a column) or diagonal.
-   *
-   * @return Some(b) if there is a line of 0X0 or similar otherwise None.
-   *         The Boolean b is true for player X, and false for player 0.
-   */
+    * Method to determine whether there is a block by one player against his opponent..
+    * The line may be horizontal (a row), vertical (a column) or diagonal.
+    *
+    * @return Some(b) if there is a line of 0X0 or similar otherwise None.
+    *         The Boolean b is true for player X, and false for player 0.
+    */
   lazy val block: Cell =
     isBlock(rowsR0) orElse isBlock(rowsL0) orElse isBlock(diagonals)
 
   /**
-   * Method to determine whether there are two potential wins.
-   * The lines may be horizontal (a row), vertical (a column) or diagonal and missing one element.
-   *
-   * @return true if there is a line of two similar marks with a space between in this TicTacToe.
-   *         The Boolean b is true for player X, and false for player 0.
-   */
+    * Method to determine whether there are two potential wins.
+    * The lines may be horizontal (a row), vertical (a column) or diagonal and missing one element.
+    *
+    * @return true if there is a line of two similar marks with a space between in this TicTacToe.
+    *         The Boolean b is true for player X, and false for player 0.
+    */
   lazy val fork: Cell =
     hasTwo(for (r <- List(rowsR0, rowsL0, diagonals)) yield isPendingWin(r))(_.isDefined) match {
       case Some(x -> _) => x
@@ -67,61 +67,61 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     }
 
   /**
-   * Method to determine whether there is a potential win.
-   * The line may be horizontal (a row), vertical (a column) or diagonal and missing one element.
-   *
-   * @return true if there is a line of two similar marks with a space between in this TicTacToe.
-   *         The Boolean b is true for player X, and false for player 0.
-   */
+    * Method to determine whether there is a potential win.
+    * The line may be horizontal (a row), vertical (a column) or diagonal and missing one element.
+    *
+    * @return true if there is a line of two similar marks with a space between in this TicTacToe.
+    *         The Boolean b is true for player X, and false for player 0.
+    */
   lazy val potentialWin: Cell =
     hasOne(for (r <- List(rowsR0, rowsL0, diagonals)) yield isPendingWin(r))(_.isDefined).flatten
 
   /**
-   * Method to create a new TicTacToe from this TicTacToe.
-   *
-   * @param xOrO true if X is to play, false otherwise.
-   * @param row  the row at which the mark should be made.
-   * @param col  the column at which the mark should be made.
-   * @return a new Board with the appropriate cell (i.e., square) marked.
-   */
+    * Method to create a new TicTacToe from this TicTacToe.
+    *
+    * @param xOrO true if X is to play, false otherwise.
+    * @param row  the row at which the mark should be made.
+    * @param col  the column at which the mark should be made.
+    * @return a new Board with the appropriate cell (i.e., square) marked.
+    */
   def play(xOrO: Boolean)(row: Int, col: Int): Prototype =
     board.play(board.sequence + 1, xOrO, row, col) -> this
 
   /**
-   * Method to create a string of Xs and 0s corresponding to this TicTacToe position.
-   * Also includes the heuristic for the position.
-   *
-   * CONSIDER adding a parameter to allow dropping the heuristic.
-   *
-   * @return a String that is a rendition of the current state.
-   */
+    * Method to create a string of Xs and 0s corresponding to this TicTacToe position.
+    * Also includes the heuristic for the position.
+    *
+    * CONSIDER adding a parameter to allow dropping the heuristic.
+    *
+    * @return a String that is a rendition of the current state.
+    */
   def render(newlines: Boolean = false): String =
     if (newlines) s"\n${TicTacToeOps.renderWithNewlines(board.value)} ($heuristic)" else s"${TicTacToeOps.render(board.value)} ($heuristic)"
 
   /**
-   * The history of a TicTacToe position, as a String.
-   *
-   * NOTE: it seems that this is a general method, not specific to TicTacToe
-   */
+    * The history of a TicTacToe position, as a String.
+    *
+    * NOTE: it seems that this is a general method, not specific to TicTacToe
+    */
   lazy val history: List[String] = maybePrior match {
     case None => List("")
     case Some(x) => x.history :+ render(true) // XXX true makes the history easier to read.
   }
 
-//  /**
-//   * The count of open cells for this TicTacToe. If you need the actual open cells as well as the count, use <code>open</code> instead.
-//   *
-//   * TESTME
-//   *
-//   * @return the number of vacancies.
-//   */
-//  lazy val vacancies: Int = TicTacToeOps.vacancies(board.value)
+  //  /**
+  //   * The count of open cells for this TicTacToe. If you need the actual open cells as well as the count, use <code>open</code> instead.
+  //   *
+  //   * TESTME
+  //   *
+  //   * @return the number of vacancies.
+  //   */
+  //  lazy val vacancies: Int = TicTacToeOps.vacancies(board.value)
 
   /**
-   * The list of open cells for this TicTacToe.
-   *
-   * @return a sequence of (Int, Int) tuples corresponding to the row, column indices.
-   */
+    * The list of open cells for this TicTacToe.
+    *
+    * @return a sequence of (Int, Int) tuples corresponding to the row, column indices.
+    */
   lazy val open: Seq[(Int, Int)] = {
     val zs: Array[Int] = TicTacToeOps.open(board.value)
     val q = for (z <- zs) yield z / size -> z % size
@@ -129,41 +129,41 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
   }
 
   /**
-   * Function to make a play for the X player at a cell.
-   */
+    * Function to make a play for the X player at a cell.
+    */
   def playX: (Int, Int) => Prototype =
     play(xOrO = true)(_, _)
 
   /**
-   * Function to make a play for the 0 player at a cell.
-   */
+    * Function to make a play for the 0 player at a cell.
+    */
   def play0: (Int, Int) => Prototype =
     play(xOrO = false)(_, _)
 
   /**
-   * HashCode method based on the board only (not prior).
-   *
-   * @return a hashCode.
-   */
+    * HashCode method based on the board only (not prior).
+    *
+    * @return a hashCode.
+    */
   override def hashCode(): Int = board.hashCode()
 
   /**
-   * Equals method based on the board only.
-   *
-   * @return Boolean.
-   */
+    * Equals method based on the board only.
+    *
+    * @return Boolean.
+    */
   override def equals(obj: Any): Boolean = obj match {
     case TicTacToe(b, _) => board == b
     case _ => false
   }
 
   /**
-   * Method to determine if this layout is a draw, i.e. no side can ever win.
-   *
-   * TODO figure out a better way to determine a draw.
-   *
-   * @return Some(false) if it's a draw, else None.
-   */
+    * Method to determine if this layout is a draw, i.e. no side can ever win.
+    *
+    * TODO figure out a better way to determine a draw.
+    *
+    * @return Some(false) if it's a draw, else None.
+    */
   def draw: Option[Boolean] =
     if (open.isEmpty) Some(false) else None
 
@@ -236,9 +236,9 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     maybePrior flatMap (_.maybeOpponentMove)
 
   /**
-   * @param opponent if `true` then the opposite corner must be the opponent.
-   * @return true if this `TicTacToe` is a corner position and if the opponent (if true, else self) occupies the opposite corner.
-   */
+    * @param opponent if `true` then the opposite corner must be the opponent.
+    * @return true if this `TicTacToe` is a corner position and if the opponent (if true, else self) occupies the opposite corner.
+    */
   def oppositeCorner(opponent: Boolean): Boolean = {
     val maskTopLeft = 0xC0000000
     val patternTopLeft = if (opponent) maskTopLeft else 0
@@ -247,10 +247,10 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
   }
 
   /**
-   * @param b1 a Board.
-   * @param b2 another Board.
-   * @return true if the XOR of the two boards masked by mask is equal to pattern.
-   */
+    * @param b1 a Board.
+    * @param b2 another Board.
+    * @return true if the XOR of the two boards masked by mask is equal to pattern.
+    */
   def maskMatch(mask: Int, pattern: Int)(b1: Board, b2: Board): Boolean =
     ((b1.value ^ b2.value) & mask) == pattern
 
@@ -317,49 +317,49 @@ object TicTacToe {
   val size: Int = 3
 
   /**
-   * Trait that extends the type class State with a concrete underlying type of TicTacToe.
-   */
+    * Trait that extends the type class State with a concrete underlying type of TicTacToe.
+    */
   trait TicTacToeState$ extends State[Board, TicTacToe] {
 
     /**
-     * a significant sequence value that distinguishes this state from others and which can be derived from a P.
-     *
-     * @param s parameter from which we may derive the sequence.
-     */
+      * a significant sequence value that distinguishes this state from others and which can be derived from a P.
+      *
+      * @param s parameter from which we may derive the sequence.
+      */
     def sequence(s: TicTacToe): Int = s.board.sequence
 
     /**
-     * Method to construct an S from a proto-state:
-     *
-     * @param proto a (Board, TicTacToe) tuple.
-     * @return a TicTacToe.
-     */
+      * Method to construct an S from a proto-state:
+      *
+      * @param proto a (Board, TicTacToe) tuple.
+      * @return a TicTacToe.
+      */
     def construct(proto: (Board, TicTacToe)): TicTacToe =
       TicTacToe(proto._1, Some(proto._2))
 
     /**
-     * In this game, all states are valid.
-     *
-     * @param s a state.
-     * @return true.
-     */
+      * In this game, all states are valid.
+      *
+      * @param s a state.
+      * @return true.
+      */
     def isValid(s: TicTacToe): Boolean = true
 
     /**
-     * How close are we to winning?
-     *
-     * @param s a state.
-     * @return the number of our aligned cells - their aligned cells.
-     */
+      * How close are we to winning?
+      *
+      * @param s a state.
+      * @return the number of our aligned cells - their aligned cells.
+      */
     def heuristic(s: TicTacToe): Double = s.heuristic
 
     /**
-     * Method to determine if s is a winning state.
-     * NOTE: it makes no sense to invoke isWin unless the result of isGoal is Some(true).
-     *
-     * @param s an S
-     * @return true if s is a win, else false.
-     */
+      * Method to determine if s is a winning state.
+      * NOTE: it makes no sense to invoke isWin unless the result of isGoal is Some(true).
+      *
+      * @param s an S
+      * @return true if s is a win, else false.
+      */
     def isWin(s: TicTacToe): Boolean = s.win match {
       case Some(b) =>
         b == s.player
@@ -368,25 +368,25 @@ object TicTacToe {
     }
 
     /**
-     * Have we reached a result? And, if so, who won?
-     *
-     * @param s a (current) state.
-     * @return an `Option[Boolean]`: if `None` then this state is not a goal state.
-     *         If `Some(b)` then:
-     *         if b is true, we got a definite result, and the winner is determined by examining `s` in more detail.
-     *         If b is false, we got a partial result, and we should continue to seek a more definite result.
-     */
+      * Have we reached a result? And, if so, who won?
+      *
+      * @param s a (current) state.
+      * @return an `Option[Boolean]`: if `None` then this state is not a goal state.
+      *         If `Some(b)` then:
+      *         if b is true, we got a definite result, and the winner is determined by examining `s` in more detail.
+      *         If b is false, we got a partial result, and we should continue to seek a more definite result.
+      */
     def isGoal(s: TicTacToe): Option[Boolean] =
       s.win map (_ => true) orElse s.draw
 
     /**
-     * Return all of the possible transitions from the given state.
-     *
-     * CONSIDER refactoring so that we do not discard the state when constructing a Move.
-     *
-     * @param s a state.
-     * @return a sequence of Transition[S]
-     */
+      * Return all of the possible transitions from the given state.
+      *
+      * CONSIDER refactoring so that we do not discard the state when constructing a Move.
+      *
+      * @param s a state.
+      * @return a sequence of Transition[S]
+      */
     def moves(s: TicTacToe): Seq[Transition[Board, TicTacToe]] = {
       val zs: Seq[(Int, Int)] = Shuffle(s.open, 3L) // we arbitrarily always want X to win
       val f: TicTacToe => (Int, Int) => Prototype = t => if (s.player) t.play0 else t.playX
@@ -399,60 +399,61 @@ object TicTacToe {
   implicit object TicTacToeState$ extends TicTacToeState$
 
   /**
-   * Method to construct a starting position `TicTacToe`.
-   *
-   * @param board the Board that defines a `TicTacToe`.
-   * @return a `TicTacToe` with the given board, no predecessor, and an empty board.
-   */
+    * Method to construct a starting position `TicTacToe`.
+    *
+    * @param board the Board that defines a `TicTacToe`.
+    * @return a `TicTacToe` with the given board, no predecessor, and an empty board.
+    */
   def apply(board: Board): TicTacToe = apply(board, None)
 
   /**
-   * Method to construct a starting position `TicTacToe`.
-   *
-   * @param proto (`Board`, `TicTacToe`).
-   * @return a `TicTacToe` with the given board and no predecessor.
-   */
+    * Method to construct a starting position `TicTacToe`.
+    *
+    * @param proto (`Board`, `TicTacToe`).
+    * @return a `TicTacToe` with the given board and no predecessor.
+    */
   def apply(proto: (Board, TicTacToe)): TicTacToe =
     apply(proto._1, Some(proto._2))
 
   /**
-   * Method to construct a starting position `TicTacToe`.
-   *
-   * @return a `TicTacToe` with all empty cells, no predecessor and an empty `Board`.
-   */
+    * Method to construct a starting position `TicTacToe`.
+    *
+    * @return a `TicTacToe` with all empty cells, no predecessor and an empty `Board`.
+    */
   def apply(): TicTacToe =
     apply(Board(0, 0))
 
   /**
-   * Apply method mostly for testing.
-   *
-   * @param board the current `Board`.
-   * @param mask  a mask that defines the bits to be eliminated from `board` to yield the previous `Board`.
-   * @return a TicTacToe.
-   */
+    * Apply method mostly for testing.
+    *
+    * @param board the current `Board`.
+    * @param mask  a mask that defines the bits to be eliminated from `board` to yield the previous `Board`.
+    * @return a TicTacToe.
+    */
   def apply(board: Board, mask: Int): TicTacToe =
     TicTacToe(board, Some(previous(board.sequence - 1, board.value, mask)))
 
   /**
-   * Method to construct a TicTacToe with prior from a particular bit pattern and a mask.
-   *
-   * @param x               the bit pattern.
-   * @param maybePriorBoard an optional bit pattern to yield the prior state.
-   * @return a TicTacToe with all empty cells.
-   */
+    * Method to construct a TicTacToe with prior from a particular bit pattern and a mask.
+    *
+    * @param x               the bit pattern.
+    * @param maybePriorBoard an optional bit pattern to yield the prior state.
+    * @return a TicTacToe with all empty cells.
+    */
   def from(sequence: Row, x: Row, maybePriorBoard: Option[Board]): TicTacToe = TicTacToe(
     Board(sequence, x),
     maybePriorBoard.map((board: Board) => previous(board.sequence - 1, x, board.value))
   )
 
   /**
-   * Method to parse a pattern for a starting position.
-   * NOTE: do not use for later positions.
-   *
-   * @param s a String made up of 9 case-independent characters, each of which must be an X, 0, O, ., or space.
-   *          CONSIDER allowing newlines.
-   * @return a TicTacToe.
-   */
+    * Method to parse a pattern for a starting position.
+    * NOTE: do not use for later positions.
+    *
+    * @param s a String made up of 9 case-independent characters, each of which must be an X, 0, O, ., or space.
+    *          CONSIDER allowing newlines.
+    *
+    * @return a TicTacToe.
+    */
   def parseString(s: String, maybeMask: Option[Int]): TicTacToe = {
     val cells = s.toCharArray.toSeq map {
       case ' ' | '.' => 0
@@ -466,13 +467,13 @@ object TicTacToe {
   }
 
   /**
-   * Method to parse a String of Xs and 0s into a TicTacToe, wrapped in Try.
-   *
-   * CONSIDER making this private.
-   *
-   * @param s the String to parse (which may include \n characters for better visualization).
-   * @return a Try of TicTacToe.
-   */
+    * Method to parse a String of Xs and 0s into a TicTacToe, wrapped in Try.
+    *
+    * CONSIDER making this private.
+    *
+    * @param s the String to parse (which may include \n characters for better visualization).
+    * @return a Try of TicTacToe.
+    */
   def parse(s: String, maybeMask: Option[Int] = None): Try[TicTacToe] = {
     val x = s.replaceAll("""[\n\-]""", "")
     if (x.length == TicTacToe.size * TicTacToe.size) Success(parseString(x, maybeMask))
@@ -496,13 +497,13 @@ object TicTacToe {
 }
 
 /**
- * This class represents 9 x 2 bits, at the high end of the 32-bit word.
- *
- * NOTE: this used to extend AnyVal before we added the sequence parameter.
- *
- * @param value the bit value of this board.
- *              NOTE: that the low 14 bits of this value should always be zero.
- */
+  * This class represents 9 x 2 bits, at the high end of the 32-bit word.
+  *
+  * NOTE: this used to extend AnyVal before we added the sequence parameter.
+  *
+  * @param value the bit value of this board.
+  *              NOTE: that the low 14 bits of this value should always be zero.
+  */
 case class Board(sequence: Int, value: Int) {
   def isEmpty: Boolean = value == 0
 
@@ -543,3 +544,27 @@ case class Board(sequence: Int, value: Int) {
     (value & 0xC00000) != 0
 
 }
+
+/**
+  * Represents a Tic-Tac-Toe player that uses the Alpha-Beta pruning algorithm
+  * for making decisions. This player is designed to work with a specified game state
+  * and evaluation model to optimize gameplay.
+  *
+  * @param me      A boolean indicating if this player is the "me" player
+  *                (e.g., the one currently making a move in the game).
+  * @param depth   The maximum depth of the game tree to explore during
+  *                the Alpha-Beta pruning search. Defaults to 6.
+  * @param keyFn   An optional function to assign heuristic values to specific game states.
+  *                If not provided, a default heuristic may be used.
+  * @param state   The state implementation that maintains and verifies
+  *                the current game board data and its manipulations.
+  * @param game    The game implementation providing rules and mechanisms
+  *                for Tic-Tac-Toe, including move generation and state evaluation.
+  * @param ttCache The transposition table cache used to store and retrieve
+  *                intermediate evaluations for optimizing Alpha-Beta pruning.
+  */
+class AlphaBetaPlayerTicTacToe(
+                                me: Boolean,
+                                depth: Int = 6
+                              )(using state: State[Board, TicTacToe], game: Game[TicTacToe, Int, Boolean], ttCache: TTCache[Int])
+  extends AlphaBetaPlayer[Board, TicTacToe, Int, Boolean, Int](me, depth)(using state, game, ttCache)

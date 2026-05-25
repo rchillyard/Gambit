@@ -1,5 +1,7 @@
 package com.phasmidsoftware.gambit.examples.connect4
 
+import com.phasmidsoftware.gambit.game.{AlphaBetaPlayer, Game, State, TTCache}
+
 /**
   * Connect Four board state using a column-major bitboard representation.
   *
@@ -170,3 +172,34 @@ object Connect4:
           case '.' | ' ' => // empty
           case c => throw new IllegalArgumentException(s"Connect4.parse: illegal char '$c'")
     Connect4(xBits, oBits, heights.toVector)
+
+
+/**
+  * A Connect Four AI player using the alpha-beta pruning optimization technique
+  * for minimax search. The player aims to determine the optimal moves for winning
+  * or forcing a draw in the game.
+  *
+  * @param me    Specifies the player's identity in the game.
+  *              True indicates the player is X, false indicates the player is O.
+  * @param depth The maximum depth of the search tree used in alpha-beta pruning.
+  *              Defaults to 6.
+  * @param keyFn An optional function that generates a unique key for the
+  *              Transposition Table (TT), to identify equivalent game states.
+  *              Defaults to None.
+  *
+  *              Uses contextual abstractions:
+  *              - `state` for managing the transformation of game states.
+  *              - `game` for game-specific logic, including rules and evaluation utilities.
+  *              - `ttCache` as a caching mechanism for storing precomputed game states
+  *              during alpha-beta expansion for performance optimization.
+  *
+  *              Extends:
+  *              - AlphaBetaPlayer, a generic implementation of alpha-beta search AI
+  *              for turn-based games, parameterized by the game state, result, move,
+  *              player type, and Transposition Table key type.
+  */
+class AlphaBetaPlayerConnect4(
+                               me: Boolean,
+                               depth: Int = 6
+                             )(using state: State[Connect4, Connect4], game: Game[Connect4, Int, Boolean], ttCache: TTCache[(Long, Long)])
+  extends AlphaBetaPlayer[Connect4, Connect4, Int, Boolean, (Long, Long)](me, depth)(using state, game, ttCache)

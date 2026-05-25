@@ -168,7 +168,17 @@ nodes evaluated. When the limit is exceeded, `NodeLimitException` is thrown.
 evaluated before the limit was hit. `getWorstSoFar: Option[(M, Double)]` returns
 the antagonist's best result across fully-evaluated top-level moves — the lowest
 score seen when maximizing, highest when minimizing. Both `withMaxNodes` and
-`gameOver` reset the counter and clear both `bestSoFar` and `worstSoFar`.
+`gameOver` reset the counter and clear `bestSoFar`, `worstSoFar`, and `scoredMoves`.
+
+**Iterative deepening** — `chooseMoveIterativeDeepening(s, random, depthStep)`
+searches to depth `depthStep`, then `2*depthStep`, … up to `depth`, re-ordering
+top-level moves at each iteration using the previous iteration's actual minimax
+scores (`scoredMoves`). The node budget is shared across all iterations via the
+same counter as `withMaxNodes`. When `NodeLimitException` fires mid-iteration,
+the last fully-completed iteration's `(move, score, completedDepth)` is returned,
+or `None` if not even the first iteration completed. This guarantees `bestSoFar`
+and `worstSoFar` are always populated after any completed iteration, and that
+move ordering improves with each successive depth.
 
 **Aspiration window** — `withAspirationWindow(w: AlphaBetaWindow): this.type`
 narrows the initial root alpha-beta window from `[-∞, +∞]` to `[w.alpha, w.beta]`
@@ -457,10 +467,9 @@ sbt ghpagesPushSite
 
 ## Future Work
 
-- **Iterative deepening** — search to depth 4, 8, 12, … so every depth
-  completes all top-level moves, ensuring `bestSoFar`/`worstSoFar` are always
-  populated and providing move ordering for deeper iterations; primary remaining
-  lever for full 52-card bridge analysis
+- **Per-iteration node budget** — reset the node counter between iterative
+  deepening iterations so GC can recover between depths; prevents GC thrashing
+  at depth 32+ observed with the current shared budget approach
 - **Issue #14: TT flags (partial)** — `TTFlag` enum, `TTEntry`, and `TTCache`
   typeclass implemented; `Exact` entries are reused correctly. Full
   `LowerBound`/`UpperBound` bound propagation deferred: requires exposing

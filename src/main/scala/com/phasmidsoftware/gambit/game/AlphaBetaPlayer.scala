@@ -244,6 +244,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         var currentDepth = depthStep
         var continue = true
         while continue && currentDepth <= depth do
+          nodeCount.set(0)
           try
             val (bestM, bestScore) = chooseMoveWithScoreAtDepth(s, currentPl, maximizing, currentDepth, orderedMs)
             lastCompleted = Some(bestM, bestScore, currentDepth)

@@ -139,6 +139,9 @@ To regenerate and publish:
 sbt ghpagesPushSite
 ```
 
+Published releases are also automatically available via
+[javadoc.io](https://javadoc.io/doc/com.phasmidsoftware/gambit_3), with no extra step required.
+
 ## Design Documents
 
 - `GamePlayingDesign.md` — design of the game-playing framework: typeclasses,

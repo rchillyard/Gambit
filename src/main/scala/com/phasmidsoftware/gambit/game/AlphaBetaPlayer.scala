@@ -220,8 +220,9 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     *
     * At each depth, top-level moves are ordered by the scores from the previous
     * iteration (best first for the maximizing player), giving the move-ordering
-    * benefit of iterative deepening. The shared node counter runs down across all
-    * iterations so the total node budget is respected.
+    * benefit of iterative deepening. The node counter is reset at the start of each
+    * iteration (so `maxNodes` is a per-depth budget, not a cumulative one) to let the
+    * GC recover between depths once the previous iteration's stack has unwound.
     *
     * @param s         the root state to search from.
     * @param random    a Random instance (reserved for future use).

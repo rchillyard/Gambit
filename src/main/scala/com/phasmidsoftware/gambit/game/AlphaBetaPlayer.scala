@@ -324,7 +324,35 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     val next = game.applyMove(s, m, currentPl)
     val nextMaximizing = state.isMaximizing(next, maximizing)
     logger.debug(s"chooseMove: move=$m, nextMaximizing=$nextMaximizing, heuristic=${state.heuristic(next)}")
-    m -> alphaBeta(next, d - 1, window.alpha, window.beta, nextMaximizing)
+    m -> searchWithAspirationRetry(next, d - 1, nextMaximizing)
+
+  /**
+    * Searches with the (possibly narrow) aspiration `window`, and re-searches with the
+    * full window if that narrow search fails -- i.e. returns a value `<= window.alpha`
+    * (failed low) or `>= window.beta` (failed high).
+    *
+    * A narrow window is only a valid substitute for a full search if every value it can
+    * ever produce for a non-terminal position is guaranteed to fall strictly inside it
+    * (so that only a genuinely proven result can fail it). Nothing enforces that
+    * guarantee here -- `State.heuristic`/`leafValue` is caller-supplied and may
+    * legitimately return values outside the window for an unproven position. Without this
+    * retry, such a value would be indistinguishable from a real cutoff, and -- once the
+    * transposition table is allowed to reuse `LowerBound`/`UpperBound` entries as cutoffs,
+    * not just `Exact` ones -- would get cached and replayed at every later transposition
+    * of that position instead of being independently re-derived each time, turning a
+    * one-off heuristic overshoot into a repeated, amplified wrong answer.
+    *
+    * The full-window re-search still benefits from whatever the narrow search already
+    * resolved: entries stored during it remain in the shared transposition table, and
+    * `TTCache.probe`'s own depth/bound checks correctly refuse to reuse a narrow-window
+    * cutoff that doesn't also satisfy the wider window, forcing exactly the nodes that
+    * need it to be recomputed.
+    */
+  private def searchWithAspirationRetry(s: S, d: Int, maximizing: Boolean): Double =
+    val narrow = alphaBeta(s, d, window.alpha, window.beta, maximizing)
+    if window != AlphaBetaWindow.full && (narrow <= window.alpha || narrow >= window.beta)
+    then alphaBeta(s, d, AlphaBetaWindow.full.alpha, AlphaBetaWindow.full.beta, maximizing)
+    else narrow
 
   /**
     * Recursive alpha-beta search.

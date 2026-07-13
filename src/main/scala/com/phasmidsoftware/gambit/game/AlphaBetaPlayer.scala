@@ -224,6 +224,18 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * iteration (so `maxNodes` is a per-depth budget, not a cumulative one) to let the
     * GC recover between depths once the previous iteration's stack has unwound.
     *
+    * The transposition table is also cleared at the start of each iteration. `TTCache.probe`
+    * rejects any entry whose `depth` is less than the depth currently being requested, and
+    * since iterative deepening only ever requests more depth as it proceeds, an entry stored
+    * during one iteration is (almost always) unable to satisfy a probe from any later one --
+    * it isn't merely stale, it's structurally unreachable again. Left in place, those entries
+    * just occupy space (and, under a size-capped `TTCache`, can fill the table with dead
+    * weight before the deepest, most expensive iteration ever gets a chance to cache anything
+    * useful). Clearing costs almost nothing -- the rare exception is a leaf near the bottom of
+    * a later, deep iteration coincidentally requesting the same small remaining-depth as some
+    * near-root node from an earlier iteration -- and it's a lot cheaper than tracking recency
+    * (e.g. an LRU policy) would be, given `probe`/`store` are called for every node.
+    *
     * @param s         the root state to search from.
     * @param random    a Random instance (reserved for future use).
     * @param depthStep the depth increment per iteration (4 for bridge: trick boundaries).
@@ -246,6 +258,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         var continue = true
         while continue && currentDepth <= depth do
           nodeCount.set(0)
+          ttCache.clear()
           try
             val (bestM, bestScore) = chooseMoveWithScoreAtDepth(s, currentPl, maximizing, currentDepth, orderedMs)
             lastCompleted = Some(bestM, bestScore, currentDepth)

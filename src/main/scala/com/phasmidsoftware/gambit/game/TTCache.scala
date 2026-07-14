@@ -87,10 +87,9 @@ class FlatTTCache[K](maxSize: Int = Int.MaxValue) extends TTCache[K]:
       if entry.depth < depth then None
       else entry.flag match
         case TTFlag.Exact => Some(entry.value)
-        case _ => None // LowerBound/UpperBound: correctly reusing these requires
-      // propagating tightened bounds back to the caller, which
-      // Option[Double] cannot express. Full bound propagation
-      // is deferred; only Exact entries are reused for now.
+        case TTFlag.LowerBound if entry.value >= beta => Some(entry.value)
+        case TTFlag.UpperBound if entry.value <= alpha => Some(entry.value)
+        case _ => None // bound doesn't cross the current window: fall through to a full re-search
     }
 
   def store(key: K, depth: Int, value: Double, alphaOrig: Double, beta: Double): Unit =
@@ -137,7 +136,9 @@ class TrancheTTCache[K](reuseDeeper: Boolean = false, maxSize: Int = Int.MaxValu
     candidate.flatMap { entry =>
       entry.flag match
         case TTFlag.Exact => Some(entry.value)
-        case _ => None // see FlatTTCache.probe comment
+        case TTFlag.LowerBound if entry.value >= beta => Some(entry.value)
+        case TTFlag.UpperBound if entry.value <= alpha => Some(entry.value)
+        case _ => None // bound doesn't cross the current window: fall through to a full re-search
     }
 
   def store(key: K, depth: Int, value: Double, alphaOrig: Double, beta: Double): Unit =

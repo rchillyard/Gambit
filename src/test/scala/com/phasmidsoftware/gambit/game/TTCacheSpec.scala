@@ -72,28 +72,35 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
 
   behavior of "FlatTTCache — UpperBound entries"
 
-  // UpperBound: value <= alphaOrig (search failed low)
-  // True value <= entry.value.  Reuse only if entry.value <= alpha (still a fail-low).
+  // UpperBound: value <= alphaOrig (search failed low), so the true value <= entry.value.
+  // Reusable as a cutoff whenever entry.value <= the *current* alpha; a looser current
+  // alpha may no longer guarantee a cutoff, in which case we fall through to a re-search.
 
-  it should "store an UpperBound entry when value <= alphaOrig" in {
+  it should "reuse an UpperBound entry as a cutoff when entry.value <= current alpha" in {
     val cache = FlatTTCache[Int]()
-    // value=-12 <= alphaOrig=-10 => UpperBound; Exact-only probe returns None
+    // value=-12 <= alphaOrig=-10 => UpperBound
     cache.store(1, depth = 4, value = -12.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(-12.0)
   }
 
-  it should "return None for UpperBound (Exact-only: all non-Exact entries are misses)" in {
+  it should "reuse an UpperBound entry as a cutoff even against a tighter current alpha" in {
     val cache = FlatTTCache[Int]()
-    // value=-12 <= alphaOrig=-10 => UpperBound; Exact-only probe always returns None
     cache.store(1, depth = 4, value = -12.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -8.0, beta = 10.0) shouldBe None
+    // current alpha=-8 is tighter (larger) than alphaOrig=-10; still >= entry.value, still a cutoff
+    cache.probe(1, depth = 4, alpha = -8.0, beta = 10.0) shouldBe Some(-12.0)
   }
 
-  it should "return None for UpperBound entry even when value equals alpha" in {
+  it should "return None for an UpperBound entry once current alpha is looser than entry.value" in {
     val cache = FlatTTCache[Int]()
-    // Exact-only: UpperBound entries are never reused
+    cache.store(1, depth = 4, value = -12.0, alphaOrig = -10.0, beta = 10.0)
+    // current alpha=-20 is looser (smaller) than entry.value=-12: no longer a guaranteed cutoff
+    cache.probe(1, depth = 4, alpha = -20.0, beta = 10.0) shouldBe None
+  }
+
+  it should "reuse an UpperBound entry as a cutoff when entry.value equals current alpha" in {
+    val cache = FlatTTCache[Int]()
     cache.store(1, depth = 4, value = -10.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(-10.0)
   }
 
   // ---------------------------------------------------------------------------
@@ -102,28 +109,35 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
 
   behavior of "FlatTTCache — LowerBound entries"
 
-  // LowerBound: value >= beta (search failed high / beta cutoff)
-  // True value >= entry.value.  Reuse only if entry.value >= beta (still a fail-high).
+  // LowerBound: value >= beta (search failed high / beta cutoff), so the true value >= entry.value.
+  // Reusable as a cutoff whenever entry.value >= the *current* beta; a looser current
+  // beta may no longer guarantee a cutoff, in which case we fall through to a re-search.
 
-  it should "store a LowerBound entry when value >= beta" in {
+  it should "reuse a LowerBound entry as a cutoff when entry.value >= current beta" in {
     val cache = FlatTTCache[Int]()
-    // value=12 >= beta=10 => LowerBound; Exact-only probe returns None
+    // value=12 >= beta=10 => LowerBound
     cache.store(1, depth = 4, value = 12.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(12.0)
   }
 
-  it should "return None for LowerBound (Exact-only: all non-Exact entries are misses)" in {
+  it should "reuse a LowerBound entry as a cutoff even against a tighter current beta" in {
     val cache = FlatTTCache[Int]()
-    // value=12 >= beta=10 => LowerBound; Exact-only probe always returns None
     cache.store(1, depth = 4, value = 12.0, alphaOrig = -10.0, beta = 10.0)
+    // current beta=9 is tighter (smaller) than betaOrig=10; still <= entry.value, still a cutoff
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 9.0) shouldBe Some(12.0)
+  }
+
+  it should "return None for a LowerBound entry once current beta is looser than entry.value" in {
+    val cache = FlatTTCache[Int]()
+    cache.store(1, depth = 4, value = 12.0, alphaOrig = -10.0, beta = 10.0)
+    // current beta=15 is looser (larger) than entry.value=12: no longer a guaranteed cutoff
     cache.probe(1, depth = 4, alpha = -10.0, beta = 15.0) shouldBe None
   }
 
-  it should "return None for LowerBound entry even when value equals beta" in {
+  it should "reuse a LowerBound entry as a cutoff when entry.value equals current beta" in {
     val cache = FlatTTCache[Int]()
-    // Exact-only: LowerBound entries are never reused
     cache.store(1, depth = 4, value = 10.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(10.0)
   }
 
   // ---------------------------------------------------------------------------
@@ -188,16 +202,16 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
     cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(5.0)
   }
 
-  it should "return None for LowerBound entry at exact depth (Exact-only)" in {
+  it should "reuse a LowerBound entry as a cutoff at exact depth" in {
     val cache = TrancheTTCache[Int]()
     cache.store(1, depth = 4, value = 12.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(12.0)
   }
 
-  it should "return None for UpperBound entry at exact depth (Exact-only)" in {
+  it should "reuse an UpperBound entry as a cutoff at exact depth" in {
     val cache = TrancheTTCache[Int]()
     cache.store(1, depth = 4, value = -12.0, alphaOrig = -10.0, beta = 10.0)
-    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 4, alpha = -10.0, beta = 10.0) shouldBe Some(-12.0)
   }
 
   // ---------------------------------------------------------------------------
@@ -262,20 +276,20 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
     cache.probe("x", depth = 3, alpha = -100.0, beta = 100.0) shouldBe Some(0.0)
   }
 
-  it should "assign UpperBound when value equals alphaOrig (Exact-only: all probes return None)" in {
+  it should "assign UpperBound when value equals alphaOrig, reusable while current alpha >= entry.value" in {
     val cache = FlatTTCache[String]()
-    // value(-5) <= alphaOrig(-5) => UpperBound; stored but never returned by probe
+    // value(-5) <= alphaOrig(-5) => UpperBound
     cache.store("x", depth = 3, value = -5.0, alphaOrig = -5.0, beta = 5.0)
-    cache.probe("x", depth = 3, alpha = -5.0, beta = 5.0) shouldBe None
-    cache.probe("x", depth = 3, alpha = -4.0, beta = 5.0) shouldBe None
-    cache.probe("x", depth = 3, alpha = -6.0, beta = 5.0) shouldBe None
+    cache.probe("x", depth = 3, alpha = -5.0, beta = 5.0) shouldBe Some(-5.0)
+    cache.probe("x", depth = 3, alpha = -4.0, beta = 5.0) shouldBe Some(-5.0)
+    cache.probe("x", depth = 3, alpha = -6.0, beta = 5.0) shouldBe None // alpha looser than entry.value
   }
 
-  it should "assign LowerBound when value equals beta (Exact-only: all probes return None)" in {
+  it should "assign LowerBound when value equals beta, reusable while current beta <= entry.value" in {
     val cache = FlatTTCache[String]()
-    // value(5) >= beta(5) => LowerBound; stored but never returned by probe
+    // value(5) >= beta(5) => LowerBound
     cache.store("x", depth = 3, value = 5.0, alphaOrig = -5.0, beta = 5.0)
-    cache.probe("x", depth = 3, alpha = -5.0, beta = 5.0) shouldBe None
-    cache.probe("x", depth = 3, alpha = -5.0, beta = 6.0) shouldBe None
+    cache.probe("x", depth = 3, alpha = -5.0, beta = 5.0) shouldBe Some(5.0)
+    cache.probe("x", depth = 3, alpha = -5.0, beta = 6.0) shouldBe None // beta looser than entry.value
   }
 }

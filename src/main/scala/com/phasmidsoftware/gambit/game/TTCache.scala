@@ -80,7 +80,18 @@ trait TTCache[K]:
   */
 class FlatTTCache[K](maxSize: Int = Int.MaxValue) extends TTCache[K]:
 
-  private val table: mutable.HashMap[K, TTEntry] = mutable.HashMap.empty
+  /**
+    * Pre-sized to hold `maxSize` entries without triggering `growTable` resizes as the search
+    * fills it up -- profiling a hard bridge position found `HashMap.growTable` the single
+    * largest CPU hotspot (11.76% of samples), from starting at the library's default capacity
+    * and repeatedly doubling on the way to a bound that's routinely reached in practice. Left
+    * at the library default when `maxSize` is `Int.MaxValue` (no bound set): that default
+    * already suits the small/shallow-game callers (TicTacToe, Connect Four) this class also
+    * serves, and sizing a table for `Int.MaxValue` entries would be its own disaster.
+    */
+  private val table: mutable.HashMap[K, TTEntry] =
+    if maxSize == Int.MaxValue then mutable.HashMap.empty
+    else new mutable.HashMap[K, TTEntry](initialCapacity = maxSize, loadFactor = mutable.HashMap.defaultLoadFactor)
 
   def probe(key: K, depth: Int, alpha: Double, beta: Double): Option[Double] =
     table.get(key).flatMap { entry =>

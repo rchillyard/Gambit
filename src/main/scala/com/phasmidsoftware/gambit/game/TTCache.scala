@@ -1,6 +1,9 @@
 package com.phasmidsoftware.gambit.game
 
+import java.util.{LinkedHashMap as JLinkedHashMap, Map as JMap}
 import scala.collection.mutable
+
+private type JMapEntry[K, V] = JMap.Entry[K, V]
 
 /**
   * Transposition table flag indicating the type of a cached alpha-beta value.
@@ -74,27 +77,41 @@ trait TTCache[K]:
   * Suitable for shallow games (e.g. TicTacToe, Connect Four) where results
   * computed at a greater-or-equal depth are valid to reuse at the current depth.
   *
-  * @param maxSize maximum number of entries; writes are suppressed once the table
-  *                reaches this size.  Default is unlimited.
+  * @param maxSize maximum number of entries; once the table reaches this size, storing a
+  *                new entry evicts the least-recently-used one rather than being refused
+  *                (see `table`'s doc). Default is unlimited.
   * @tparam K the key type.
   */
 class FlatTTCache[K](maxSize: Int = Int.MaxValue) extends TTCache[K]:
 
   /**
-    * Pre-sized to hold `maxSize` entries without triggering `growTable` resizes as the search
-    * fills it up -- profiling a hard bridge position found `HashMap.growTable` the single
-    * largest CPU hotspot (11.76% of samples), from starting at the library's default capacity
-    * and repeatedly doubling on the way to a bound that's routinely reached in practice. Left
-    * at the library default when `maxSize` is `Int.MaxValue` (no bound set): that default
-    * already suits the small/shallow-game callers (TicTacToe, Connect Four) this class also
-    * serves, and sizing a table for `Int.MaxValue` entries would be its own disaster.
+    * Backed by `java.util.LinkedHashMap` in access-order mode (`accessOrder = true`), with
+    * `removeEldestEntry` overridden to cap the table at `maxSize` by evicting the
+    * least-recently-touched entry -- not the previous policy of refusing every store once
+    * the table was full, which let whichever entries happened to be computed first in a
+    * search occupy the table for the rest of that iteration, even though later entries
+    * (often deeper into a promising line, once move ordering has done its job) are
+    * frequently the more valuable ones to keep. `accessOrder = true` means both `get`
+    * (`probe`) and `put` (`store`) count as a touch, so a frequently-reused entry survives
+    * eviction even if it was one of the earliest stored. Since the table is a pure cache --
+    * a miss just means recomputing, never a wrong answer -- this is a performance-only
+    * change, same as everything else in this class's history: it cannot affect correctness.
+    *
+    * Still pre-sized to `maxSize` (when bounded) for the same reason as before: avoids
+    * repeated resize-and-rehash as the table fills toward a bound that's routinely reached
+    * in practice (see the `growTable` profiling finding this class's history already
+    * describes). Left at a small library-typical default when `maxSize` is `Int.MaxValue`
+    * (no bound set): that suits the small/shallow-game callers (TicTacToe, Connect Four)
+    * this class also serves, and it also means `removeEldestEntry`'s `size() > maxSize`
+    * check can never fire for them.
     */
-  private val table: mutable.HashMap[K, TTEntry] =
-    if maxSize == Int.MaxValue then mutable.HashMap.empty
-    else new mutable.HashMap[K, TTEntry](initialCapacity = maxSize, loadFactor = mutable.HashMap.defaultLoadFactor)
+  private val table: JLinkedHashMap[K, TTEntry] =
+    val initialCapacity = if maxSize == Int.MaxValue then 16 else maxSize
+    new JLinkedHashMap[K, TTEntry](initialCapacity, 0.75f, true):
+      override def removeEldestEntry(eldest: JMapEntry[K, TTEntry]): Boolean = this.size() > maxSize
 
   def probe(key: K, depth: Int, alpha: Double, beta: Double): Option[Double] =
-    table.get(key).flatMap { entry =>
+    Option(table.get(key)).flatMap { entry =>
       if entry.depth < depth then None
       else entry.flag match
         case TTFlag.Exact => Some(entry.value)
@@ -104,12 +121,11 @@ class FlatTTCache[K](maxSize: Int = Int.MaxValue) extends TTCache[K]:
     }
 
   def store(key: K, depth: Int, value: Double, alphaOrig: Double, beta: Double): Unit =
-    if table.size < maxSize then
-      val flag =
-        if value <= alphaOrig then TTFlag.UpperBound
-        else if value >= beta then TTFlag.LowerBound
-        else TTFlag.Exact
-      table(key) = TTEntry(value, depth, flag)
+    val flag =
+      if value <= alphaOrig then TTFlag.UpperBound
+      else if value >= beta then TTFlag.LowerBound
+      else TTFlag.Exact
+    table.put(key, TTEntry(value, depth, flag))
 
   def clear(): Unit = table.clear()
 

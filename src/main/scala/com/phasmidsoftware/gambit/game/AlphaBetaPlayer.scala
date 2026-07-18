@@ -482,6 +482,18 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
             result
 
   /**
+    * A successor decorated with its already-computed heuristic value. A dedicated case
+    * class rather than a `(M, S, Double)` tuple: a generic tuple boxes its `Double` field
+    * regardless of its static type, so every successor at every node would box its
+    * heuristic value on the way through -- the same class of cost `CacheKey` (Bridge) had
+    * before it became a dedicated case class, just found here instead. Computing the
+    * heuristic once per successor (see this class's own doc below) fixes the
+    * *recomputation* cost; using a case class instead of a tuple here fixes the *boxing*
+    * cost -- both were needed, one doesn't imply the other.
+    */
+  private case class ScoredSuccessor(move: M, next: S, score: Double)
+
+  /**
     * Generates and orders successor (move, state) pairs for move ordering.
     * Maximizing player gets successors sorted highest-heuristic first;
     * minimizing player gets lowest-heuristic first.
@@ -497,10 +509,10 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
     val decorated = game.moves(s).map { m =>
       val next = game.applyMove(s, m, currentPl)
-      (m, next, state.heuristic(next))
+      ScoredSuccessor(m, next, state.heuristic(next))
     }
-    val ordered = if maximizing then decorated.sortBy(-_._3) else decorated.sortBy(_._3)
-    ordered.map(t => (t._1, t._2))
+    val ordered = if maximizing then decorated.sortBy(-_.score) else decorated.sortBy(_.score)
+    ordered.map(t => (t.move, t.next))
 
 /**
   * Companion object for `AlphaBetaPlayer`.

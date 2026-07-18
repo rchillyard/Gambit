@@ -485,12 +485,22 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * Generates and orders successor (move, state) pairs for move ordering.
     * Maximizing player gets successors sorted highest-heuristic first;
     * minimizing player gets lowest-heuristic first.
+    *
+    * Computes `state.heuristic(next)` exactly once per successor before sorting, rather
+    * than calling `sortBy((_, next) => state.heuristic(next))` directly: `sortBy`'s
+    * comparator recomputes its key function on every pairwise comparison (it doesn't cache),
+    * so sorting `b` successors that way costs O(b log b) heuristic evaluations, not O(b) --
+    * for any heuristic pricier than a trivial field read, that's a real, avoidable multiplier
+    * at every node in the tree. Decorating each successor with its heuristic value up front
+    * turns the sort's comparisons into cheap `Double` reads instead.
     */
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
-    val successors = game.moves(s).map(m => m -> game.applyMove(s, m, currentPl))
-    if maximizing
-    then successors.sortBy((_, next) => -state.heuristic(next))
-    else successors.sortBy((_, next) => state.heuristic(next))
+    val decorated = game.moves(s).map { m =>
+      val next = game.applyMove(s, m, currentPl)
+      (m, next, state.heuristic(next))
+    }
+    val ordered = if maximizing then decorated.sortBy(-_._3) else decorated.sortBy(_._3)
+    ordered.map(t => (t._1, t._2))
 
 /**
   * Companion object for `AlphaBetaPlayer`.

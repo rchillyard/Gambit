@@ -265,11 +265,11 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
             orderedMs = if maximizing
             then scoredMoves.sortBy(-_._2).map(_._1)
             else scoredMoves.sortBy(_._2).map(_._1)
-            logger.info(s"iterativeDeepening: completed depth=$currentDepth, best=$bestM, score=$bestScore")
+            logger.debug(s"iterativeDeepening: completed depth=$currentDepth, best=$bestM, score=$bestScore")
             currentDepth += depthStep
           catch
             case _: NodeLimitException =>
-              logger.info(s"iterativeDeepening: node limit at depth=$currentDepth, returning completedDepth=${lastCompleted.map(_._3)}")
+              logger.debug(s"iterativeDeepening: node limit at depth=$currentDepth, returning completedDepth=${lastCompleted.map(_._3)}")
               continue = false
         lastCompleted
 

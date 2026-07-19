@@ -2,7 +2,7 @@ organization := "com.phasmidsoftware"
 
 name := "gambit"
 
-version := "1.2.5"
+version := "1.2.6"
 
 scalaVersion := "3.7.4"
 

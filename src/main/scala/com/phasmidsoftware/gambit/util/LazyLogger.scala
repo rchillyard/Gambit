@@ -28,6 +28,19 @@ import org.slf4j.{Logger, LoggerFactory}
   */
 case class LazyLogger(logger: Logger):
   /**
+    * Logs a message at the "TRACE" level if trace logging is enabled.
+    * The message is lazily evaluated, meaning it will only be constructed
+    * if the trace level is enabled, saving computation when not necessary.
+    *
+    * @param msg The message to be logged at the trace level.
+    *            The message is provided as a by-name parameter, allowing for lazy evaluation.
+    *
+    * @return Unit, as this method performs side effects of logging the trace message.
+    */
+  def trace(msg: => String): Unit =
+    if logger.isTraceEnabled then logger.trace(msg)
+
+  /**
     * Logs a message at the "DEBUG" level if debug logging is enabled.
     * The message is lazily evaluated, meaning it will only be constructed
     * if the debug level is enabled, saving computation when not necessary.

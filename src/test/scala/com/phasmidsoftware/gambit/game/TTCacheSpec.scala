@@ -157,13 +157,25 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
     cache.size shouldBe 2
   }
 
-  it should "respect maxSize and suppress writes beyond limit" in {
+  it should "respect maxSize by evicting the least-recently-used entry" in {
     val cache = FlatTTCache[Int](maxSize = 2)
     cache.store(1, depth = 3, value = 1.0, alphaOrig = -10.0, beta = 10.0)
     cache.store(2, depth = 3, value = 2.0, alphaOrig = -10.0, beta = 10.0)
-    cache.store(3, depth = 3, value = 3.0, alphaOrig = -10.0, beta = 10.0) // suppressed
+    cache.store(3, depth = 3, value = 3.0, alphaOrig = -10.0, beta = 10.0) // evicts key 1 (least recently touched)
     cache.size shouldBe 2
-    cache.probe(3, depth = 3, alpha = -10.0, beta = 10.0) shouldBe None
+    cache.probe(1, depth = 3, alpha = -10.0, beta = 10.0) shouldBe None // evicted
+    cache.probe(2, depth = 3, alpha = -10.0, beta = 10.0) shouldBe Some(2.0) // retained
+    cache.probe(3, depth = 3, alpha = -10.0, beta = 10.0) shouldBe Some(3.0) // newly stored, retained
+  }
+
+  it should "treat a probe as a touch, protecting the entry from LRU eviction" in {
+    val cache = FlatTTCache[Int](maxSize = 2)
+    cache.store(1, depth = 3, value = 1.0, alphaOrig = -10.0, beta = 10.0)
+    cache.store(2, depth = 3, value = 2.0, alphaOrig = -10.0, beta = 10.0)
+    cache.probe(1, depth = 3, alpha = -10.0, beta = 10.0) // touches key 1, making key 2 the LRU entry
+    cache.store(3, depth = 3, value = 3.0, alphaOrig = -10.0, beta = 10.0) // evicts key 2, not key 1
+    cache.probe(1, depth = 3, alpha = -10.0, beta = 10.0) shouldBe Some(1.0) // protected by the earlier probe
+    cache.probe(2, depth = 3, alpha = -10.0, beta = 10.0) shouldBe None // evicted
   }
 
   // ---------------------------------------------------------------------------

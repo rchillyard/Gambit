@@ -265,11 +265,11 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
             orderedMs = if maximizing
             then scoredMoves.sortBy(-_._2).map(_._1)
             else scoredMoves.sortBy(_._2).map(_._1)
-            logger.info(s"iterativeDeepening: completed depth=$currentDepth, best=$bestM, score=$bestScore")
+            logger.debug(s"iterativeDeepening: completed depth=$currentDepth, best=$bestM, score=$bestScore")
             currentDepth += depthStep
           catch
             case _: NodeLimitException =>
-              logger.info(s"iterativeDeepening: node limit at depth=$currentDepth, returning completedDepth=${lastCompleted.map(_._3)}")
+              logger.debug(s"iterativeDeepening: node limit at depth=$currentDepth, returning completedDepth=${lastCompleted.map(_._3)}")
               continue = false
         lastCompleted
 
@@ -482,15 +482,37 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
             result
 
   /**
+    * A successor decorated with its already-computed heuristic value. A dedicated case
+    * class rather than a `(M, S, Double)` tuple: a generic tuple boxes its `Double` field
+    * regardless of its static type, so every successor at every node would box its
+    * heuristic value on the way through -- the same class of cost `CacheKey` (Bridge) had
+    * before it became a dedicated case class, just found here instead. Computing the
+    * heuristic once per successor (see this class's own doc below) fixes the
+    * *recomputation* cost; using a case class instead of a tuple here fixes the *boxing*
+    * cost -- both were needed, one doesn't imply the other.
+    */
+  private case class ScoredSuccessor(move: M, next: S, score: Double)
+
+  /**
     * Generates and orders successor (move, state) pairs for move ordering.
     * Maximizing player gets successors sorted highest-heuristic first;
     * minimizing player gets lowest-heuristic first.
+    *
+    * Computes `state.heuristic(next)` exactly once per successor before sorting, rather
+    * than calling `sortBy((_, next) => state.heuristic(next))` directly: `sortBy`'s
+    * comparator recomputes its key function on every pairwise comparison (it doesn't cache),
+    * so sorting `b` successors that way costs O(b log b) heuristic evaluations, not O(b) --
+    * for any heuristic pricier than a trivial field read, that's a real, avoidable multiplier
+    * at every node in the tree. Decorating each successor with its heuristic value up front
+    * turns the sort's comparisons into cheap `Double` reads instead.
     */
   private def orderedMoves(s: S, currentPl: Pl, maximizing: Boolean): Seq[(M, S)] =
-    val successors = game.moves(s).map(m => m -> game.applyMove(s, m, currentPl))
-    if maximizing
-    then successors.sortBy((_, next) => -state.heuristic(next))
-    else successors.sortBy((_, next) => state.heuristic(next))
+    val decorated = game.moves(s).map { m =>
+      val next = game.applyMove(s, m, currentPl)
+      ScoredSuccessor(m, next, state.heuristic(next))
+    }
+    val ordered = if maximizing then decorated.sortBy(-_.score) else decorated.sortBy(_.score)
+    ordered.map(t => (t.move, t.next))
 
 /**
   * Companion object for `AlphaBetaPlayer`.

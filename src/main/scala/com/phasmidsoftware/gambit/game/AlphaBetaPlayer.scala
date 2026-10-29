@@ -391,7 +391,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
       val used = (rt.totalMemory - rt.freeMemory) / 1024 / 1024
       val total = rt.totalMemory / 1024 / 1024
       val max = rt.maxMemory / 1024 / 1024
-      logger.info(f"nodes=$n%,d  heap used=${used}MB / total=${total}MB / max=${max}MB")
+      logger.debug(f"nodes=$n%,d  heap used=${used}MB / total=${total}MB / max=${max}MB")
 
     lazy val leafValue: Double = state.leafValue(s, maximizing)
 

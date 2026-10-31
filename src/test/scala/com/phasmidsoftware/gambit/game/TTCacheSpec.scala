@@ -9,11 +9,6 @@ class TTCacheSpec extends AnyFlatSpec with Matchers {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /** Store a single entry and return the cache for chaining. */
-  private def storeOne[K](cache: TTCache[K], key: K, depth: Int, value: Double, alphaOrig: Double, beta: Double): TTCache[K] =
-    cache.store(key, depth, value, alphaOrig, beta)
-    cache
-
   // ---------------------------------------------------------------------------
   // FlatTTCache — miss cases
   // ---------------------------------------------------------------------------

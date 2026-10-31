@@ -1,65 +1,79 @@
-# Scala CircleCI 2.1 configuration file
+# CircleCI configuration for Gambit (the standard Phasmid template, plus a slow-tests job)
+#
+# Check https://circleci.com/docs/configuration-reference/ for more details
+#
 version: 2.1
+
+commands:
+  setup:
+    steps:
+      - checkout
+
+      - run:
+          name: Install sbt (version pinned in project/build.properties)
+          command: |
+            SBT_VERSION=$(sed -n 's/^sbt.version=//p' project/build.properties)
+            curl -fsSL --retry 3 "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" | tar -xz -C ~
+            echo 'export PATH="$HOME/sbt/bin:$PATH"' >> "$BASH_ENV"
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v2-dependencies-{{ checksum "build.sbt" }}-{{ checksum "project/build.properties" }}-{{ checksum "project/plugins.sbt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v2-dependencies-
+
+executors:
+  jdk:
+    docker:
+      # cimg/openjdk ships Maven and Gradle but not sbt, so sbt is installed by the setup command
+      - image: cimg/openjdk:21.0
+    working_directory: ~/repo
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
 
 jobs:
   build:
-    docker:
-      - image: cimg/openjdk:17.0
-
-    working_directory: ~/repo
-
-    environment:
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
+    executor: jdk
     steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.sbt" }}
-            - v1-dependencies-
+      - setup
 
       - run:
           name: Compile
-          command: sbt Test/compile
+          command: cat /dev/null | sbt Test/compile
 
       - save_cache:
           paths:
-            - ~/.sbt
             - ~/.ivy2/cache
+            - ~/.sbt
             - ~/.cache/coursier
-          key: v1-dependencies-{{ checksum "build.sbt" }}
+          key: v2-dependencies-{{ checksum "build.sbt" }}-{{ checksum "project/build.properties" }}-{{ checksum "project/plugins.sbt" }}
 
       - run:
           name: Test (fast)
-          command: sbt "testOnly -- -l org.scalatest.tags.Slow"
+          command: cat /dev/null | sbt "testOnly -- -l org.scalatest.tags.Slow"
+
+      # Generate Scaladoc (catches doc warnings, and the docs are published to GitHub Pages)
+      - run:
+          name: Doc
+          command: cat /dev/null | sbt doc
+
+      - store_test_results:
+          path: target/test-reports
 
   slow-tests:
-    docker:
-      - image: cimg/openjdk:17.0
-
-    working_directory: ~/repo
-
-    environment:
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
+    executor: jdk
     steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "build.sbt" }}
-            - v1-dependencies-
+      - setup
 
       - run:
           name: Test (slow)
-          command: sbt "testOnly -- -n org.scalatest.tags.Slow"
+          command: cat /dev/null | sbt "testOnly -- -n org.scalatest.tags.Slow"
 
 workflows:
-  version: 2
-  build-and-test:
+  build:
     jobs:
       - build
       - slow-tests:

@@ -1,6 +1,6 @@
 package com.phasmidsoftware.gambit.examples.tictactoe
 
-import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState
 import com.phasmidsoftware.gambit.game.State
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -9,7 +9,7 @@ import scala.util.Random
 
 class PerfectPlayerSpec extends AnyFlatSpec with should.Matchers {
 
-  implicit val state: State[Board, TicTacToe] = TicTacToeState$
+  implicit val state: State[Board, TicTacToe] = TicTacToeState
 
   private val rng = new Random(42L)
 

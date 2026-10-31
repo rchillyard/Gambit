@@ -10,9 +10,6 @@ import scala.util.Random
 
 class TournamentSpec extends AnyFlatSpec with should.Matchers {
 
-  // Convenience alias.
-  private type C4Tournament = Tournament[Connect4, Connect4, Int, Boolean]
-
   private def contestant(name: String, player: Player[Connect4, Int, Boolean]) =
     Contestant(name, player)
 
@@ -57,7 +54,7 @@ class TournamentSpec extends AnyFlatSpec with should.Matchers {
     )
     val rows = t.standings
     // Each row is (name, played, wins, draws, losses, goalDiff, points).
-    rows.foreach { case (name, p, w, d, l, gd, pts) =>
+    rows.foreach { case (_, p, w, d, l, gd, pts) =>
       p shouldBe w + d + l
       pts shouldBe w * 3 + d
       gd shouldBe w - l

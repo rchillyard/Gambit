@@ -1,6 +1,6 @@
 package com.phasmidsoftware.gambit.examples.tictactoe
 
-import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState
 import com.phasmidsoftware.gambit.game.{MCTSPlayer, Player}
 
 import scala.util.Random
@@ -65,7 +65,7 @@ def playTicTacToeDemo(
                        oName: String,
                        rng: Random
                      ): Option[Boolean] =
-  import TicTacToeState$ as state
+  import TicTacToeState as state
 
   var ttt = TicTacToe.start
   var moveNum = 0
@@ -102,7 +102,7 @@ def playTicTacToeDemo(
   * Render a TicTacToe board with its heuristic score.
   */
 def renderTTTWithHeuristic(ttt: TicTacToe): String =
-  import TicTacToeState$ as state
+  import TicTacToeState as state
   val board = TicTacToeOps.renderWithNewlines(ttt.board.value)
   val heuristic = if state.isGoal(ttt).isDefined then "terminal"
   else f"heuristic=${state.heuristic(ttt)}%.1f"

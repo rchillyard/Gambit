@@ -11,7 +11,7 @@ import scala.util.Random
   * M  = Int (column index, 0..6)
   * Pl = Boolean (true = X, moves first; false = O, moves second)
   */
-given connect4Game(using State[Connect4, Connect4]): Game[Connect4, Int, Boolean] with
+given connect4Game(using @scala.annotation.unused state: State[Connect4, Connect4]): Game[Connect4, Int, Boolean] with
   def start: Connect4 = Connect4.start
 
   def startingPlayer: Boolean = true

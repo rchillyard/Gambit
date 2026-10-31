@@ -43,7 +43,7 @@ import scala.util.Random
   * @tparam Pl the player identity type.
   */
 class MCTSPlayer[P, S, M, Pl](
-                               me: Pl,
+                               @scala.annotation.unused me: Pl,
                                iterations: Int = 1000,
                                explorationConstant: Double = math.sqrt(2)
                              )(using state: State[P, S], game: Game[S, M, Pl])

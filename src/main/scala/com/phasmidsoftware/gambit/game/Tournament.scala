@@ -106,7 +106,7 @@ class Tournament[P, S, M, Pl](
 
     totals.toSeq
       .map { case (name, r) => (name, r.played, r.wins, r.draws, r.losses, r.wins - r.losses, r.points) }
-      .sortBy { case (_, _, w, _, l, gd, pts) => (-pts, -(w - l), -w) }
+      .sortBy { case (_, _, w, _, l, _, pts) => (-pts, -(w - l), -w) }
 
   // ---------------------------------------------------------------------------
   // Helpers

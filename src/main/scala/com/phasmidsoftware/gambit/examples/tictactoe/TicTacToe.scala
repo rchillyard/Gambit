@@ -264,6 +264,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
 
   private lazy val firstAndTopLeftCorner = board.value == 0x40000000
 
+  @scala.annotation.unused
   private def rowTupled(i: Int): Row =
     TicTacToe.row(board)(i) // NOTE: used by unit tests
 
@@ -319,7 +320,7 @@ object TicTacToe {
   /**
     * Trait that extends the type class State with a concrete underlying type of TicTacToe.
     */
-  trait TicTacToeState$ extends State[Board, TicTacToe] {
+  trait TicTacToeStateBase extends State[Board, TicTacToe] {
 
     /**
       * a significant sequence value that distinguishes this state from others and which can be derived from a P.
@@ -396,7 +397,7 @@ object TicTacToe {
     def render(s: TicTacToe): String = s.render()
   }
 
-  implicit object TicTacToeState$ extends TicTacToeState$
+  implicit object TicTacToeState extends TicTacToeStateBase
 
   /**
     * Method to construct a starting position `TicTacToe`.

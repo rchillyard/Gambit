@@ -201,7 +201,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @param random an instance of Random (reserved for future randomisation).
     * @return an Option containing the (move, score) pair if a valid move exists, otherwise None.
     */
-  def chooseMoveWithScore(s: S, random: Random): Option[(M, Double)] =
+  def chooseMoveWithScore(s: S, @scala.annotation.unused random: Random): Option[(M, Double)] =
     if state.isGoal(s).isDefined
     then None
     else
@@ -242,7 +242,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
     * @return the (move, score, completedDepth) of the last fully completed
     *         iteration, or `None` if not even the first iteration completed.
     */
-  def chooseMoveIterativeDeepening(s: S, random: Random, depthStep: Int): Option[(M, Double, Int)] =
+  def chooseMoveIterativeDeepening(s: S, @scala.annotation.unused random: Random, depthStep: Int): Option[(M, Double, Int)] =
     if state.isGoal(s).isDefined
     then None
     else

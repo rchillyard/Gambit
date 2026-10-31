@@ -1,6 +1,6 @@
 package com.phasmidsoftware.gambit.examples.tictactoe
 
-import com.phasmidsoftware.gambit.game.{GameResult, Player, State}
+import com.phasmidsoftware.gambit.game.{Player, State}
 import com.phasmidsoftware.visitor.core.*
 
 import scala.collection.mutable

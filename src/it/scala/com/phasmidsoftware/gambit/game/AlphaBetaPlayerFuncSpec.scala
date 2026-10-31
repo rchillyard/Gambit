@@ -2,7 +2,7 @@ package com.phasmidsoftware.gambit.game
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
 import com.phasmidsoftware.gambit.examples.connect4.{Connect4, Connect4GameRunner, Connect4State, connect4Game, HeuristicPlayer as C4HeuristicPlayer}
-import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState
 import com.phasmidsoftware.gambit.examples.tictactoe.{Board, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should

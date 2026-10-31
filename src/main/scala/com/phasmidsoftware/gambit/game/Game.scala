@@ -105,7 +105,7 @@ trait Game[S, M, Pl]:
     * @param current the player whose turn it would have been next.
     * @return a GameResult mapping each player to their score.
     */
-  def winner(s: S, current: Pl): GameResult[Pl] =
+  def winner(@scala.annotation.unused s: S, current: Pl): GameResult[Pl] =
     val prev = players.find(_ != current).getOrElse(current)
     players.map { pl =>
       pl -> (if pl == prev then 1 else if pl == current then -1 else 0)

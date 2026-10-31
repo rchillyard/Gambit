@@ -98,7 +98,7 @@ trait State[P, S] extends Ordering[S]:
     * @return a Boolean value negating the input `currentMaximizing`,
     *         indicating the next player's maximizing status.
     */
-  def isMaximizing(s: S, currentMaximizing: Boolean): Boolean = !currentMaximizing
+  def isMaximizing(@scala.annotation.unused s: S, currentMaximizing: Boolean): Boolean = !currentMaximizing
 
   /**
     * Concrete method to get the possible states to follow the given state s.

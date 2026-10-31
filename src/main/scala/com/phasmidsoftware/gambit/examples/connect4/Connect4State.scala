@@ -97,16 +97,11 @@ object Connect4State extends State[Connect4, Connect4]:
       // Windows with no opponent: all 4 positions must be in notOp.
       val w0 = notOp & (notOp >> sh) & (notOp >> (2 * sh)) & (notOp >> (3 * sh))
 
-      // Windows with 3 mine: exactly 3 of 4 positions in myBits, window unblocked.
-      // = windows where exactly one position is empty (in notOp but not myBits).
-      val emptyBits = notOp & ~myBits
-
       // 3 mine + 1 empty: w0 (unblocked) & m1 (at least 2 consecutive mine) &
       // the 3rd mine exists & exactly 1 empty slot.
       // Simplify: use bitCount of (myBits shifted into window) for each start.
       // Direct approach — enumerate start positions explicitly.
-      // NOTE that `p` and `mask` are mutable.
-      var p = 0L
+      // NOTE that `mask` is mutable.
       var mask = w0
       while mask != 0 do
         val bit = mask & (-mask) // lowest set bit = one window start

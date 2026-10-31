@@ -264,6 +264,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
 
   private lazy val firstAndTopLeftCorner = board.value == 0x40000000
 
+  @scala.annotation.unused
   private def rowTupled(i: Int): Row =
     TicTacToe.row(board)(i) // NOTE: used by unit tests
 

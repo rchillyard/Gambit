@@ -4,15 +4,16 @@ name := "gambit"
 
 version := "1.2.6"
 
-scalaVersion := "3.7.4"
+scalaVersion := "3.9.0" // the current LTS
 
 val scalaTestVersion = "3.2.20"
 
 scalacOptions ++= Seq(
   "-unchecked",
-  "-Xfatal-warnings",
+  "-Werror",
   "-deprecation",
-  "-feature"
+  "-feature",
+  "-Wunused:all"
 )
 
 javacOptions ++= Seq("-source", "17", "-target", "17")
@@ -42,6 +43,10 @@ lazy val root = project.in(file("."))
     IT / scalaSource := baseDirectory.value / "src" / "it" / "scala"
   )
 
+// JUnit-style reports, collected by CircleCI
+Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test-reports")
+
+// Scaladoc is published to https://rchillyard.github.io/Gambit/latest/api/ by `sbt ghpagesPushSite`
 enablePlugins(GhpagesPlugin, SiteScaladocPlugin)
 
 git.remoteRepo := "git@github.com:rchillyard/Gambit.git"

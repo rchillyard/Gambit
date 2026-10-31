@@ -313,7 +313,7 @@ class MatchboxSpec extends AnyFlatSpec with should.Matchers {
 
   behavior of "GameRunner"
 
-  import TicTacToe.TicTacToeState$
+  import TicTacToe.TicTacToeState
 
   it should "play a single game without throwing" in {
     val mbs = Matchboxes()

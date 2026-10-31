@@ -28,7 +28,7 @@ AlphaBeta.
 
 | File | Contents |
 |------|----------|
-| `TicTacToe.scala` | `TicTacToe`, `Board` — bitboard state; `TicTacToeState$` |
+| `TicTacToe.scala` | `TicTacToe`, `Board` — bitboard state; `TicTacToeState` |
 | `TicTacToeOps.java` | Low-level bit manipulation (rotate, transpose, play, render) |
 | `TicTacToeUtils.scala` | `cellFromDiff` — shared utility |
 | `Matchbox.scala` | `Matchbox` — weighted bead selection and reward/penalise |

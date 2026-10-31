@@ -339,7 +339,7 @@ class TicTacToeSpec extends AnyFlatSpec with should.Matchers with PrivateMethodT
 
   //    behavior of "PriorityQueue"
   //
-  //    import TicTacToe.TicTacToeState$
+  //    import TicTacToe.TicTacToeState
   //
   //    private val bTs = implicitly[State[Board, TicTacToe]]
   //

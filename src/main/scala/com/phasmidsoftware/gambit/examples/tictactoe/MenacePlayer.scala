@@ -56,7 +56,7 @@ class RandomPlayer extends Player[TicTacToe, Int, Boolean] {
 }
 
 /**
-  * A player that uses the existing heuristic (TicTacToeState$.heuristic) to
+  * A player that uses the existing heuristic (TicTacToeState.heuristic) to
   * greedily pick the best available move. Useful as a strong baseline.
   */
 class HeuristicPlayer(implicit state: State[Board, TicTacToe])

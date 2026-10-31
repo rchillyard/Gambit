@@ -2,7 +2,7 @@ package com.phasmidsoftware.gambit.game
 
 import com.phasmidsoftware.gambit.examples.connect4.Connect4State.given
 import com.phasmidsoftware.gambit.examples.connect4.{AlphaBetaPlayerConnect4, Connect4, Connect4GameRunner, Connect4State, connect4Game, HeuristicPlayer as C4HeuristicPlayer, RandomPlayer as C4RandomPlayer}
-import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState$
+import com.phasmidsoftware.gambit.examples.tictactoe.TicTacToe.TicTacToeState
 import com.phasmidsoftware.gambit.examples.tictactoe.{AlphaBetaPlayerTicTacToe, Board, PerfectPlayer, TicTacToe, TicTacToeGameRunner, tictactoeGame, RandomPlayer as TTTRandomPlayer}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
@@ -40,8 +40,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     move shouldBe defined
     val row = move.get / TicTacToe.size
     val col = move.get % TicTacToe.size
-    val next = TicTacToeState$.construct(ttt.playX(row, col))
-    TicTacToeState$.isGoal(next) shouldBe Some(true)
+    val next = TicTacToeState.construct(ttt.playX(row, col))
+    TicTacToeState.isGoal(next) shouldBe Some(true)
   }
 
   it should "block O from winning" in {
@@ -52,9 +52,9 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     move shouldBe defined
     val row = move.get / TicTacToe.size
     val col = move.get % TicTacToe.size
-    val next = TicTacToeState$.construct(ttt.playX(row, col))
-    val oResponses = TicTacToeState$.getStates(next)
-    val oWins = oResponses.filter(s => TicTacToeState$.isGoal(s).contains(true) && !TicTacToeState$.isWin(s))
+    val next = TicTacToeState.construct(ttt.playX(row, col))
+    val oResponses = TicTacToeState.getStates(next)
+    val oWins = oResponses.filter(s => TicTacToeState.isGoal(s).contains(true) && !TicTacToeState.isWin(s))
     oWins shouldBe empty
   }
 
@@ -586,8 +586,8 @@ class AlphaBetaPlayerSpec extends AnyFlatSpec with should.Matchers {
     score should be > 0.0
     val row = move / TicTacToe.size
     val col = move % TicTacToe.size
-    val next = TicTacToeState$.construct(ttt.playX(row, col))
-    TicTacToeState$.isGoal(next) shouldBe Some(true)
+    val next = TicTacToeState.construct(ttt.playX(row, col))
+    TicTacToeState.isGoal(next) shouldBe Some(true)
   }
 
   it should "work correctly with depthStep > 1" in {

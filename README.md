@@ -1,12 +1,12 @@
 [![Sonatype Central](https://maven-badges.sml.io/sonatype-central/com.phasmidsoftware/gambit_3/badge.svg?color=blue)](https://central.sonatype.com/artifact/com.phasmidsoftware/gambit_3)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/master)
-![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)
-![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)
-![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)
-![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)
-![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)
 [![API Docs](https://img.shields.io/badge/api-docs-blue)](https://rchillyard.github.io/Gambit/latest/api/)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/master)
+[![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)](https://github.com/rchillyard/Gambit)
+[![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/blob/master/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/commits/master)
+[![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/issues)
+[![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)](https://github.com/rchillyard/Gambit/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
 
 ![Gambit](img/logo.svg)
 # Gambit
@@ -132,15 +132,12 @@ Player             P     W     D     L    GD   Pts
 
 ## API Documentation
 
-Full Scaladoc at: <https://rchillyard.github.io/Gambit/latest/api/>
+Full Scaladoc is at <https://rchillyard.github.io/Gambit/latest/api/>.
 
 To regenerate and publish:
 ```
 sbt ghpagesPushSite
 ```
-
-Published releases are also automatically available via
-[javadoc.io](https://javadoc.io/doc/com.phasmidsoftware/gambit_3), with no extra step required.
 
 ## Design Documents
 

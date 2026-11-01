@@ -43,8 +43,6 @@ lazy val root = project.in(file("."))
     IT / scalaSource := baseDirectory.value / "src" / "it" / "scala"
   )
 
-// JUnit-style reports, collected by CircleCI
-Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-u", "target/test-reports")
 
 // Scaladoc is published to https://rchillyard.github.io/Gambit/latest/api/ by `sbt ghpagesPushSite`
 enablePlugins(GhpagesPlugin, SiteScaladocPlugin)

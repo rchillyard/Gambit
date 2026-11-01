@@ -28,10 +28,10 @@ its graph and tree traversal engine.
 Gambit is published to Maven Central. Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.1.0"
+libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.3.0"
 ```
 
-Requires Scala 3. Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.6.0,
+Requires Scala 3.9 or later (1.3.0 is built with Scala 3.9.0, the current LTS). Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.7.0,
 which is pulled in automatically as a transitive dependency.
 
 ## Structure

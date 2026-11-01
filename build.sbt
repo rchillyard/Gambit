@@ -2,7 +2,7 @@ organization := "com.phasmidsoftware"
 
 name := "gambit"
 
-version := "1.2.6"
+version := "1.3.0"
 
 scalaVersion := "3.9.0" // the current LTS
 
@@ -21,8 +21,8 @@ javacOptions ++= Seq("-source", "17", "-target", "17")
 lazy val versionConfig = "1.4.9"
 lazy val versionScalaLogging = "3.9.6"
 lazy val versionLogback = "1.5.38"
-lazy val versionVisitor = "1.6.0"
-lazy val versionFlog = "1.0.15"
+lazy val versionVisitor = "1.7.0"
+lazy val versionFlog = "1.1.0"
 
 libraryDependencies ++= Seq(
   "com.phasmidsoftware"        %% "flog"             % versionFlog,

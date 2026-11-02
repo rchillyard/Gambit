@@ -31,7 +31,7 @@ Gambit is published to Maven Central. Add the following to your `build.sbt`:
 libraryDependencies += "com.phasmidsoftware" %% "gambit" % "1.3.0"
 ```
 
-Requires Scala 3.9 or later (1.3.0 is built with Scala 3.9.0, the current LTS). Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.7.0,
+Gambit 1.3.0 and later need Scala 3.9 or later; for Scala 3.7 or 3.8, use 1.2.6. (No release supports Scala 3.3.) Depends on [Visitor](https://github.com/rchillyard/Visitor) 1.7.0,
 which is pulled in automatically as a transitive dependency.
 
 ## Structure

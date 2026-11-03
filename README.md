@@ -1,6 +1,7 @@
 [![Sonatype Central](https://maven-badges.sml.io/sonatype-central/com.phasmidsoftware/gambit_3/badge.svg?color=blue)](https://central.sonatype.com/artifact/com.phasmidsoftware/gambit_3)
 [![API Docs](https://img.shields.io/badge/api-docs-blue)](https://rchillyard.github.io/Gambit/latest/api/)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard)
+[![Codacy Coverage](https://app.codacy.com/project/badge/Coverage/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/master)
 [![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)](https://github.com/rchillyard/Gambit)
 [![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/blob/master/LICENSE)

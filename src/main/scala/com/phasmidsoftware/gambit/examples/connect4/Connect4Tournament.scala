@@ -49,7 +49,7 @@ object Connect4Tournament:
     *   )
     * }}}
     *
-    * Player parameters are read from [[GambitConfig]] (`application.conf`).
+    * Player parameters are read from [[com.phasmidsoftware.gambit.game.GambitConfig]] (`application.conf`).
     * Override by editing the config file -- no recompilation needed.
     *
     * @param gamesPerPairing number of games each ordered pair plays

@@ -430,7 +430,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         a = a.max(best)
         if a >= beta then break(best) // prune: minimizer won't allow this
       }
-    best
+      best
 
   /**
     * Minimizing half of alpha-beta: iterates over successor states, updating
@@ -451,7 +451,7 @@ class AlphaBetaPlayer[P, S, M, Pl, K](
         b = b.min(best)
         if alpha >= b then break(best) // prune: maximizer won't allow this
       }
-    best
+      best
 
   /**
     * Wraps `evaluate` with transposition-table lookup and store.

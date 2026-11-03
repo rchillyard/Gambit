@@ -125,7 +125,7 @@ class FlatTTCache[K](maxSize: Int = Int.MaxValue) extends TTCache[K]:
       if value <= alphaOrig then TTFlag.UpperBound
       else if value >= beta then TTFlag.LowerBound
       else TTFlag.Exact
-    table.put(key, TTEntry(value, depth, flag))
+    table.put(key, TTEntry(value, depth, flag)): Unit
 
   def clear(): Unit = table.clear()
 

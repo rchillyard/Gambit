@@ -282,7 +282,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
   }
 
   def persist(x: CharSequence): Unit = if (isBacked)
-    appendable.append(transform(x))
+    appendable.append(transform(x)): Unit
   else
     throw OutputException(s"Cannot persist to unbacked Output")
 
@@ -298,7 +298,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
   def flush: Output = {
     if (nonEmpty) {
       persist(content)
-      clear
+      clear: Unit
       flushed = true
     }
     this
@@ -309,7 +309,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
   def appendToBuffer(x: CharSequence): Unit = sb.append(x)
 
   def close(): Unit = {
-    flush
+    flush: Unit
     if (isBacked)
       appendable.flush()
     // TODO understand why we fail with "Terminated" condition if we try to close the appendable (in the case of a PrintWriter).
@@ -340,7 +340,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
 
   private def transferContentFromBufferedOutput(o: BufferedOutput): Output = {
     appendToBuffer(o.clear.asInstanceOf[CharSequence]) // TODO fix this up
-    maybeFlush
+    maybeFlush: Unit
     o.close()
     this
   }

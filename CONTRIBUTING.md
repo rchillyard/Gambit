@@ -27,7 +27,7 @@ what you have in mind.
 
 ## How to Contribute
 
-1. **Fork** the repository and create a branch from `master`:
+1. **Fork** the repository and create a branch from `main`:
    ```
    git checkout -b my-feature
    ```
@@ -53,9 +53,9 @@ what you have in mind.
    ```
    sbt test
    ```
-   CircleCI will also run the slow tests on merge to `master`.
+   CircleCI will also run the slow tests on merge to `main`.
 
-6. **Open a pull request** against `master` with a clear description of
+6. **Open a pull request** against `main` with a clear description of
    what changed and why. Reference any related issues.
 
 ## Commit Messages

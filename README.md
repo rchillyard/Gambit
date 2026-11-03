@@ -2,10 +2,10 @@
 [![API Docs](https://img.shields.io/badge/api-docs-blue)](https://rchillyard.github.io/Gambit/latest/api/)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard)
 [![Codacy Coverage](https://app.codacy.com/project/badge/Coverage/df51f96dfeac4f8c8ec796b7e91eac7c)](https://app.codacy.com/gh/rchillyard/Gambit/dashboard)
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/master)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/rchillyard/Gambit/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/rchillyard/Gambit/tree/main)
 [![GitHub Top Languages](https://img.shields.io/github/languages/top/rchillyard/Gambit)](https://github.com/rchillyard/Gambit)
-[![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/blob/master/LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/commits/master)
+[![GitHub](https://img.shields.io/github/license/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/blob/main/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/commits/main)
 [![GitHub issues](https://img.shields.io/github/issues-raw/rchillyard/Gambit)](https://github.com/rchillyard/Gambit/issues)
 [![GitHub issues by-label](https://img.shields.io/github/issues/rchillyard/Gambit/bug)](https://github.com/rchillyard/Gambit/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
 

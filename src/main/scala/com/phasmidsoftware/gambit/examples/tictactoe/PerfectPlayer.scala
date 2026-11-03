@@ -88,7 +88,7 @@ class PerfectPlayer(implicit state: State[Board, TicTacToe]) extends Player[TicT
     given VisitedSet[TicTacToe] = summon[VisitedSet[TicTacToe]]
 
     val visitor = JournaledVisitor.withListJournal[TicTacToe, Int]
-    Traversal.dfs(TicTacToe.start, visitor, DfsOrder.Post)
+    Traversal.dfs(TicTacToe.start, visitor, DfsOrder.Post): Unit
 
     scoreMap.toMap
   }

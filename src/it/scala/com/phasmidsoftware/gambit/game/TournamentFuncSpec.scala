@@ -1,6 +1,5 @@
 package com.phasmidsoftware.gambit.game
 
-import com.phasmidsoftware.gambit.examples.connect4.Connect4
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should
 import org.scalatest.tagobjects.Slow

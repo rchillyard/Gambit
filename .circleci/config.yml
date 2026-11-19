@@ -53,7 +53,7 @@ jobs:
 
       - run:
           name: Test (fast)
-          command: cat /dev/null | sbt "testOnly -- -l org.scalatest.tags.Slow"
+          command: cat /dev/null | sbt fastTests
 
       # Generate Scaladoc (catches doc warnings, and the docs are published to GitHub Pages)
       - run:
@@ -66,7 +66,7 @@ jobs:
       # Coverage, reported but not enforced. It starts with clean, because the earlier steps' classes aren't instrumented.
       - run:
           name: Coverage
-          command: cat /dev/null | sbt clean coverage "testOnly -- -l org.scalatest.tags.Slow" coverageReport
+          command: cat /dev/null | sbt clean coverage fastTests coverageReport
 
       - store_artifacts:
           path: target/scala-3.9.0/scoverage-report
@@ -90,7 +90,7 @@ jobs:
 
       - run:
           name: Test (slow)
-          command: cat /dev/null | sbt "testOnly -- -n org.scalatest.tags.Slow"
+          command: cat /dev/null | sbt slowTests
 
 workflows:
   build:

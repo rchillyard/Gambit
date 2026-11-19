@@ -6,7 +6,7 @@ package com.phasmidsoftware.gambit.game
   * For example, a State might describe a board position in Tic-tac-toe or Chess.
   *
   * NOTE that State depends on Transition.
-  * CONSIDER eliminating Transition such that all logic is defined by State.
+  * CONSIDER eliminating Transition such that all logic is defined by State. See Issue #36.
   *
   * @tparam P a proto-state, that's to say a type such that a P, S tuple can be converted into a new S.
   * @tparam S the underlying type on which the state is based.

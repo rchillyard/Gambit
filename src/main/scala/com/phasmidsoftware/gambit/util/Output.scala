@@ -312,7 +312,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
     flush: Unit
     if (isBacked)
       appendable.flush()
-    // TODO understand why we fail with "Terminated" condition if we try to close the appendable (in the case of a PrintWriter).
+    // TODO understand why we fail with "Terminated" condition if we try to close the appendable (in the case of a PrintWriter). See Issue #33.
   }
 
   def concatenate(output: Output): Output = output match {
@@ -339,7 +339,7 @@ sealed abstract class BufferedCharSequenceOutput[A <: Appendable & AutoCloseable
     transferContentFromBufferedOutput(output)
 
   private def transferContentFromBufferedOutput(o: BufferedOutput): Output = {
-    appendToBuffer(o.clear.asInstanceOf[CharSequence]) // TODO fix this up
+    appendToBuffer(o.clear.asInstanceOf[CharSequence]) // TODO fix this up. See Issue #33.
     maybeFlush: Unit
     o.close()
     this

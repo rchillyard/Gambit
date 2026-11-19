@@ -91,7 +91,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     * Method to create a string of Xs and 0s corresponding to this TicTacToe position.
     * Also includes the heuristic for the position.
     *
-    * CONSIDER adding a parameter to allow dropping the heuristic.
+    * CONSIDER adding a parameter to allow dropping the heuristic. See Issue #34.
     *
     * @return a String that is a rendition of the current state.
     */
@@ -108,15 +108,6 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
     case Some(x) => x.history :+ render(true) // XXX true makes the history easier to read.
   }
 
-  //  /**
-  //   * The count of open cells for this TicTacToe. If you need the actual open cells as well as the count, use <code>open</code> instead.
-  //   *
-  //   * TESTME
-  //   *
-  //   * @return the number of vacancies.
-  //   */
-  //  lazy val vacancies: Int = TicTacToeOps.vacancies(board.value)
-
   /**
     * The list of open cells for this TicTacToe.
     *
@@ -125,7 +116,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
   lazy val open: Seq[(Int, Int)] = {
     val zs: Array[Int] = TicTacToeOps.open(board.value)
     val q = for (z <- zs) yield z / size -> z % size
-    q.toList // CONSIDER returning q as is.
+    q.toList // CONSIDER returning q as is. See Issue #34.
   }
 
   /**
@@ -160,7 +151,7 @@ case class TicTacToe(board: Board, maybePrior: Option[TicTacToe] = None) {
   /**
     * Method to determine if this layout is a draw, i.e. no side can ever win.
     *
-    * TODO figure out a better way to determine a draw.
+    * TODO figure out a better way to determine a draw. See Issue #37.
     *
     * @return Some(false) if it's a draw, else None.
     */
@@ -383,7 +374,7 @@ object TicTacToe {
     /**
       * Return all of the possible transitions from the given state.
       *
-      * CONSIDER refactoring so that we do not discard the state when constructing a Move.
+      * CONSIDER refactoring so that we do not discard the state when constructing a Move. See Issue #34.
       *
       * @param s a state.
       * @return a sequence of Transition[S]
@@ -451,7 +442,7 @@ object TicTacToe {
     * NOTE: do not use for later positions.
     *
     * @param s a String made up of 9 case-independent characters, each of which must be an X, 0, O, ., or space.
-    *          CONSIDER allowing newlines.
+    *          CONSIDER allowing newlines. See Issue #32.
     *
     * @return a TicTacToe.
     */
@@ -470,7 +461,7 @@ object TicTacToe {
   /**
     * Method to parse a String of Xs and 0s into a TicTacToe, wrapped in Try.
     *
-    * CONSIDER making this private.
+    * CONSIDER making this private. See Issue #32.
     *
     * @param s the String to parse (which may include \n characters for better visualization).
     * @return a Try of TicTacToe.

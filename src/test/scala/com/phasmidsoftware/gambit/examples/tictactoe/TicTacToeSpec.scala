@@ -30,7 +30,7 @@ class TicTacToeSpec extends AnyFlatSpec with should.Matchers with PrivateMethodT
     renderWithNewlines(board2) shouldBe "X..\n...\n0..\n"
     board2 shouldBe 0x40080000
   }
-  // CONSIDER skipping the toHexString part
+  // CONSIDER skipping the toHexString part (#44)
   it should "hFlip to hex string" in {
     hFlip(0xC0000000).toHexString shouldBe "c0000"
     hFlip(0x30000000).toHexString shouldBe "30000"
@@ -42,7 +42,7 @@ class TicTacToeSpec extends AnyFlatSpec with should.Matchers with PrivateMethodT
     hFlip(0x00030000).toHexString shouldBe "30000000"
     hFlip(0x0000C000).toHexString shouldBe "c000000"
   }
-  // CONSIDER skipping the toHexString part
+  // CONSIDER skipping the toHexString part (#44)
   it should "rotate to hex string" in {
     rotateBoard(0xC0000000).toHexString shouldBe "c000000"
     rotateBoard(0x30000000).toHexString shouldBe "300000"
